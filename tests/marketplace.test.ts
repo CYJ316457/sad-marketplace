@@ -34,9 +34,11 @@ afterEach(() => {
 describe("shared skill marketplace", () => {
   test("lists packs from the registry", async () => {
     const packs = await listPacks({ registryPath: registryPath() });
-    expect(packs).toHaveLength(1);
+    expect(packs).toHaveLength(2);
     expect(packs[0]?.name).toBe("starter-pack");
     expect(packs[0]?.contents.skills).toEqual(["writing-clearly", "release-checklist"]);
+    expect(packs[1]?.name).toBe("floating-island-hooks");
+    expect(packs[1]?.contents.skills).toEqual(["project-floating-island-hooks"]);
   });
 
   test("installs a pack globally for codex and claude", async () => {
@@ -60,6 +62,67 @@ describe("shared skill marketplace", () => {
     expect(
       fs.existsSync(
         path.join(workspace, "home", ".claude", "skills", "release-checklist", "SKILL.md"),
+      ),
+    ).toBe(true);
+  });
+
+  test("installs floating island hooks with scripts and bundled assets", async () => {
+    const workspace = tempWorkspace();
+    process.env.SKILL_MARKETPLACE_HOME = path.join(workspace, "home");
+
+    const record = await installPack({
+      registryPath: registryPath(),
+      packName: "floating-island-hooks",
+      scope: "global",
+      cwd: workspace,
+      platform: "all",
+    });
+
+    expect(record.platforms).toEqual(["codex", "claude", "codebuddy"]);
+    expect(
+      fs.existsSync(
+        path.join(
+          workspace,
+          "home",
+          ".codex",
+          "skills",
+          "project-floating-island-hooks",
+          "scripts",
+          "install_codebuddy_hooks.py",
+        ),
+      ),
+    ).toBe(true);
+    expect(
+      fs.existsSync(
+        path.join(
+          workspace,
+          "home",
+          ".claude",
+          "skills",
+          "project-floating-island-hooks",
+          "assets",
+          "floating-island",
+          "scripts",
+          "islandctl.js",
+        ),
+      ),
+    ).toBe(true);
+    expect(
+      fs.existsSync(
+        path.join(
+          workspace,
+          "home",
+          ".codebuddy",
+          "plugins",
+          "marketplaces",
+          "sad-marketplace",
+          "plugins",
+          "floating-island-hooks",
+          "skills",
+          "project-floating-island-hooks",
+          "scripts",
+          "install_codebuddy_hooks.py",
+        ),
       ),
     ).toBe(true);
   });

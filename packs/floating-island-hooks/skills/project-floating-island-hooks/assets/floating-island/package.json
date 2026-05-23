@@ -1,0 +1,16 @@
+{
+  "name": "floating-island",
+  "version": "0.1.0",
+  "description": "Always-on-top Windows floating island with a local animation control API.",
+  "main": "src/main.js",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "start": "electron .",
+    "test": "node --test",
+    "check": "node --check src/main.js && node --check src/api-server.js && node --check src/island-state.js && node --check src/display-title.js"
+  },
+  "dependencies": {
+    "electron": "^38.5.1"
+  }
+}

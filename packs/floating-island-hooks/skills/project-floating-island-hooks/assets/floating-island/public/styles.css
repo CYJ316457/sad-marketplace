@@ -1,0 +1,307 @@
+:root {
+  --bg: rgba(15, 18, 22, 0.84);
+  --edge: rgba(255, 255, 255, 0.14);
+  --text: #f8fbf7;
+  --accent: #67d8a2;
+  --accent-2: #ffd166;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+  background: transparent;
+  font-family: "Segoe UI Variable", "Microsoft YaHei UI", sans-serif;
+}
+
+body {
+  display: grid;
+  place-items: center;
+  user-select: none;
+}
+
+.island {
+  width: 248px;
+  height: 44px;
+  padding: 4px;
+  color: var(--text);
+  -webkit-app-region: drag;
+}
+
+.shell {
+  position: relative;
+  display: grid;
+  grid-template-columns: 26px 1fr 18px;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  height: 100%;
+  padding: 6px 7px 6px 10px;
+  border: 1px solid var(--edge);
+  border-radius: 999px;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.12), transparent 38%),
+    linear-gradient(160deg, var(--bg), rgba(5, 7, 10, 0.92));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18);
+  overflow: hidden;
+}
+
+.shell::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--accent), transparent 78%), transparent);
+  opacity: 0;
+  transform: translateX(-70%);
+  pointer-events: none;
+}
+
+.animate .shell::after,
+.island[data-action="busy"] .shell::after {
+  animation: sweep 860ms ease-out;
+}
+
+.orb {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+}
+
+.ring,
+.core {
+  position: absolute;
+  border-radius: 50%;
+}
+
+.ring {
+  inset: 1px;
+  border: 2px solid color-mix(in srgb, var(--accent), transparent 36%);
+  box-shadow: 0 0 14px color-mix(in srgb, var(--accent), transparent 34%);
+}
+
+.core {
+  width: 12px;
+  height: 12px;
+  background: radial-gradient(circle at 36% 32%, #ffffff, var(--accent) 38%, #112018 72%);
+}
+
+.animate .ring {
+  animation: ringPulse 820ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.island[data-action="idle"] .core {
+  animation: idleBreath 5000ms ease-in-out infinite;
+}
+
+.island[data-action="busy"] .ring {
+  animation: busySpin 1200ms linear infinite;
+}
+
+.island[data-action="busy"] .core {
+  animation: busyBeat 900ms ease-in-out infinite;
+}
+
+.island[data-action="ask"] .shell {
+  animation: askShake 700ms ease-in-out infinite;
+}
+
+.island[data-action="ask"] .ring {
+  animation: askFlash 650ms ease-in-out infinite;
+}
+
+.island[data-action="ask"] .core {
+  animation: askPop 650ms ease-in-out infinite;
+}
+
+.copy {
+  min-width: 0;
+}
+
+.label {
+  overflow: hidden;
+  color: var(--text);
+  font-size: 11px;
+  font-weight: 650;
+  line-height: 1;
+  letter-spacing: 0.04em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.close {
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  color: rgba(255, 255, 255, 0.72);
+  background: rgba(255, 255, 255, 0.08);
+  cursor: pointer;
+  -webkit-app-region: no-drag;
+}
+
+.close::before,
+.close::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 8px;
+  height: 1.5px;
+  border-radius: 999px;
+  background: currentColor;
+  transform-origin: center;
+}
+
+.close::before {
+  transform: translate(-50%, -50%) rotate(45deg);
+}
+
+.close::after {
+  transform: translate(-50%, -50%) rotate(-45deg);
+}
+
+.close:hover {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.16);
+}
+
+.tone-neutral {
+  --accent: #42e66f;
+  --accent-2: #a6ff65;
+}
+
+.tone-busy {
+  --accent: #ffd24a;
+  --accent-2: #ff9f1c;
+}
+
+.tone-ask {
+  --accent: #ff3d52;
+  --accent-2: #ff8a65;
+}
+
+@keyframes sweep {
+  0% {
+    opacity: 0;
+    transform: translateX(-70%);
+  }
+
+  20% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0;
+    transform: translateX(70%);
+  }
+}
+
+@keyframes ringPulse {
+  0% {
+    transform: scale(0.72);
+    opacity: 0.4;
+  }
+
+  64% {
+    transform: scale(1.12);
+    opacity: 1;
+  }
+
+  100% {
+    transform: scale(1);
+    opacity: 0.78;
+  }
+}
+
+@keyframes idleBreath {
+  0%,
+  100% {
+    transform: scale(0.86);
+    opacity: 0.68;
+  }
+
+  50% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes busySpin {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes busyBeat {
+  0%,
+  100% {
+    transform: scale(0.9);
+  }
+
+  50% {
+    transform: scale(1.08);
+  }
+}
+
+@keyframes askShake {
+  0%,
+  100% {
+    transform: translateX(0);
+    border-color: color-mix(in srgb, var(--accent), white 18%);
+  }
+
+  20% {
+    transform: translateX(-3px);
+  }
+
+  40% {
+    transform: translateX(3px);
+  }
+
+  60% {
+    transform: translateX(-2px);
+  }
+
+  80% {
+    transform: translateX(2px);
+    border-color: color-mix(in srgb, var(--accent), transparent 8%);
+  }
+}
+
+@keyframes askFlash {
+  0%,
+  100% {
+    opacity: 0.52;
+  }
+
+  45% {
+    opacity: 1;
+  }
+}
+
+@keyframes askPop {
+  0%,
+  100% {
+    transform: scale(0.8);
+  }
+
+  50% {
+    transform: scale(1.25);
+  }
+}

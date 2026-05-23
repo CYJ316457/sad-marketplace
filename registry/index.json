@@ -27,6 +27,28 @@
       "contents": {
         "skills": ["writing-clearly", "release-checklist"]
       }
+    },
+    {
+      "name": "floating-island-hooks",
+      "version": "1.0.0",
+      "description": "Project-local Floating Island hooks for CodeBuddy, Claude Code, and Codex",
+      "author": {
+        "name": "Local Publisher"
+      },
+      "license": "MIT",
+      "tags": ["floating-island", "hooks", "status", "codebuddy", "claude", "codex"],
+      "source": "./packs/floating-island-hooks",
+      "platformSupport": {
+        "codex": true,
+        "claude": true,
+        "codebuddy": true
+      },
+      "install": {
+        "unit": "pack"
+      },
+      "contents": {
+        "skills": ["project-floating-island-hooks"]
+      }
     }
   ]
 }

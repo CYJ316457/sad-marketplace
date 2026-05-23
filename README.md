@@ -7,4 +7,4 @@ Shared skill marketplace for Codex, Claude Code, and CodeBuddy.
 - `npm install`
 - `npm test`
 - `npm run build`
-- `node dist/cli/index.js list --registry registry/index.json`
+- `node dist/src/cli/index.js list --registry registry/index.json`

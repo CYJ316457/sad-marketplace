@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import { Command } from "commander";
+import { pathToFileURL } from "node:url";
 import { installPack, listPacks, uninstallPack, updatePack } from "../core/api.js";
 
 export function buildCli(): Command {
@@ -67,6 +68,6 @@ export function buildCli(): Command {
   return program;
 }
 
-if (import.meta.url === `file://${process.argv[1]?.replace(/\\/g, "/")}`) {
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   buildCli().parse(process.argv);
 }

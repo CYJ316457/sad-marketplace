@@ -1,0 +1,3 @@
+display_name: CodeBuddy Floating Island Hooks
+short_description: Wire CodeBuddy status hooks to Floating Island.
+default_prompt: Deploy Floating Island if needed and set up CodeBuddy hooks in this project.

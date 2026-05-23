@@ -1,0 +1,28 @@
+{
+  "name": "floating-island-hooks",
+  "version": "1.0.0",
+  "description": "Project-local Floating Island hooks for CodeBuddy, Claude Code, and Codex",
+  "author": {
+    "name": "Local Publisher"
+  },
+  "license": "MIT",
+  "tags": ["floating-island", "hooks", "status", "codebuddy", "claude", "codex"],
+  "platformSupport": {
+    "codex": true,
+    "claude": true,
+    "codebuddy": true
+  },
+  "contents": {
+    "skills": [
+      {
+        "name": "project-floating-island-hooks",
+        "path": "skills/project-floating-island-hooks",
+        "kind": "shared"
+      }
+    ]
+  },
+  "codebuddy": {
+    "pluginName": "floating-island-hooks",
+    "category": "productivity"
+  }
+}

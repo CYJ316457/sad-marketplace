@@ -25,6 +25,53 @@ function skillContent(packDir: string, skillPath: string): string {
   return fs.readFileSync(path.join(packDir, skillPath, "SKILL.md"), "utf-8");
 }
 
+function listSkillFiles(packDir: string, skillPath: string): string[] {
+  const root = path.join(packDir, skillPath);
+  const files: string[] = [];
+
+  function visit(dir: string) {
+    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+      const fullPath = path.join(dir, entry.name);
+      if (entry.isDirectory()) {
+        if (entry.name === "node_modules" || entry.name === "__pycache__") continue;
+        visit(fullPath);
+      } else if (entry.isFile()) {
+        files.push(path.relative(root, fullPath));
+      }
+    }
+  }
+
+  visit(root);
+  return files;
+}
+
+function copySkillDirectory(options: {
+  packDir: string;
+  skillPath: string;
+  skillName: string;
+  destRoot: string;
+  platform: Platform;
+  managed: ManagedFileRecord[];
+}) {
+  const sourceRoot = path.join(options.packDir, options.skillPath);
+  const destSkillRoot = path.join(options.destRoot, options.skillName);
+  ensureDirectory(destSkillRoot);
+
+  for (const relativePath of listSkillFiles(options.packDir, options.skillPath)) {
+    const source = path.join(sourceRoot, relativePath);
+    const dest = path.join(destSkillRoot, relativePath);
+    const content = fs.readFileSync(source);
+    ensureDirectory(path.dirname(dest));
+    fs.writeFileSync(dest, content);
+    options.managed.push({
+      path: dest,
+      hash: sha256(content),
+      kind: "skill",
+      platform: options.platform,
+    });
+  }
+}
+
 function codebuddyMarketplaceJson(packName: string): string {
   return JSON.stringify(
     {
@@ -97,14 +144,13 @@ function buildManagedFiles(
     ensureDirectory(platformRoot);
     for (const skill of pack.contents.skills) {
       if (skill.kind === "platform" && platform === "codebuddy") continue;
-      const content = skillContent(packDir, skill.path);
-      const dest = path.join(platformRoot, skill.name, "SKILL.md");
-      writeTextFile(dest, content);
-      managed.push({
-        path: dest,
-        hash: sha256(content),
-        kind: "skill",
+      copySkillDirectory({
+        packDir,
+        skillPath: skill.path,
+        skillName: skill.name,
+        destRoot: platformRoot,
         platform,
+        managed,
       });
     }
   }
@@ -117,14 +163,13 @@ function buildManagedFiles(
   ensureDirectory(path.join(pluginDir, ".codebuddy-plugin"));
   writeTextFile(path.join(pluginDir, ".codebuddy-plugin", "plugin.json"), codebuddyPluginJson(pack));
   for (const skill of pack.contents.skills) {
-    const content = skillContent(packDir, skill.path);
-    const dest = path.join(pluginDir, "skills", skill.name, "SKILL.md");
-    writeTextFile(dest, content);
-    managed.push({
-      path: dest,
-      hash: sha256(content),
-      kind: "skill",
+    copySkillDirectory({
+      packDir,
+      skillPath: skill.path,
+      skillName: skill.name,
+      destRoot: path.join(pluginDir, "skills"),
       platform: "codebuddy",
+      managed,
     });
   }
   managed.push({
