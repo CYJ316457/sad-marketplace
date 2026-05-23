@@ -1,0 +1,162 @@
+import fs from "node:fs";
+import os from "node:os";
+import path from "node:path";
+import { afterEach, describe, expect, test } from "vitest";
+import {
+  installPack,
+  listPacks,
+  uninstallPack,
+  updatePack,
+} from "../src/core/api.js";
+
+function repoRoot(): string {
+  return "C:\\AI\\Codex\\Install\\sad-marketplace";
+}
+
+function registryPath(): string {
+  return path.join(repoRoot(), "registry", "index.json");
+}
+
+const tempDirs: string[] = [];
+
+function tempWorkspace(): string {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "sad-marketplace-"));
+  tempDirs.push(dir);
+  return dir;
+}
+
+afterEach(() => {
+  for (const dir of tempDirs.splice(0)) {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+describe("shared skill marketplace", () => {
+  test("lists packs from the registry", async () => {
+    const packs = await listPacks({ registryPath: registryPath() });
+    expect(packs).toHaveLength(1);
+    expect(packs[0]?.name).toBe("starter-pack");
+    expect(packs[0]?.contents.skills).toEqual(["writing-clearly", "release-checklist"]);
+  });
+
+  test("installs a pack globally for codex and claude", async () => {
+    const workspace = tempWorkspace();
+    process.env.SKILL_MARKETPLACE_HOME = path.join(workspace, "home");
+
+    const record = await installPack({
+      registryPath: registryPath(),
+      packName: "starter-pack",
+      scope: "global",
+      cwd: workspace,
+      platform: "all",
+    });
+
+    expect(record.platforms).toEqual(["codex", "claude", "codebuddy"]);
+    expect(
+      fs.existsSync(
+        path.join(workspace, "home", ".codex", "skills", "writing-clearly", "SKILL.md"),
+      ),
+    ).toBe(true);
+    expect(
+      fs.existsSync(
+        path.join(workspace, "home", ".claude", "skills", "release-checklist", "SKILL.md"),
+      ),
+    ).toBe(true);
+  });
+
+  test("installs a pack in project mode with codex shared skills and codebuddy plugin layout", async () => {
+    const workspace = tempWorkspace();
+
+    const record = await installPack({
+      registryPath: registryPath(),
+      packName: "starter-pack",
+      scope: "project",
+      cwd: workspace,
+      platform: "all",
+    });
+
+    expect(record.name).toBe("starter-pack");
+    expect(
+      fs.existsSync(path.join(workspace, ".agents", "skills", "writing-clearly", "SKILL.md")),
+    ).toBe(true);
+    expect(
+      fs.existsSync(
+        path.join(
+          workspace,
+          ".codebuddy",
+          "plugins",
+          "marketplaces",
+          "sad-marketplace",
+          ".codebuddy-plugin",
+          "marketplace.json",
+        ),
+      ),
+    ).toBe(true);
+    expect(
+      fs.existsSync(
+        path.join(
+          workspace,
+          ".codebuddy",
+          "plugins",
+          "marketplaces",
+          "sad-marketplace",
+          "plugins",
+          "starter-pack",
+          ".codebuddy-plugin",
+          "plugin.json",
+        ),
+      ),
+    ).toBe(true);
+  });
+
+  test("updates a pack by replacing only managed files", async () => {
+    const workspace = tempWorkspace();
+
+    await installPack({
+      registryPath: registryPath(),
+      packName: "starter-pack",
+      scope: "project",
+      cwd: workspace,
+      platform: "codex",
+    });
+
+    const updated = await updatePack({
+      registryPath: registryPath(),
+      packName: "starter-pack",
+      scope: "project",
+      cwd: workspace,
+      platform: "codex",
+    });
+
+    expect(updated.name).toBe("starter-pack");
+    expect(updated.managedFiles.length).toBeGreaterThan(0);
+  });
+
+  test("uninstalls a pack without removing unrelated files", async () => {
+    const workspace = tempWorkspace();
+    const unrelated = path.join(workspace, ".agents", "skills", "custom-skill", "SKILL.md");
+    fs.mkdirSync(path.dirname(unrelated), { recursive: true });
+    fs.writeFileSync(unrelated, "custom");
+
+    await installPack({
+      registryPath: registryPath(),
+      packName: "starter-pack",
+      scope: "project",
+      cwd: workspace,
+      platform: "all",
+    });
+
+    const result = await uninstallPack({
+      packName: "starter-pack",
+      scope: "project",
+      cwd: workspace,
+      platform: "all",
+    });
+
+    expect(result.removedPaths.length).toBeGreaterThan(0);
+    expect(fs.existsSync(unrelated)).toBe(true);
+    expect(
+      fs.existsSync(path.join(workspace, ".agents", "skills", "writing-clearly", "SKILL.md")),
+    ).toBe(false);
+  });
+});

@@ -1,0 +1,32 @@
+{
+  "marketplace": {
+    "name": "shared-skill-marketplace",
+    "description": "Shared skill marketplace for Codex, Claude Code, and CodeBuddy",
+    "source": "local-registry",
+    "version": "1"
+  },
+  "packs": [
+    {
+      "name": "starter-pack",
+      "version": "1.0.0",
+      "description": "Starter pack with two reusable workflow skills",
+      "author": {
+        "name": "Local Publisher"
+      },
+      "license": "MIT",
+      "tags": ["starter", "workflow"],
+      "source": "./packs/starter-pack",
+      "platformSupport": {
+        "codex": true,
+        "claude": true,
+        "codebuddy": true
+      },
+      "install": {
+        "unit": "pack"
+      },
+      "contents": {
+        "skills": ["writing-clearly", "release-checklist"]
+      }
+    }
+  ]
+}

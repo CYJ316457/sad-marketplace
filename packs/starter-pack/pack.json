@@ -1,0 +1,33 @@
+{
+  "name": "starter-pack",
+  "version": "1.0.0",
+  "description": "Starter pack with two reusable workflow skills",
+  "author": {
+    "name": "Local Publisher"
+  },
+  "license": "MIT",
+  "tags": ["starter", "workflow"],
+  "platformSupport": {
+    "codex": true,
+    "claude": true,
+    "codebuddy": true
+  },
+  "contents": {
+    "skills": [
+      {
+        "name": "writing-clearly",
+        "path": "skills/writing-clearly",
+        "kind": "shared"
+      },
+      {
+        "name": "release-checklist",
+        "path": "skills/release-checklist",
+        "kind": "shared"
+      }
+    ]
+  },
+  "codebuddy": {
+    "pluginName": "starter-pack",
+    "category": "productivity"
+  }
+}
