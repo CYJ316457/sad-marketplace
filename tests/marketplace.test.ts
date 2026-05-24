@@ -117,6 +117,15 @@ describe("shared skill marketplace", () => {
     ) as { name: string; commands?: string[] };
     expect(svn.name).toBe("svn-toolkit");
     expect(svn.commands).toContain("./commands/SVN-log.md");
+
+    const image = JSON.parse(
+      fs.readFileSync(
+        path.join(repoRoot(), "packs", "gpt-image-2-gen", ".codebuddy-plugin", "plugin.json"),
+        "utf-8",
+      ),
+    ) as { name: string; commands?: string[] };
+    expect(image.name).toBe("gpt-image-2-gen");
+    expect(image.commands).toContain("./commands/GPT-image-2-Gen.md");
   });
 
   test("each pack exposes a Claude plugin manifest", async () => {
@@ -151,6 +160,15 @@ describe("shared skill marketplace", () => {
     ) as { name: string; commands?: string[] };
     expect(svn.name).toBe("svn-toolkit");
     expect(svn.commands).toContain("./commands");
+
+    const image = JSON.parse(
+      fs.readFileSync(
+        path.join(repoRoot(), "packs", "gpt-image-2-gen", ".claude-plugin", "plugin.json"),
+        "utf-8",
+      ),
+    ) as { name: string; commands?: string[] };
+    expect(image.name).toBe("gpt-image-2-gen");
+    expect(image.commands).toContain("./commands");
   });
 
   test("lists packs from the registry", async () => {
@@ -180,6 +198,7 @@ describe("shared skill marketplace", () => {
     ]);
     expect(packs[3]?.name).toBe("gpt-image-2-gen");
     expect(packs[3]?.contents.skills).toEqual(["gpt-image-2-gen"]);
+    expect(packs[3]?.contents.commands).toEqual(["GPT-image-2-Gen"]);
   });
 
   test("installs a pack globally for codex and claude", async () => {
@@ -357,6 +376,33 @@ describe("shared skill marketplace", () => {
           "skills",
           "gpt-image-2-gen",
           ".gpt-image-2.env",
+        ),
+      ),
+    ).toBe(true);
+    expect(
+      fs.existsSync(
+        path.join(
+          workspace,
+          "home",
+          ".claude",
+          "commands",
+          "GPT-image-2-Gen.md",
+        ),
+      ),
+    ).toBe(true);
+    expect(
+      fs.existsSync(
+        path.join(
+          workspace,
+          "home",
+          ".codebuddy",
+          "plugins",
+          "marketplaces",
+          "sad-marketplace",
+          "plugins",
+          "gpt-image-2-gen",
+          "commands",
+          "GPT-image-2-Gen.md",
         ),
       ),
     ).toBe(true);

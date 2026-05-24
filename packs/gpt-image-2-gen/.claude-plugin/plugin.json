@@ -6,5 +6,8 @@
   },
   "skills": [
     "./skills/gpt-image-2-gen"
+  ],
+  "commands": [
+    "./commands"
   ]
 }

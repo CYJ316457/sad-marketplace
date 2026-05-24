@@ -61,6 +61,9 @@
       "license": "MIT",
       "skills": [
         "./packs/gpt-image-2-gen/skills/gpt-image-2-gen"
+      ],
+      "commands": [
+        "./packs/gpt-image-2-gen/commands/GPT-image-2-Gen.md"
       ]
     }
   ]

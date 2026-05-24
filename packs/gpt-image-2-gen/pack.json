@@ -19,6 +19,13 @@
         "path": "skills/gpt-image-2-gen",
         "kind": "shared"
       }
+    ],
+    "commands": [
+      {
+        "name": "GPT-image-2-Gen",
+        "path": "commands/GPT-image-2-Gen.md",
+        "kind": "shared"
+      }
     ]
   },
   "codebuddy": {

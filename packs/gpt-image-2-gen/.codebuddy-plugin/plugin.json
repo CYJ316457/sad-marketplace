@@ -5,5 +5,8 @@
   "license": "MIT",
   "skills": [
     "./skills/gpt-image-2-gen"
+  ],
+  "commands": [
+    "./commands/GPT-image-2-Gen.md"
   ]
 }

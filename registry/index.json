@@ -107,7 +107,8 @@
         "unit": "pack"
       },
       "contents": {
-        "skills": ["gpt-image-2-gen"]
+        "skills": ["gpt-image-2-gen"],
+        "commands": ["GPT-image-2-Gen"]
       }
     }
   ]
