@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
+import { spawnSync } from "node:child_process";
 import { afterEach, describe, expect, test } from "vitest";
 import {
   installPack,
@@ -23,6 +24,20 @@ function tempWorkspace(): string {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), "sad-marketplace-"));
   tempDirs.push(dir);
   return dir;
+}
+
+function pythonCommand(): { cmd: string; args: string[] } {
+  const python = spawnSync("python", ["--version"], { encoding: "utf-8" });
+  if (python.status === 0) {
+    return { cmd: "python", args: [] };
+  }
+
+  const py = spawnSync("py", ["-3", "--version"], { encoding: "utf-8" });
+  if (py.status === 0) {
+    return { cmd: "py", args: ["-3"] };
+  }
+
+  throw new Error("Python runtime not available for gpt-image-2 skill test");
 }
 
 afterEach(() => {
@@ -363,6 +378,44 @@ describe("shared skill marketplace", () => {
         ),
       ),
     ).toBe(true);
+  });
+
+  test("gpt-image-2 script creates project env demo on first run", async () => {
+    const workspace = tempWorkspace();
+    process.env.SKILL_MARKETPLACE_HOME = path.join(workspace, "home");
+
+    await installPack({
+      registryPath: registryPath(),
+      packName: "gpt-image-2-gen",
+      scope: "global",
+      cwd: workspace,
+      platform: "codex",
+    });
+
+    const project = path.join(workspace, "project");
+    fs.mkdirSync(project, { recursive: true });
+    const script = path.join(
+      workspace,
+      "home",
+      ".codex",
+      "skills",
+      "gpt-image-2-gen",
+      "scripts",
+      "generate_gpt_image_2.py",
+    );
+
+    const py = pythonCommand();
+    const result = spawnSync(
+      py.cmd,
+      [...py.args, script, "--project", project, "--prompt", "demo image"],
+      { encoding: "utf-8" },
+    );
+
+    expect(result.status).toBe(0);
+    expect(fs.existsSync(path.join(project, ".gpt-image-2.env"))).toBe(true);
+    expect(fs.readFileSync(path.join(project, ".gpt-image-2.env"), "utf-8")).toContain(
+      "OPENAI_API_KEY=sk-your-api-key-here",
+    );
   });
 
   test("installs a pack in project mode with codex shared skills and codebuddy plugin layout", async () => {

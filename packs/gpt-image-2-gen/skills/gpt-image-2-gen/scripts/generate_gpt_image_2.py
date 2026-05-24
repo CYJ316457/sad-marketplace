@@ -10,6 +10,10 @@ from urllib import error, request
 
 OUTPUT_DIR = Path(".generated-images") / "gpt-image-2"
 ENV_FILE = ".gpt-image-2.env"
+ENV_TEMPLATE = """OPENAI_BASE_URL=https://api.openai.com/v1
+OPENAI_API_KEY=sk-your-api-key-here
+OPENAI_IMAGE_MODEL=gpt-image-2
+"""
 
 
 def parse_args():
@@ -17,14 +21,16 @@ def parse_args():
     parser.add_argument("--project", required=True, help="Project root directory.")
     parser.add_argument("--prompt", required=True, help="Image generation prompt.")
     parser.add_argument("--size", default="1024x1024", help="Image size. Default: 1024x1024")
-    parser.add_argument("--output-dir", default=None, help="Optional override. Defaults to <project>/.generated-images/gpt-image-2")
     return parser.parse_args()
 
 
 def load_env_file(path: Path):
     values = {}
     if not path.exists():
-        raise SystemExit(f"Missing config file: {path}")
+        path.write_text(ENV_TEMPLATE, encoding="utf-8")
+        print(f"Created config template: {path}")
+        print("Edit the file with your base URL and API key, then rerun the command.")
+        return None
 
     for raw_line in path.read_text(encoding="utf-8").splitlines():
         line = raw_line.strip()
@@ -43,8 +49,6 @@ def require_config(config: dict, key: str) -> str:
 
 
 def output_path(project: Path, override: str | None) -> Path:
-    if override:
-      return Path(override).expanduser().resolve()
     return (project / OUTPUT_DIR).resolve()
 
 
@@ -130,13 +134,15 @@ def main():
         raise SystemExit(f"Project path does not exist: {project}")
 
     config = load_env_file(project / ENV_FILE)
+    if config is None:
+        return
     base_url = require_config(config, "OPENAI_BASE_URL")
     api_key = require_config(config, "OPENAI_API_KEY")
     model = config.get("OPENAI_IMAGE_MODEL", "gpt-image-2")
 
     image_bytes = stream_image_response(base_url, api_key, model, args.prompt, args.size)
 
-    out_dir = output_path(project, args.output_dir)
+    out_dir = output_path(project, None)
     out_dir.mkdir(parents=True, exist_ok=True)
     filename = f"gpt-image-2-{datetime.now().strftime('%Y%m%d-%H%M%S')}.png"
     target = out_dir / filename

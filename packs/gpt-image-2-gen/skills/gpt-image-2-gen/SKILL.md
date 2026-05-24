@@ -10,9 +10,9 @@ description: Use when the user wants to generate images with gpt-image-2, manual
 
 ## 配置
 
-安装后 skill 目录里会默认带一个 `.gpt-image-2.env` demo 文件。
+首次运行脚本时，如果项目根目录没有 `.gpt-image-2.env`，脚本会自动在项目根目录生成一份 demo 文件。
 
-用户需要直接编辑这个文件，设置：
+用户需要直接编辑项目根目录里的这个文件，设置：
 - `OPENAI_BASE_URL`
 - `OPENAI_API_KEY`
 
@@ -22,7 +22,7 @@ description: Use when the user wants to generate images with gpt-image-2, manual
 ## 工作流
 
 1. 先确认当前目录是目标项目根目录。
-2. 检查项目内是否存在 `.gpt-image-2.env`；如果没有，就参考 skill 自带 demo 新建一个。
+2. 检查项目内是否存在 `.gpt-image-2.env`；如果没有，先运行脚本让它自动生成 demo。
 3. 解析用户的生图需求，必要时先帮用户收敛提示词。
 4. 用 `python scripts/generate_gpt_image_2.py --project <project> --prompt "<prompt>"` 发起生成。
 5. 输出最终保存路径。
