@@ -125,17 +125,21 @@ def load_json(path):
 def deploy_island(destination, dry_run=False):
     if not ASSET_ISLAND.exists():
         raise SystemExit(f"Missing bundled Floating Island asset: {ASSET_ISLAND}")
-    if destination.exists() and (destination / "scripts" / "islandctl.js").exists():
-        return
-    if destination.exists() and any(destination.iterdir()):
+    managed_markers = [
+        destination / "scripts" / "islandctl.js",
+        destination / "src" / "main.js",
+        destination / "public" / "index.html",
+    ]
+    managed_destination = destination.exists() and any(marker.exists() for marker in managed_markers)
+    if destination.exists() and any(destination.iterdir()) and not managed_destination:
         raise SystemExit(f"Destination exists and is not an empty Floating Island directory: {destination}")
     if dry_run:
         return
 
     destination.parent.mkdir(parents=True, exist_ok=True)
-    if destination.exists():
+    if destination.exists() and not managed_destination:
         destination.rmdir()
-    shutil.copytree(ASSET_ISLAND, destination)
+    shutil.copytree(ASSET_ISLAND, destination, dirs_exist_ok=True)
 
 
 def extract_runtime(destination, dry_run=False):
@@ -187,11 +191,16 @@ def write_launcher_files(destination, port, dry_run=False):
         "@echo off\r\n"
         "setlocal\r\n"
         f"set FLOATING_ISLAND_PORT={port}\r\n"
-        f"start \"Floating Island\" /b \"{runtime_exe}\" \"{main_js}\"\r\n"
+        "set FLOATING_ISLAND_DEFAULT_TITLE=CodeBuddy\r\n"
+        "powershell -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -Command "
+        f"\"$env:FLOATING_ISLAND_PORT='{port}'; $env:FLOATING_ISLAND_DEFAULT_TITLE='CodeBuddy'; "
+        f"Start-Process -FilePath '{runtime_exe}' -ArgumentList @('{main_js}') -WindowStyle Hidden\""
+        "\r\n"
         "exit /b 0\r\n"
     )
     ps1 = (
         f"$env:FLOATING_ISLAND_PORT='{port}'\n"
+        "$env:FLOATING_ISLAND_DEFAULT_TITLE='CodeBuddy'\n"
         f"Start-Process -FilePath '{runtime_exe}' -ArgumentList @('{main_js}') -WindowStyle Hidden\n"
     )
     (destination / "start-floating-island.cmd").write_text(cmd, encoding="utf-8")
@@ -226,11 +235,12 @@ def settings_path_for(project, platform, codebuddy_settings):
 
 
 def hook_command_path(path):
-    return str(path)
+    script_path = Path(path).with_name("islandctl.js")
+    return f'node "{script_path}"'
 
 
 def build_command(hook_cmd, state, title):
-    return f'cmd.exe /d /s /c call "{hook_cmd}" {quote_cmd_arg(state)} {quote_cmd_arg(title)}'
+    return f'{hook_cmd} {quote_cmd_arg(state)} {quote_cmd_arg(title)}'
 
 
 def quote_cmd_arg(value):

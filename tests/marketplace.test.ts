@@ -333,6 +333,82 @@ describe("shared skill marketplace", () => {
     expect(installer).not.toContain("npm start");
   });
 
+  test("floating island installer emits shell-safe hook commands", async () => {
+    const workspace = tempWorkspace();
+    process.env.SKILL_MARKETPLACE_HOME = path.join(workspace, "home");
+
+    await installPack({
+      registryPath: registryPath(),
+      packName: "floating-island-hooks",
+      scope: "global",
+      cwd: workspace,
+      platform: "codex",
+    });
+
+    const project = path.join(workspace, "project");
+    fs.mkdirSync(project, { recursive: true });
+    const script = path.join(
+      workspace,
+      "home",
+      ".codex",
+      "skills",
+      "project-floating-island-hooks",
+      "scripts",
+      "install_codebuddy_hooks.py",
+    );
+
+    const py = pythonCommand();
+    const result = spawnSync(
+      py.cmd,
+      [...py.args, script, "--project", project, "--platform", "codebuddy", "--dry-run"],
+      { encoding: "utf-8" },
+    );
+
+    expect(result.status).toBe(0);
+    expect(result.stdout).toContain("node ");
+    expect(result.stdout).toContain("islandctl.js");
+    expect(result.stdout).not.toContain("cmd.exe /d /s /c call");
+  });
+
+  test("floating island start script sets a default idle title", async () => {
+    const workspace = tempWorkspace();
+    process.env.SKILL_MARKETPLACE_HOME = path.join(workspace, "home");
+
+    await installPack({
+      registryPath: registryPath(),
+      packName: "floating-island-hooks",
+      scope: "global",
+      cwd: workspace,
+      platform: "codex",
+    });
+
+    const project = path.join(workspace, "project");
+    fs.mkdirSync(project, { recursive: true });
+    const script = path.join(
+      workspace,
+      "home",
+      ".codex",
+      "skills",
+      "project-floating-island-hooks",
+      "scripts",
+      "install_codebuddy_hooks.py",
+    );
+
+    const py = pythonCommand();
+    const installResult = spawnSync(
+      py.cmd,
+      [...py.args, script, "--project", project, "--platform", "codebuddy"],
+      { encoding: "utf-8" },
+    );
+
+    expect(installResult.status).toBe(0);
+    const startScript = fs.readFileSync(
+      path.join(project, ".codebuddy", "floating-island", "start-floating-island.cmd"),
+      "utf-8",
+    );
+    expect(startScript).toContain("FLOATING_ISLAND_DEFAULT_TITLE=CodeBuddy");
+  });
+
   test("floating island skill docs do not hardcode machine-local skill paths", async () => {
     const skillDoc = fs.readFileSync(
       path.join(

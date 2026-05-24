@@ -6,7 +6,8 @@ import { createApiServer } from "./api-server.js";
 import { createIslandState } from "./island-state.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const island = createIslandState();
+const defaultTitle = process.env.FLOATING_ISLAND_DEFAULT_TITLE?.trim() || "Floating Island";
+const island = createIslandState({ title: defaultTitle });
 const api = createApiServer({ island });
 
 let mainWindow;
