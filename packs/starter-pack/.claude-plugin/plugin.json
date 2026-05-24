@@ -1,0 +1,11 @@
+{
+  "name": "starter-pack",
+  "description": "Starter pack with two reusable workflow skills",
+  "author": {
+    "name": "Local Publisher"
+  },
+  "skills": [
+    "./skills/writing-clearly",
+    "./skills/release-checklist"
+  ]
+}

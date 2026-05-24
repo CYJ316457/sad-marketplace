@@ -1,0 +1,10 @@
+{
+  "name": "floating-island-hooks",
+  "description": "Project-local Floating Island hooks for CodeBuddy, Claude Code, and Codex",
+  "author": {
+    "name": "Local Publisher"
+  },
+  "skills": [
+    "./skills/project-floating-island-hooks"
+  ]
+}

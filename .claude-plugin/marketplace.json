@@ -1,0 +1,28 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "sad-marketplace",
+  "description": "Shared skill marketplace for Codex, Claude Code, and CodeBuddy",
+  "owner": {
+    "name": "Local Publisher"
+  },
+  "plugins": [
+    {
+      "name": "starter-pack",
+      "description": "Starter pack with two reusable workflow skills",
+      "author": {
+        "name": "Local Publisher"
+      },
+      "category": "productivity",
+      "source": "./packs/starter-pack"
+    },
+    {
+      "name": "floating-island-hooks",
+      "description": "Project-local Floating Island hooks for CodeBuddy, Claude Code, and Codex",
+      "author": {
+        "name": "Local Publisher"
+      },
+      "category": "productivity",
+      "source": "./packs/floating-island-hooks"
+    }
+  ]
+}
