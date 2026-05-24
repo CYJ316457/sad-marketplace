@@ -87,6 +87,28 @@
           "SVN-cleanup"
         ]
       }
+    },
+    {
+      "name": "gpt-image-2-gen",
+      "version": "1.0.0",
+      "description": "使用 gpt-image-2 在项目内固定目录生成图片，需手动配置 base_url 和 api_key",
+      "author": {
+        "name": "Local Publisher"
+      },
+      "license": "MIT",
+      "tags": ["image", "gpt-image-2", "openai", "generation", "chinese"],
+      "source": "./packs/gpt-image-2-gen",
+      "platformSupport": {
+        "codex": true,
+        "claude": true,
+        "codebuddy": true
+      },
+      "install": {
+        "unit": "pack"
+      },
+      "contents": {
+        "skills": ["gpt-image-2-gen"]
+      }
     }
   ]
 }

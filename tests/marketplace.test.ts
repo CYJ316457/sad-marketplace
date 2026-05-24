@@ -47,6 +47,7 @@ describe("shared skill marketplace", () => {
       "starter-pack",
       "floating-island-hooks",
       "svn-toolkit",
+      "gpt-image-2-gen",
     ]);
   });
 
@@ -65,6 +66,7 @@ describe("shared skill marketplace", () => {
       "starter-pack",
       "floating-island-hooks",
       "svn-toolkit",
+      "gpt-image-2-gen",
     ]);
   });
 
@@ -138,7 +140,7 @@ describe("shared skill marketplace", () => {
 
   test("lists packs from the registry", async () => {
     const packs = await listPacks({ registryPath: registryPath() });
-    expect(packs).toHaveLength(3);
+    expect(packs).toHaveLength(4);
     expect(packs[0]?.name).toBe("starter-pack");
     expect(packs[0]?.contents.skills).toEqual(["writing-clearly", "release-checklist"]);
     expect(packs[1]?.name).toBe("floating-island-hooks");
@@ -161,6 +163,8 @@ describe("shared skill marketplace", () => {
       "SVN-switch",
       "SVN-cleanup",
     ]);
+    expect(packs[3]?.name).toBe("gpt-image-2-gen");
+    expect(packs[3]?.contents.skills).toEqual(["gpt-image-2-gen"]);
   });
 
   test("installs a pack globally for codex and claude", async () => {
@@ -298,6 +302,65 @@ describe("shared skill marketplace", () => {
           "svn-toolkit",
           "commands",
           "SVN-log.md",
+        ),
+      ),
+    ).toBe(true);
+  });
+
+  test("installs gpt-image-2 generator skill assets", async () => {
+    const workspace = tempWorkspace();
+    process.env.SKILL_MARKETPLACE_HOME = path.join(workspace, "home");
+
+    const record = await installPack({
+      registryPath: registryPath(),
+      packName: "gpt-image-2-gen",
+      scope: "global",
+      cwd: workspace,
+      platform: "all",
+    });
+
+    expect(record.platforms).toEqual(["codex", "claude", "codebuddy"]);
+    expect(
+      fs.existsSync(
+        path.join(
+          workspace,
+          "home",
+          ".codex",
+          "skills",
+          "gpt-image-2-gen",
+          "scripts",
+          "generate_gpt_image_2.py",
+        ),
+      ),
+    ).toBe(true);
+    expect(
+      fs.existsSync(
+        path.join(
+          workspace,
+          "home",
+          ".claude",
+          "skills",
+          "gpt-image-2-gen",
+          "templates",
+          ".gpt-image-2.env.example",
+        ),
+      ),
+    ).toBe(true);
+    expect(
+      fs.existsSync(
+        path.join(
+          workspace,
+          "home",
+          ".codebuddy",
+          "plugins",
+          "marketplaces",
+          "sad-marketplace",
+          "plugins",
+          "gpt-image-2-gen",
+          "skills",
+          "gpt-image-2-gen",
+          "scripts",
+          "generate_gpt_image_2.py",
         ),
       ),
     ).toBe(true);

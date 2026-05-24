@@ -1,0 +1,28 @@
+{
+  "name": "gpt-image-2-gen",
+  "version": "1.0.0",
+  "description": "使用 gpt-image-2 在项目内固定目录生成图片，需手动配置 base_url 和 api_key",
+  "author": {
+    "name": "Local Publisher"
+  },
+  "license": "MIT",
+  "tags": ["image", "gpt-image-2", "openai", "generation", "chinese"],
+  "platformSupport": {
+    "codex": true,
+    "claude": true,
+    "codebuddy": true
+  },
+  "contents": {
+    "skills": [
+      {
+        "name": "gpt-image-2-gen",
+        "path": "skills/gpt-image-2-gen",
+        "kind": "shared"
+      }
+    ]
+  },
+  "codebuddy": {
+    "pluginName": "gpt-image-2-gen",
+    "category": "productivity"
+  }
+}

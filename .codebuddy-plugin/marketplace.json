@@ -48,6 +48,20 @@
       "skills": [
         "./packs/svn-toolkit/skills/svn-workflow"
       ]
+    },
+    {
+      "name": "gpt-image-2-gen",
+      "description": "使用 gpt-image-2 在项目内固定目录生成图片，需手动配置 base_url 和 api_key",
+      "version": "1.0.0",
+      "source": "./packs/gpt-image-2-gen",
+      "category": "productivity",
+      "author": {
+        "name": "Local Publisher"
+      },
+      "license": "MIT",
+      "skills": [
+        "./packs/gpt-image-2-gen/skills/gpt-image-2-gen"
+      ]
     }
   ]
 }
