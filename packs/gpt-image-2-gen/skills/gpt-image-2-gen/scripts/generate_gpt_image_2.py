@@ -10,6 +10,19 @@ from urllib import error, request
 
 OUTPUT_DIR = Path(".generated-images") / "gpt-image-2"
 ENV_FILE = ".gpt-image-2.env"
+SUPPORTED_SIZES = {"1024x1024", "1536x1024", "1024x1536"}
+ASPECT_RATIO_TO_SIZE = {
+    "1:1": "1024x1024",
+    "square": "1024x1024",
+    "3:2": "1536x1024",
+    "4:3": "1536x1024",
+    "16:9": "1536x1024",
+    "2:3": "1024x1536",
+    "3:4": "1024x1536",
+    "9:16": "1024x1536",
+    "portrait": "1024x1536",
+    "landscape": "1536x1024",
+}
 ENV_TEMPLATE = """OPENAI_BASE_URL=https://api.openai.com/v1
 OPENAI_API_KEY=sk-your-api-key-here
 OPENAI_IMAGE_MODEL=gpt-image-2
@@ -20,7 +33,14 @@ def parse_args():
     parser = argparse.ArgumentParser(description="Generate images with gpt-image-2 into a project-local folder.")
     parser.add_argument("--project", required=True, help="Project root directory.")
     parser.add_argument("--prompt", required=True, help="Image generation prompt.")
-    parser.add_argument("--size", default="1024x1024", help="Image size. Default: 1024x1024")
+    parser.add_argument(
+        "--size",
+        help="Image resolution. Supported: 1024x1024, 1536x1024, 1024x1536. Overrides --aspect-ratio.",
+    )
+    parser.add_argument(
+        "--aspect-ratio",
+        help="Convenience ratio. Examples: 1:1, 16:9, 9:16, 4:3, 3:4, landscape, portrait.",
+    )
     return parser.parse_args()
 
 
@@ -46,6 +66,28 @@ def require_config(config: dict, key: str) -> str:
     if not value:
         raise SystemExit(f"Missing required config: {key}")
     return value
+
+
+def normalize_size(value: str) -> str:
+    size = value.strip().lower()
+    if size not in SUPPORTED_SIZES:
+        supported = ", ".join(sorted(SUPPORTED_SIZES))
+        raise SystemExit(f"Unsupported size: {value}. Supported sizes: {supported}")
+    return size
+
+
+def resolve_size(size: str | None, aspect_ratio: str | None) -> str:
+    if size:
+        return normalize_size(size)
+    if not aspect_ratio:
+        return "1024x1024"
+
+    ratio = aspect_ratio.strip().lower()
+    mapped = ASPECT_RATIO_TO_SIZE.get(ratio)
+    if not mapped:
+        supported = ", ".join(sorted(ASPECT_RATIO_TO_SIZE))
+        raise SystemExit(f"Unsupported aspect ratio: {aspect_ratio}. Supported ratios: {supported}")
+    return mapped
 
 
 def output_path(project: Path, override: str | None) -> Path:
@@ -139,8 +181,9 @@ def main():
     base_url = require_config(config, "OPENAI_BASE_URL")
     api_key = require_config(config, "OPENAI_API_KEY")
     model = config.get("OPENAI_IMAGE_MODEL", "gpt-image-2")
+    size = resolve_size(args.size, args.aspect_ratio)
 
-    image_bytes = stream_image_response(base_url, api_key, model, args.prompt, args.size)
+    image_bytes = stream_image_response(base_url, api_key, model, args.prompt, size)
 
     out_dir = output_path(project, None)
     out_dir.mkdir(parents=True, exist_ok=True)

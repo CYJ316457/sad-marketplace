@@ -464,6 +464,76 @@ describe("shared skill marketplace", () => {
     );
   });
 
+  test("gpt-image-2 script maps aspect ratio to a supported size", async () => {
+    const workspace = tempWorkspace();
+    process.env.SKILL_MARKETPLACE_HOME = path.join(workspace, "home");
+
+    await installPack({
+      registryPath: registryPath(),
+      packName: "gpt-image-2-gen",
+      scope: "global",
+      cwd: workspace,
+      platform: "codex",
+    });
+
+    const script = path.join(
+      workspace,
+      "home",
+      ".codex",
+      "skills",
+      "gpt-image-2-gen",
+      "scripts",
+      "generate_gpt_image_2.py",
+    );
+    const probe = path.join(workspace, "probe_gpt_image_2.py");
+    fs.writeFileSync(
+      probe,
+      [
+        "import importlib.util",
+        "import json",
+        `spec = importlib.util.spec_from_file_location('gpt_image_2_gen', r'''${script}''')`,
+        "mod = importlib.util.module_from_spec(spec)",
+        "spec.loader.exec_module(mod)",
+        "print(json.dumps({",
+        "  'ratio_16_9': mod.resolve_size(None, '16:9'),",
+        "  'ratio_9_16': mod.resolve_size(None, '9:16'),",
+        "  'size_wins': mod.resolve_size('1024x1536', '16:9')",
+        "}))",
+      ].join("\n"),
+      "utf-8",
+    );
+
+    const py = pythonCommand();
+    const result = spawnSync(
+      py.cmd,
+      [...py.args, probe],
+      { encoding: "utf-8" },
+    );
+
+    expect(result.status).toBe(0);
+    expect(JSON.parse(result.stdout.trim())).toEqual({
+      ratio_16_9: "1536x1024",
+      ratio_9_16: "1024x1536",
+      size_wins: "1024x1536",
+    });
+  });
+
+  test("gpt-image-2 docs expose custom size and aspect ratio options", async () => {
+    const commandDoc = fs.readFileSync(
+      path.join(repoRoot(), "packs", "gpt-image-2-gen", "commands", "GPT-image-2-Gen.md"),
+      "utf-8",
+    );
+    const skillDoc = fs.readFileSync(
+      path.join(repoRoot(), "packs", "gpt-image-2-gen", "skills", "gpt-image-2-gen", "SKILL.md"),
+      "utf-8",
+    );
+
+    expect(commandDoc).toContain("--size");
+    expect(commandDoc).toContain("--aspect-ratio");
+    expect(skillDoc).toContain("--size");
+    expect(skillDoc).toContain("--aspect-ratio");
+  });
+
   test("installs a pack in project mode with codex shared skills and codebuddy plugin layout", async () => {
     const workspace = tempWorkspace();
 

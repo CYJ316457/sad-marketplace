@@ -3,3 +3,4 @@ dist/
 .skill-marketplace/
 .global-home/
 *.log
+__pycache__/
