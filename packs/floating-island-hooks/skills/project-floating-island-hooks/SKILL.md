@@ -38,7 +38,7 @@ Codex support is intentionally conservative: install `UserPromptSubmit -> busy` 
 Run from any directory:
 
 ```powershell
-python C:\Users\C\.agents\skills\project-floating-island-hooks\scripts\install_codebuddy_hooks.py --project C:\path\to\project
+python scripts/install_codebuddy_hooks.py --project C:\path\to\project
 ```
 
 Useful flags:
@@ -55,9 +55,11 @@ Useful flags:
 --dry-run
 ```
 
+Run that command from the installed skill directory. For example, after installing into Codex global skills, run it from `<codex-home>/skills/project-floating-island-hooks/`.
+
 The installer preserves unrelated hooks, replaces older Floating Island hooks, and appends the current hooks. It creates the needed platform config directories.
 
-Bundled Floating Island source is stored in `assets/floating-island`. Do not store `node_modules` in the skill. The installer first looks for an existing dependency source such as a sibling `FloatingIsland` directory or `C:\AI\Codex\Install\FloatingIsland`; if none exists, run `npm install` in the deployed app directory.
+Bundled Floating Island source is stored in `assets/floating-island`. Do not store `node_modules` in the skill. The installer first looks for an existing dependency source such as a sibling `FloatingIsland` directory or `~/FloatingIsland`; if none exists, run `npm install` in the deployed app directory.
 
 Platform outputs:
 

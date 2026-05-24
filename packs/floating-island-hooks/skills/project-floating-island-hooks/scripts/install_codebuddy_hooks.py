@@ -202,7 +202,6 @@ def find_dependency_source(project, configured_source=None):
     candidates.extend([
         project.parent / "FloatingIsland",
         Path.home() / "FloatingIsland",
-        Path("C:/AI/Codex/Install/FloatingIsland"),
     ])
 
     seen = set()

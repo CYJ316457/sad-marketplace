@@ -211,6 +211,23 @@ describe("shared skill marketplace", () => {
     ).toBe(true);
   });
 
+  test("floating island skill docs do not hardcode machine-local skill paths", async () => {
+    const skillDoc = fs.readFileSync(
+      path.join(
+        repoRoot(),
+        "packs",
+        "floating-island-hooks",
+        "skills",
+        "project-floating-island-hooks",
+        "SKILL.md",
+      ),
+      "utf-8",
+    );
+
+    expect(skillDoc).not.toContain("C:\\Users\\C\\.agents\\skills\\project-floating-island-hooks");
+    expect(skillDoc).not.toContain("C:\\AI\\Codex\\Install\\FloatingIsland");
+  });
+
   test("installs a pack in project mode with codex shared skills and codebuddy plugin layout", async () => {
     const workspace = tempWorkspace();
 
