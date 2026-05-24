@@ -7,9 +7,19 @@
     "./skills/svn-workflow"
   ],
   "commands": [
+    "./commands/SVN-info.md",
     "./commands/SVN-log.md",
     "./commands/SVN-status.md",
+    "./commands/SVN-diff.md",
     "./commands/SVN-update.md",
-    "./commands/SVN-commit.md"
+    "./commands/SVN-add.md",
+    "./commands/SVN-delete.md",
+    "./commands/SVN-revert.md",
+    "./commands/SVN-commit.md",
+    "./commands/SVN-resolve.md",
+    "./commands/SVN-blame.md",
+    "./commands/SVN-list.md",
+    "./commands/SVN-switch.md",
+    "./commands/SVN-cleanup.md"
   ]
 }

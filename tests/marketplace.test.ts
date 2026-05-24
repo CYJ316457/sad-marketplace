@@ -146,10 +146,20 @@ describe("shared skill marketplace", () => {
     expect(packs[2]?.name).toBe("svn-toolkit");
     expect(packs[2]?.contents.skills).toEqual(["svn-workflow"]);
     expect(packs[2]?.contents.commands).toEqual([
+      "SVN-info",
       "SVN-log",
       "SVN-status",
+      "SVN-diff",
       "SVN-update",
+      "SVN-add",
+      "SVN-delete",
+      "SVN-revert",
       "SVN-commit",
+      "SVN-resolve",
+      "SVN-blame",
+      "SVN-list",
+      "SVN-switch",
+      "SVN-cleanup",
     ]);
   });
 

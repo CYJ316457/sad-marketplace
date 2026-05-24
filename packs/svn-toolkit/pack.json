@@ -22,6 +22,11 @@
     ],
     "commands": [
       {
+        "name": "SVN-info",
+        "path": "commands/SVN-info.md",
+        "kind": "shared"
+      },
+      {
         "name": "SVN-log",
         "path": "commands/SVN-log.md",
         "kind": "shared"
@@ -32,13 +37,58 @@
         "kind": "shared"
       },
       {
+        "name": "SVN-diff",
+        "path": "commands/SVN-diff.md",
+        "kind": "shared"
+      },
+      {
         "name": "SVN-update",
         "path": "commands/SVN-update.md",
         "kind": "shared"
       },
       {
+        "name": "SVN-add",
+        "path": "commands/SVN-add.md",
+        "kind": "shared"
+      },
+      {
+        "name": "SVN-delete",
+        "path": "commands/SVN-delete.md",
+        "kind": "shared"
+      },
+      {
+        "name": "SVN-revert",
+        "path": "commands/SVN-revert.md",
+        "kind": "shared"
+      },
+      {
         "name": "SVN-commit",
         "path": "commands/SVN-commit.md",
+        "kind": "shared"
+      },
+      {
+        "name": "SVN-resolve",
+        "path": "commands/SVN-resolve.md",
+        "kind": "shared"
+      },
+      {
+        "name": "SVN-blame",
+        "path": "commands/SVN-blame.md",
+        "kind": "shared"
+      },
+      {
+        "name": "SVN-list",
+        "path": "commands/SVN-list.md",
+        "kind": "shared"
+      },
+      {
+        "name": "SVN-switch",
+        "path": "commands/SVN-switch.md",
+        "kind": "shared"
+      },
+      {
+        "name": "SVN-cleanup",
+        "path": "commands/SVN-cleanup.md",
         "kind": "shared"
       }
     ]

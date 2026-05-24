@@ -70,7 +70,22 @@
       },
       "contents": {
         "skills": ["svn-workflow"],
-        "commands": ["SVN-log", "SVN-status", "SVN-update", "SVN-commit"]
+        "commands": [
+          "SVN-info",
+          "SVN-log",
+          "SVN-status",
+          "SVN-diff",
+          "SVN-update",
+          "SVN-add",
+          "SVN-delete",
+          "SVN-revert",
+          "SVN-commit",
+          "SVN-resolve",
+          "SVN-blame",
+          "SVN-list",
+          "SVN-switch",
+          "SVN-cleanup"
+        ]
       }
     }
   ]
