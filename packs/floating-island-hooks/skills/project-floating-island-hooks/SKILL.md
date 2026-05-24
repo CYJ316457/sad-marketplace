@@ -11,11 +11,21 @@ Create or update a project-local Floating Island app and install CodeBuddy, Clau
 
 1. Confirm the target project root and platform: `codebuddy`, `claude`, `codex`, or `all`.
 2. Use `scripts/install_codebuddy_hooks.py --project <project> --platform <platform>`. With no platform flag it preserves the old CodeBuddy-only default.
-3. It deploys a bundled Floating Island into a project-local directory, creates launcher and hook wrapper scripts, assigns a stable project-local port, and merges hooks.
-4. The installer tries to copy dependencies from an existing local Floating Island before requiring a network install.
+3. It deploys bundled Floating Island app files plus a prebuilt Windows x64 runtime into a project-local directory.
+4. The installer creates launcher and hook wrapper scripts, assigns a stable project-local port, and merges hooks.
 5. Start the island with the generated `start-floating-island.cmd`.
 6. Hooks call the generated `scripts/island-hook.cmd` wrapper so the same config works from Git Bash, cmd, and PowerShell-backed launchers.
 7. Verify manually with `scripts\island-hook.cmd busy <Title>`, then restart the target assistant so it reloads settings.
+
+## Delivery Model
+
+This pack now ships a prebuilt Windows x64 runtime.
+这是预打包分发，不再依赖本地 npm 安装 Electron。
+
+- No project-local `npm install`
+- No local Electron build step
+- Installer expands the bundled runtime into the project island directory
+- Start script launches the bundled `electron.exe` directly
 
 ## Event Mapping
 
@@ -50,8 +60,6 @@ Useful flags:
 --port 17321                    # override stable project-local API port
 --title CodeBuddy
 --no-deploy-island              # only wire hooks to an existing island
---dependency-source C:\path\to\FloatingIsland
---no-copy-dependencies          # skip local node_modules/package-lock reuse
 --dry-run
 ```
 
@@ -59,7 +67,7 @@ Run that command from the installed skill directory. For example, after installi
 
 The installer preserves unrelated hooks, replaces older Floating Island hooks, and appends the current hooks. It creates the needed platform config directories.
 
-Bundled Floating Island source is stored in `assets/floating-island`. Do not store `node_modules` in the skill. The installer first looks for an existing dependency source such as a sibling `FloatingIsland` directory or `~/FloatingIsland`; if none exists, run `npm install` in the deployed app directory.
+Bundled Floating Island app source is stored in `assets/floating-island`. Bundled prebuilt runtime parts are stored in `assets/floating-island-runtime-win32-x64`.
 
 Platform outputs:
 
@@ -119,13 +127,12 @@ If editing manually, use this structure and prefer the generated wrapper command
 
 After installing:
 
-1. If the deployed app has no `node_modules/electron`, run `npm install` or rerun the installer with `--dependency-source C:\path\to\FloatingIsland`.
-2. Run `start-floating-island.cmd` in the generated island directory if the app is not listening.
-3. Run `scripts\island-hook.cmd busy CodeBuddy` to confirm the island changes.
-4. Restart CodeBuddy, Claude Code, or Codex/open a new session.
-5. Submit a prompt and expect `busy`.
-6. Trigger a permission/idle notification and expect `ask`.
-7. Let the response finish and expect `idle`.
+1. Run `start-floating-island.cmd` in the generated island directory.
+2. Run `scripts\island-hook.cmd busy CodeBuddy` to confirm the island changes.
+3. Restart CodeBuddy, Claude Code, or Codex/open a new session.
+4. Submit a prompt and expect `busy`.
+5. Trigger a permission/idle notification and expect `ask`.
+6. Let the response finish and expect `idle`.
 
 For Codex, also verify `[features].hooks = true` in `C:\Users\C\.codex\config.toml` and approve project hooks with `/hooks` when prompted.
 

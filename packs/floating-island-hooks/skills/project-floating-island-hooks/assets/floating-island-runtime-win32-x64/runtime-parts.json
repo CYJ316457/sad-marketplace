@@ -1,0 +1,9 @@
+{
+  "platform": "win32-x64",
+  "archive": "runtime.zip",
+  "parts": [
+    "runtime.zip.part001",
+    "runtime.zip.part002"
+  ],
+  "bytes": 135840106
+}

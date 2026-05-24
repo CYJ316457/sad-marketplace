@@ -2,6 +2,7 @@
 import argparse
 import json
 import shutil
+import zipfile
 import zlib
 from pathlib import Path
 
@@ -10,7 +11,10 @@ DEFAULT_PORT_BASE = 17321
 DEFAULT_PORT_SPAN = 1000
 SKILL_ROOT = Path(__file__).resolve().parents[1]
 ASSET_ISLAND = SKILL_ROOT / "assets" / "floating-island"
-DEPENDENCY_MARKER = Path("node_modules") / "electron"
+ASSET_RUNTIME = SKILL_ROOT / "assets" / "floating-island-runtime-win32-x64"
+RUNTIME_MANIFEST = ASSET_RUNTIME / "runtime-parts.json"
+RUNTIME_DEST_DIR = "runtime-win32-x64"
+RUNTIME_EXE = Path(RUNTIME_DEST_DIR) / "electron.exe"
 PLATFORM_CHOICES = ("codebuddy", "claude", "codex", "all")
 PLATFORM_DIRS = {
     "codebuddy": ".codebuddy",
@@ -29,14 +33,12 @@ def main():
     parser.add_argument("--title", default=None, help="Default visible title for idle/busy states.")
     parser.add_argument("--deploy-island", action="store_true", help="Deprecated no-op. Deployment is enabled by default.")
     parser.add_argument("--no-deploy-island", action="store_true", help="Do not copy bundled Floating Island source.")
-    parser.add_argument("--dependency-source", default=None, help="Existing Floating Island app to copy node_modules/package-lock.json from.")
-    parser.add_argument("--no-copy-dependencies", action="store_true", help="Do not copy dependencies from an existing local Floating Island.")
     parser.add_argument("--dry-run", action="store_true", help="Print merged JSON without writing.")
     args = parser.parse_args()
 
     project = Path(args.project).expanduser().resolve()
     if not project.exists():
-      raise SystemExit(f"Project path does not exist: {project}")
+        raise SystemExit(f"Project path does not exist: {project}")
 
     platforms = selected_platforms(args.platform)
     island = resolve_island_path(project, args.island, platforms)
@@ -44,15 +46,14 @@ def main():
     title = args.title or default_title_for(platforms)
     if not args.no_deploy_island:
         deploy_island(island, dry_run=args.dry_run)
+        extract_runtime(island, dry_run=args.dry_run)
         write_launcher_files(island, port, dry_run=args.dry_run)
-        if not args.no_copy_dependencies:
-            copy_dependencies(island, project, args.dependency_source, dry_run=args.dry_run)
 
     islandctl = island / "scripts" / "islandctl.js"
     hook_cmd = island / "scripts" / "island-hook.cmd"
 
     if not islandctl.exists() and not (args.dry_run and not args.no_deploy_island):
-      raise SystemExit(f"Missing islandctl.js: {islandctl}")
+        raise SystemExit(f"Missing islandctl.js: {islandctl}")
 
     merged_by_path = {}
     for platform in platforms:
@@ -75,8 +76,7 @@ def main():
     print(f"Floating Island: {island}")
     print(f"API port: {port}")
     print(f"Start script: {island / 'start-floating-island.cmd'}")
-    if not has_dependencies(island):
-        print("Dependencies: missing. Run npm install in the Floating Island directory before starting it.")
+    print("Runtime: prebuilt Windows x64 bundle deployed locally.")
     if "codex" in platforms:
         print("Codex: ensure user config has [features].hooks = true and approve hooks with /hooks if prompted.")
 
@@ -138,25 +138,70 @@ def deploy_island(destination, dry_run=False):
     shutil.copytree(ASSET_ISLAND, destination)
 
 
+def extract_runtime(destination, dry_run=False):
+    if not ASSET_RUNTIME.exists():
+        raise SystemExit(f"Missing bundled Floating Island runtime asset: {ASSET_RUNTIME}")
+    if not RUNTIME_MANIFEST.exists():
+        raise SystemExit(f"Missing runtime manifest: {RUNTIME_MANIFEST}")
+
+    runtime_root = destination / RUNTIME_DEST_DIR
+    exe_path = runtime_root / "electron.exe"
+    if exe_path.exists():
+        return
+    if dry_run:
+        return
+
+    parts = json.loads(RUNTIME_MANIFEST.read_text(encoding="utf-8")).get("parts", [])
+    if not parts:
+        raise SystemExit(f"Runtime manifest has no parts: {RUNTIME_MANIFEST}")
+
+    runtime_root.mkdir(parents=True, exist_ok=True)
+    archive_path = runtime_root / "runtime.zip"
+    with archive_path.open("wb") as archive:
+        for part in parts:
+            part_path = ASSET_RUNTIME / part
+            if not part_path.exists():
+                raise SystemExit(f"Missing runtime archive part: {part_path}")
+            archive.write(part_path.read_bytes())
+
+    with zipfile.ZipFile(archive_path, "r") as zipf:
+        zipf.extractall(runtime_root)
+    archive_path.unlink(missing_ok=True)
+
+    if not exe_path.exists():
+        raise SystemExit(f"Missing extracted runtime executable: {exe_path}")
+
+
 def write_launcher_files(destination, port, dry_run=False):
     if dry_run:
         return
 
+    runtime_exe = destination / RUNTIME_EXE
+    main_js = destination / "src" / "main.js"
+    if not runtime_exe.exists():
+        raise SystemExit(f"Missing runtime executable: {runtime_exe}")
+    if not main_js.exists():
+        raise SystemExit(f"Missing Floating Island entrypoint: {main_js}")
+
     cmd = (
         "@echo off\r\n"
+        "setlocal\r\n"
         f"set FLOATING_ISLAND_PORT={port}\r\n"
-        "npm start\r\n"
+        f"start \"Floating Island\" /b \"{runtime_exe}\" \"{main_js}\"\r\n"
+        "exit /b 0\r\n"
     )
     ps1 = (
         f"$env:FLOATING_ISLAND_PORT='{port}'\n"
-        "npm start\n"
+        f"Start-Process -FilePath '{runtime_exe}' -ArgumentList @('{main_js}') -WindowStyle Hidden\n"
     )
     (destination / "start-floating-island.cmd").write_text(cmd, encoding="utf-8")
     (destination / "start-floating-island.ps1").write_text(ps1, encoding="utf-8")
+
     scripts_dir = destination / "scripts"
     scripts_dir.mkdir(parents=True, exist_ok=True)
     hook_cmd = (
         "@echo off\r\n"
+        "setlocal\r\n"
         f"set FLOATING_ISLAND_PORT={port}\r\n"
         'node "%~dp0islandctl.js" %*\r\n'
         "exit /b 0\r\n"
@@ -168,52 +213,6 @@ def write_launcher_files(destination, port, dry_run=False):
     )
     (scripts_dir / "island-hook.cmd").write_text(hook_cmd, encoding="utf-8")
     (scripts_dir / "island-hook.ps1").write_text(hook_ps1, encoding="utf-8")
-
-
-def has_dependencies(island):
-    return (island / DEPENDENCY_MARKER).exists()
-
-
-def copy_dependencies(destination, project, configured_source=None, dry_run=False):
-    if has_dependencies(destination):
-        return
-
-    source = find_dependency_source(project, configured_source)
-    if source is None:
-        return
-
-    if dry_run:
-        return
-
-    target_modules = destination / "node_modules"
-    if target_modules.exists():
-        shutil.rmtree(target_modules)
-    shutil.copytree(source / "node_modules", destination / "node_modules")
-    lockfile = source / "package-lock.json"
-    if lockfile.exists():
-        shutil.copy2(lockfile, destination / "package-lock.json")
-    print(f"Copied dependencies from {source}")
-
-
-def find_dependency_source(project, configured_source=None):
-    candidates = []
-    if configured_source:
-        candidates.append(Path(configured_source).expanduser())
-    candidates.extend([
-        project.parent / "FloatingIsland",
-        Path.home() / "FloatingIsland",
-    ])
-
-    seen = set()
-    for candidate in candidates:
-        source = candidate.resolve()
-        key = str(source).lower()
-        if key in seen:
-            continue
-        seen.add(key)
-        if (source / DEPENDENCY_MARKER).exists():
-            return source
-    return None
 
 
 def settings_path_for(project, platform, codebuddy_settings):

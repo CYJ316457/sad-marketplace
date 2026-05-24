@@ -272,6 +272,20 @@ describe("shared skill marketplace", () => {
         path.join(
           workspace,
           "home",
+          ".claude",
+          "skills",
+          "project-floating-island-hooks",
+          "assets",
+          "floating-island-runtime-win32-x64",
+          "README.md",
+        ),
+      ),
+    ).toBe(true);
+    expect(
+      fs.existsSync(
+        path.join(
+          workspace,
+          "home",
           ".codebuddy",
           "plugins",
           "marketplaces",
@@ -285,6 +299,38 @@ describe("shared skill marketplace", () => {
         ),
       ),
     ).toBe(true);
+  });
+
+  test("floating island installer docs describe prebuilt windows runtime delivery", async () => {
+    const skillDoc = fs.readFileSync(
+      path.join(
+        repoRoot(),
+        "packs",
+        "floating-island-hooks",
+        "skills",
+        "project-floating-island-hooks",
+        "SKILL.md",
+      ),
+      "utf-8",
+    );
+    const installer = fs.readFileSync(
+      path.join(
+        repoRoot(),
+        "packs",
+        "floating-island-hooks",
+        "skills",
+        "project-floating-island-hooks",
+        "scripts",
+        "install_codebuddy_hooks.py",
+      ),
+      "utf-8",
+    );
+
+    expect(skillDoc).toContain("预打包");
+    expect(skillDoc).not.toContain("run `npm install`");
+    expect(installer).toContain("extract_runtime");
+    expect(installer).toContain("start-floating-island.cmd");
+    expect(installer).not.toContain("npm start");
   });
 
   test("floating island skill docs do not hardcode machine-local skill paths", async () => {
