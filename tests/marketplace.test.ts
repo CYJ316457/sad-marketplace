@@ -46,6 +46,7 @@ describe("shared skill marketplace", () => {
     expect(marketplace.plugins.map((plugin) => plugin.name)).toEqual([
       "starter-pack",
       "floating-island-hooks",
+      "svn-toolkit",
     ]);
   });
 
@@ -63,6 +64,7 @@ describe("shared skill marketplace", () => {
     expect(marketplace.plugins.map((plugin) => plugin.name)).toEqual([
       "starter-pack",
       "floating-island-hooks",
+      "svn-toolkit",
     ]);
   });
 
@@ -89,6 +91,15 @@ describe("shared skill marketplace", () => {
     expect(starter.name).toBe("starter-pack");
     expect(floating.name).toBe("floating-island-hooks");
     expect(floating.skills).toEqual(["./skills/project-floating-island-hooks"]);
+
+    const svn = JSON.parse(
+      fs.readFileSync(
+        path.join(repoRoot(), "packs", "svn-toolkit", ".codebuddy-plugin", "plugin.json"),
+        "utf-8",
+      ),
+    ) as { name: string; commands?: string[] };
+    expect(svn.name).toBe("svn-toolkit");
+    expect(svn.commands).toContain("./commands/SVN-log.md");
   });
 
   test("each pack exposes a Claude plugin manifest", async () => {
@@ -114,15 +125,32 @@ describe("shared skill marketplace", () => {
     expect(starter.name).toBe("starter-pack");
     expect(floating.name).toBe("floating-island-hooks");
     expect(floating.skills).toEqual(["./skills/project-floating-island-hooks"]);
+
+    const svn = JSON.parse(
+      fs.readFileSync(
+        path.join(repoRoot(), "packs", "svn-toolkit", ".claude-plugin", "plugin.json"),
+        "utf-8",
+      ),
+    ) as { name: string; commands?: string[] };
+    expect(svn.name).toBe("svn-toolkit");
+    expect(svn.commands).toContain("./commands");
   });
 
   test("lists packs from the registry", async () => {
     const packs = await listPacks({ registryPath: registryPath() });
-    expect(packs).toHaveLength(2);
+    expect(packs).toHaveLength(3);
     expect(packs[0]?.name).toBe("starter-pack");
     expect(packs[0]?.contents.skills).toEqual(["writing-clearly", "release-checklist"]);
     expect(packs[1]?.name).toBe("floating-island-hooks");
     expect(packs[1]?.contents.skills).toEqual(["project-floating-island-hooks"]);
+    expect(packs[2]?.name).toBe("svn-toolkit");
+    expect(packs[2]?.contents.skills).toEqual(["svn-workflow"]);
+    expect(packs[2]?.contents.commands).toEqual([
+      "SVN-log",
+      "SVN-status",
+      "SVN-update",
+      "SVN-commit",
+    ]);
   });
 
   test("installs a pack globally for codex and claude", async () => {
@@ -226,6 +254,43 @@ describe("shared skill marketplace", () => {
 
     expect(skillDoc).not.toContain("C:\\Users\\C\\.agents\\skills\\project-floating-island-hooks");
     expect(skillDoc).not.toContain("C:\\AI\\Codex\\Install\\FloatingIsland");
+  });
+
+  test("installs svn commands for all supported platforms", async () => {
+    const workspace = tempWorkspace();
+    process.env.SKILL_MARKETPLACE_HOME = path.join(workspace, "home");
+
+    const record = await installPack({
+      registryPath: registryPath(),
+      packName: "svn-toolkit",
+      scope: "global",
+      cwd: workspace,
+      platform: "all",
+    });
+
+    expect(record.platforms).toEqual(["codex", "claude", "codebuddy"]);
+    expect(
+      fs.existsSync(path.join(workspace, "home", ".codex", "skills", "SVN-log", "SKILL.md")),
+    ).toBe(true);
+    expect(
+      fs.existsSync(path.join(workspace, "home", ".claude", "commands", "SVN-log.md")),
+    ).toBe(true);
+    expect(
+      fs.existsSync(
+        path.join(
+          workspace,
+          "home",
+          ".codebuddy",
+          "plugins",
+          "marketplaces",
+          "sad-marketplace",
+          "plugins",
+          "svn-toolkit",
+          "commands",
+          "SVN-log.md",
+        ),
+      ),
+    ).toBe(true);
   });
 
   test("installs a pack in project mode with codex shared skills and codebuddy plugin layout", async () => {

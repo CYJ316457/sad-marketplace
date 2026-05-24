@@ -1,0 +1,50 @@
+{
+  "name": "svn-toolkit",
+  "version": "1.0.0",
+  "description": "通用 SVN 技能与命令集合，适配 Codex、Claude Code 和 CodeBuddy",
+  "author": {
+    "name": "Local Publisher"
+  },
+  "license": "MIT",
+  "tags": ["svn", "subversion", "command", "workflow", "chinese"],
+  "platformSupport": {
+    "codex": true,
+    "claude": true,
+    "codebuddy": true
+  },
+  "contents": {
+    "skills": [
+      {
+        "name": "svn-workflow",
+        "path": "skills/svn-workflow",
+        "kind": "shared"
+      }
+    ],
+    "commands": [
+      {
+        "name": "SVN-log",
+        "path": "commands/SVN-log.md",
+        "kind": "shared"
+      },
+      {
+        "name": "SVN-status",
+        "path": "commands/SVN-status.md",
+        "kind": "shared"
+      },
+      {
+        "name": "SVN-update",
+        "path": "commands/SVN-update.md",
+        "kind": "shared"
+      },
+      {
+        "name": "SVN-commit",
+        "path": "commands/SVN-commit.md",
+        "kind": "shared"
+      }
+    ]
+  },
+  "codebuddy": {
+    "pluginName": "svn-toolkit",
+    "category": "productivity"
+  }
+}

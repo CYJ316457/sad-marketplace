@@ -32,6 +32,7 @@ const registryIndexSchema = z.object({
       }),
       contents: z.object({
         skills: z.array(z.string()),
+        commands: z.array(z.string()).optional(),
       }),
     }),
   ),
@@ -60,6 +61,15 @@ const packManifestSchema = z.object({
         kind: z.enum(["shared", "platform"]),
       }),
     ),
+    commands: z
+      .array(
+        z.object({
+          name: z.string(),
+          path: z.string(),
+          kind: z.enum(["shared", "platform"]),
+        }),
+      )
+      .optional(),
   }),
   codebuddy: z
     .object({

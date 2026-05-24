@@ -20,6 +20,7 @@ export interface RegistryPackSummary {
   };
   contents: {
     skills: string[];
+    commands?: string[];
   };
 }
 
@@ -39,6 +40,12 @@ export interface PackSkill {
   kind: "shared" | "platform";
 }
 
+export interface PackCommand {
+  name: string;
+  path: string;
+  kind: "shared" | "platform";
+}
+
 export interface PackManifest {
   name: string;
   version: string;
@@ -49,6 +56,7 @@ export interface PackManifest {
   platformSupport: Record<Platform, boolean>;
   contents: {
     skills: PackSkill[];
+    commands?: PackCommand[];
   };
   codebuddy?: {
     pluginName: string;
@@ -59,7 +67,7 @@ export interface PackManifest {
 export interface ManagedFileRecord {
   path: string;
   hash: string;
-  kind: "skill" | "marketplace" | "plugin-meta";
+  kind: "skill" | "command" | "marketplace" | "plugin-meta";
   platform: Platform;
 }
 

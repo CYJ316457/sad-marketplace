@@ -2,6 +2,10 @@
 
 Shared skill marketplace for Codex, Claude Code, and CodeBuddy.
 
+Supports pack distribution for:
+- `skills/`
+- `commands/`
+
 ## Commands
 
 - `npm install`

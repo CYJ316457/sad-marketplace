@@ -23,6 +23,15 @@
       },
       "category": "productivity",
       "source": "./packs/floating-island-hooks"
+    },
+    {
+      "name": "svn-toolkit",
+      "description": "通用 SVN 技能与命令集合，适配 Codex、Claude Code 和 CodeBuddy",
+      "author": {
+        "name": "Local Publisher"
+      },
+      "category": "productivity",
+      "source": "./packs/svn-toolkit"
     }
   ]
 }

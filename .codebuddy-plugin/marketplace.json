@@ -34,6 +34,20 @@
       "skills": [
         "./packs/floating-island-hooks/skills/project-floating-island-hooks"
       ]
+    },
+    {
+      "name": "svn-toolkit",
+      "description": "通用 SVN 技能与命令集合，适配 Codex、Claude Code 和 CodeBuddy",
+      "version": "1.0.0",
+      "source": "./packs/svn-toolkit",
+      "category": "productivity",
+      "author": {
+        "name": "Local Publisher"
+      },
+      "license": "MIT",
+      "skills": [
+        "./packs/svn-toolkit/skills/svn-workflow"
+      ]
     }
   ]
 }

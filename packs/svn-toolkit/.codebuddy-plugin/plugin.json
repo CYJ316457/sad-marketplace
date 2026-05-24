@@ -1,0 +1,15 @@
+{
+  "name": "svn-toolkit",
+  "description": "通用 SVN 技能与命令集合，适配 Codex、Claude Code 和 CodeBuddy",
+  "version": "1.0.0",
+  "license": "MIT",
+  "skills": [
+    "./skills/svn-workflow"
+  ],
+  "commands": [
+    "./commands/SVN-log.md",
+    "./commands/SVN-status.md",
+    "./commands/SVN-update.md",
+    "./commands/SVN-commit.md"
+  ]
+}

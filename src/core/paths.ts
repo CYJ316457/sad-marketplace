@@ -41,6 +41,25 @@ export function resolvePlatformRoots(
   };
 }
 
+export function resolvePlatformCommandRoots(
+  cwd: string,
+  scope: InstallScope,
+): Record<Platform, string> {
+  const baseDir =
+    scope === "global"
+      ? resolveMarketplacePaths(cwd, scope).homeDir
+      : cwd;
+
+  return {
+    codex: path.join(baseDir, ".codex", "commands"),
+    claude: path.join(baseDir, ".claude", "commands"),
+    codebuddy:
+      scope === "global"
+        ? path.join(baseDir, ".codebuddy", "plugins", "marketplaces", "sad-marketplace")
+        : path.join(baseDir, ".codebuddy", "plugins", "marketplaces", "sad-marketplace"),
+  };
+}
+
 export function ensureDirectory(dir: string): void {
   fs.mkdirSync(dir, { recursive: true });
 }

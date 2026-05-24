@@ -49,6 +49,29 @@
       "contents": {
         "skills": ["project-floating-island-hooks"]
       }
+    },
+    {
+      "name": "svn-toolkit",
+      "version": "1.0.0",
+      "description": "通用 SVN 技能与命令集合，适配 Codex、Claude Code 和 CodeBuddy",
+      "author": {
+        "name": "Local Publisher"
+      },
+      "license": "MIT",
+      "tags": ["svn", "subversion", "command", "workflow", "chinese"],
+      "source": "./packs/svn-toolkit",
+      "platformSupport": {
+        "codex": true,
+        "claude": true,
+        "codebuddy": true
+      },
+      "install": {
+        "unit": "pack"
+      },
+      "contents": {
+        "skills": ["svn-workflow"],
+        "commands": ["SVN-log", "SVN-status", "SVN-update", "SVN-commit"]
+      }
     }
   ]
 }

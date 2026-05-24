@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import type { InstallScope, ManagedFileRecord, PackManifest, Platform } from "./types.js";
-import { ensureDirectory, resolvePlatformRoots } from "./paths.js";
+import { ensureDirectory, resolvePlatformCommandRoots, resolvePlatformRoots } from "./paths.js";
 import { loadPackManifest, loadRegistryIndex } from "./registry.js";
 import { readState, removeInstalledPack, upsertInstalledPack } from "./state.js";
 import { removeFileIfExists, sha256, writeTextFile } from "./write.js";
@@ -43,6 +43,21 @@ function listSkillFiles(packDir: string, skillPath: string): string[] {
 
   visit(root);
   return files;
+}
+
+function commandContent(packDir: string, commandPath: string): string {
+  return fs.readFileSync(path.join(packDir, commandPath), "utf-8");
+}
+
+function stripFrontmatter(content: string): string {
+  if (!content.startsWith("---\n") && !content.startsWith("---\r\n")) {
+    return content.trim();
+  }
+
+  const normalized = content.replace(/\r\n/g, "\n");
+  const secondMarker = normalized.indexOf("\n---\n", 4);
+  if (secondMarker === -1) return content.trim();
+  return normalized.slice(secondMarker + 5).trim();
 }
 
 function copySkillDirectory(options: {
@@ -112,10 +127,34 @@ function codebuddyPluginJson(pack: PackManifest): string {
       author: pack.author,
       category: pack.codebuddy?.category || "productivity",
       keywords: pack.tags,
+      skills: pack.contents.skills.map((skill) => `./skills/${skill.name}`),
+      commands: (pack.contents.commands ?? []).map((command) => `./commands/${path.basename(command.path)}`),
     },
     null,
     2,
   );
+}
+
+function writeCommandFile(options: {
+  packDir: string;
+  commandPath: string;
+  destPath: string;
+  platform: Platform;
+  managed: ManagedFileRecord[];
+}) {
+  const content = commandContent(options.packDir, options.commandPath);
+  ensureDirectory(path.dirname(options.destPath));
+  fs.writeFileSync(options.destPath, content, "utf-8");
+  options.managed.push({
+    path: options.destPath,
+    hash: sha256(content),
+    kind: "command",
+    platform: options.platform,
+  });
+}
+
+function codexCommandAsSkill(commandName: string, content: string): string {
+  return `---\nname: ${commandName}\ndescription: Use when the user explicitly invokes /${commandName} or asks in Chinese for the ${commandName} SVN workflow.\n---\n\n${stripFrontmatter(content)}\n`;
 }
 
 function codebuddyTargets(cwd: string, scope: InstallScope): { marketplaceRoot: string; pluginRoot: string } {
@@ -138,6 +177,7 @@ function buildManagedFiles(
 ): ManagedFileRecord[] {
   const managed: ManagedFileRecord[] = [];
   const roots = resolvePlatformRoots(cwd, scope);
+  const commandRoots = resolvePlatformCommandRoots(cwd, scope);
 
   for (const platform of platforms) {
     const platformRoot = roots[platform];
@@ -149,6 +189,34 @@ function buildManagedFiles(
         skillPath: skill.path,
         skillName: skill.name,
         destRoot: platformRoot,
+        platform,
+        managed,
+      });
+    }
+
+    for (const command of pack.contents.commands ?? []) {
+      if (command.kind === "platform" && platform === "codebuddy") continue;
+      if (platform === "codex") {
+        const source = commandContent(packDir, command.path);
+        const destPath = path.join(platformRoot, command.name, "SKILL.md");
+        const content = codexCommandAsSkill(command.name, source);
+        ensureDirectory(path.dirname(destPath));
+        fs.writeFileSync(destPath, content, "utf-8");
+        managed.push({
+          path: destPath,
+          hash: sha256(content),
+          kind: "command",
+          platform,
+        });
+        continue;
+      }
+
+      const commandRoot = commandRoots[platform];
+      ensureDirectory(commandRoot);
+      writeCommandFile({
+        packDir,
+        commandPath: command.path,
+        destPath: path.join(commandRoot, path.basename(command.path)),
         platform,
         managed,
       });
@@ -168,6 +236,15 @@ function buildManagedFiles(
       skillPath: skill.path,
       skillName: skill.name,
       destRoot: path.join(pluginDir, "skills"),
+      platform: "codebuddy",
+      managed,
+    });
+  }
+  for (const command of pack.contents.commands ?? []) {
+    writeCommandFile({
+      packDir,
+      commandPath: command.path,
+      destPath: path.join(pluginDir, "commands", path.basename(command.path)),
       platform: "codebuddy",
       managed,
     });
