@@ -367,6 +367,7 @@ describe("shared skill marketplace", () => {
     expect(result.status).toBe(0);
     expect(result.stdout).toContain("node ");
     expect(result.stdout).toContain("islandctl.js");
+    expect(result.stdout).toContain("--port");
     expect(result.stdout).not.toContain("cmd.exe /d /s /c call");
   });
 

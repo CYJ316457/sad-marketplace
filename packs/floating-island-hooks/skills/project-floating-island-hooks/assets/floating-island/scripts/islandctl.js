@@ -1,8 +1,10 @@
 #!/usr/bin/env node
-const action = process.argv[2] || "busy";
-const title = process.argv[3];
-const message = process.argv.slice(4).join(" ");
-const port = Number(process.env.FLOATING_ISLAND_PORT) || 17321;
+const args = process.argv.slice(2);
+const parsed = parseArgs(args);
+const action = parsed.action || "busy";
+const title = parsed.title;
+const message = parsed.message;
+const port = parsed.port || Number(process.env.FLOATING_ISLAND_PORT) || 17321;
 const token = process.env.FLOATING_ISLAND_TOKEN;
 
 const headers = { "content-type": "application/json" };
@@ -23,3 +25,30 @@ if (!response.ok) {
 }
 
 console.log(JSON.stringify(json.state, null, 2));
+
+function parseArgs(argv) {
+  let port;
+  let index = 0;
+
+  while (index < argv.length) {
+    const arg = argv[index];
+    if (arg === "--port") {
+      const value = Number(argv[index + 1]);
+      if (!Number.isFinite(value) || value <= 0) {
+        console.error("Invalid --port value");
+        process.exit(1);
+      }
+      port = value;
+      index += 2;
+      continue;
+    }
+    break;
+  }
+
+  return {
+    port,
+    action: argv[index],
+    title: argv[index + 1],
+    message: argv.slice(index + 2).join(" ")
+  };
+}

@@ -59,7 +59,7 @@ def main():
     for platform in platforms:
         settings_path = settings_path_for(project, platform, args.settings)
         existing = load_json(settings_path)
-        desired_hooks = build_hooks(platform, hook_command_path(hook_cmd), title)
+        desired_hooks = build_hooks(platform, hook_command_path(hook_cmd, port), title)
         merged_by_path[settings_path] = merge_hooks(existing, desired_hooks)
 
     if args.dry_run:
@@ -234,9 +234,9 @@ def settings_path_for(project, platform, codebuddy_settings):
     raise ValueError(f"Unsupported platform: {platform}")
 
 
-def hook_command_path(path):
+def hook_command_path(path, port):
     script_path = Path(path).with_name("islandctl.js")
-    return f'node "{script_path}"'
+    return f'node "{script_path}" --port {port}'
 
 
 def build_command(hook_cmd, state, title):
