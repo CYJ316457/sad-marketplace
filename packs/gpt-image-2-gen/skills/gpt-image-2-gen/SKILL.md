@@ -10,13 +10,9 @@ description: Use when the user wants to generate images with gpt-image-2, manual
 
 ## 配置
 
-用户需要先手动复制模板并填写：
+安装后 skill 目录里会默认带一个 `.gpt-image-2.env` demo 文件。
 
-```powershell
-copy templates\.gpt-image-2.env.example .gpt-image-2.env
-```
-
-然后在 `.gpt-image-2.env` 中设置：
+用户需要直接编辑这个文件，设置：
 - `OPENAI_BASE_URL`
 - `OPENAI_API_KEY`
 
@@ -26,7 +22,7 @@ copy templates\.gpt-image-2.env.example .gpt-image-2.env
 ## 工作流
 
 1. 先确认当前目录是目标项目根目录。
-2. 检查项目内是否存在 `.gpt-image-2.env`，没有就让用户先创建。
+2. 检查项目内是否存在 `.gpt-image-2.env`；如果没有，就参考 skill 自带 demo 新建一个。
 3. 解析用户的生图需求，必要时先帮用户收敛提示词。
 4. 用 `python scripts/generate_gpt_image_2.py --project <project> --prompt "<prompt>"` 发起生成。
 5. 输出最终保存路径。

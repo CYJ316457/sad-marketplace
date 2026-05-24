@@ -341,8 +341,7 @@ describe("shared skill marketplace", () => {
           ".claude",
           "skills",
           "gpt-image-2-gen",
-          "templates",
-          ".gpt-image-2.env.example",
+          ".gpt-image-2.env",
         ),
       ),
     ).toBe(true);
