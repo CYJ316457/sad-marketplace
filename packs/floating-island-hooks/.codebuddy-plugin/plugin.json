@@ -5,5 +5,8 @@
   "license": "MIT",
   "skills": [
     "./skills/project-floating-island-hooks"
+  ],
+  "commands": [
+    "./commands/Start-Floating-Island.md"
   ]
 }

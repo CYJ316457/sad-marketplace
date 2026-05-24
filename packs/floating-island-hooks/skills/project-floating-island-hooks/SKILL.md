@@ -13,8 +13,8 @@ Create or update a project-local Floating Island app and install CodeBuddy, Clau
 2. Use `scripts/install_codebuddy_hooks.py --project <project> --platform <platform>`. With no platform flag it preserves the old CodeBuddy-only default.
 3. It deploys bundled Floating Island app files plus a prebuilt Windows x64 runtime into a project-local directory.
 4. The installer creates launcher and hook wrapper scripts, assigns a stable project-local port, and merges hooks.
-5. Start the island with the generated `start-floating-island.cmd`.
-6. Hooks call the generated `scripts/island-hook.cmd` wrapper so the same config works from Git Bash, cmd, and PowerShell-backed launchers.
+5. Hooks call the generated `scripts/island-hook.js` wrapper. It auto-starts the island if needed, waits for readiness, then sends the state update.
+6. You can still start the island manually with the generated `start-floating-island.cmd` or the distributed `Start-Floating-Island` command.
 7. Verify manually with `scripts\island-hook.cmd busy <Title>`, then restart the target assistant so it reloads settings.
 
 ## Delivery Model
@@ -90,7 +90,7 @@ If editing manually, use this structure and prefer the generated wrapper command
         "hooks": [
           {
             "type": "command",
-            "command": "cmd.exe /d /s /c call \"C:\\path\\to\\project\\.floating-island\\scripts\\island-hook.cmd\" \"busy\" \"CodeBuddy\"",
+            "command": "node \"C:\\path\\to\\project\\.floating-island\\scripts\\island-hook.js\" --port 17321 \"busy\" \"CodeBuddy\"",
             "timeout": 3
           }
         ]
@@ -102,7 +102,7 @@ If editing manually, use this structure and prefer the generated wrapper command
         "hooks": [
           {
             "type": "command",
-            "command": "cmd.exe /d /s /c call \"C:\\path\\to\\project\\.floating-island\\scripts\\island-hook.cmd\" \"ask\" \"Need input\"",
+            "command": "node \"C:\\path\\to\\project\\.floating-island\\scripts\\island-hook.js\" --port 17321 \"ask\" \"Need input\"",
             "timeout": 3
           }
         ]
@@ -113,7 +113,7 @@ If editing manually, use this structure and prefer the generated wrapper command
         "hooks": [
           {
             "type": "command",
-            "command": "cmd.exe /d /s /c call \"C:\\path\\to\\project\\.floating-island\\scripts\\island-hook.cmd\" \"idle\" \"CodeBuddy\"",
+            "command": "node \"C:\\path\\to\\project\\.floating-island\\scripts\\island-hook.js\" --port 17321 \"idle\" \"CodeBuddy\"",
             "timeout": 3
           }
         ]
@@ -127,8 +127,8 @@ If editing manually, use this structure and prefer the generated wrapper command
 
 After installing:
 
-1. Run `start-floating-island.cmd` in the generated island directory.
-2. Run `scripts\island-hook.cmd busy CodeBuddy` to confirm the island changes.
+1. Run `start-floating-island.cmd` in the generated island directory, or execute `Start-Floating-Island`.
+2. Run `scripts\island-hook.cmd busy CodeBuddy` or `node scripts\island-hook.js --port <port> busy CodeBuddy` to confirm the island changes.
 3. Restart CodeBuddy, Claude Code, or Codex/open a new session.
 4. Submit a prompt and expect `busy`.
 5. Trigger a permission/idle notification and expect `ask`.

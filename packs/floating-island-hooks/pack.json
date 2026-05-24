@@ -1,6 +1,6 @@
 {
   "name": "floating-island-hooks",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Project-local Floating Island hooks for CodeBuddy, Claude Code, and Codex",
   "author": {
     "name": "Local Publisher"
@@ -17,6 +17,13 @@
       {
         "name": "project-floating-island-hooks",
         "path": "skills/project-floating-island-hooks",
+        "kind": "shared"
+      }
+    ],
+    "commands": [
+      {
+        "name": "Start-Floating-Island",
+        "path": "commands/Start-Floating-Island.md",
         "kind": "shared"
       }
     ]

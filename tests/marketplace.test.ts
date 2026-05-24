@@ -103,11 +103,12 @@ describe("shared skill marketplace", () => {
         ),
         "utf-8",
       ),
-    ) as { name: string; skills?: string[] };
+    ) as { name: string; skills?: string[]; commands?: string[] };
 
     expect(starter.name).toBe("starter-pack");
     expect(floating.name).toBe("floating-island-hooks");
     expect(floating.skills).toEqual(["./skills/project-floating-island-hooks"]);
+    expect(floating.commands).toContain("./commands/Start-Floating-Island.md");
 
     const svn = JSON.parse(
       fs.readFileSync(
@@ -146,11 +147,12 @@ describe("shared skill marketplace", () => {
         ),
         "utf-8",
       ),
-    ) as { name: string; skills?: string[] };
+    ) as { name: string; skills?: string[]; commands?: string[] };
 
     expect(starter.name).toBe("starter-pack");
     expect(floating.name).toBe("floating-island-hooks");
     expect(floating.skills).toEqual(["./skills/project-floating-island-hooks"]);
+    expect(floating.commands).toContain("./commands/Start-Floating-Island.md");
 
     const svn = JSON.parse(
       fs.readFileSync(
@@ -178,6 +180,7 @@ describe("shared skill marketplace", () => {
     expect(packs[0]?.contents.skills).toEqual(["writing-clearly", "release-checklist"]);
     expect(packs[1]?.name).toBe("floating-island-hooks");
     expect(packs[1]?.contents.skills).toEqual(["project-floating-island-hooks"]);
+    expect(packs[1]?.contents.commands).toEqual(["Start-Floating-Island"]);
     expect(packs[2]?.name).toBe("svn-toolkit");
     expect(packs[2]?.contents.skills).toEqual(["svn-workflow"]);
     expect(packs[2]?.contents.commands).toEqual([
@@ -366,9 +369,52 @@ describe("shared skill marketplace", () => {
 
     expect(result.status).toBe(0);
     expect(result.stdout).toContain("node ");
-    expect(result.stdout).toContain("islandctl.js");
+    expect(result.stdout).toContain("island-hook.js");
     expect(result.stdout).toContain("--port");
     expect(result.stdout).not.toContain("cmd.exe /d /s /c call");
+  });
+
+  test("floating island installer emits auto-start wrapper scripts", async () => {
+    const workspace = tempWorkspace();
+    process.env.SKILL_MARKETPLACE_HOME = path.join(workspace, "home");
+
+    await installPack({
+      registryPath: registryPath(),
+      packName: "floating-island-hooks",
+      scope: "global",
+      cwd: workspace,
+      platform: "codex",
+    });
+
+    const project = path.join(workspace, "project");
+    fs.mkdirSync(project, { recursive: true });
+    const script = path.join(
+      workspace,
+      "home",
+      ".codex",
+      "skills",
+      "project-floating-island-hooks",
+      "scripts",
+      "install_codebuddy_hooks.py",
+    );
+
+    const py = pythonCommand();
+    const installResult = spawnSync(
+      py.cmd,
+      [...py.args, script, "--project", project, "--platform", "codebuddy"],
+      { encoding: "utf-8" },
+    );
+
+    expect(installResult.status).toBe(0);
+    const wrapper = fs.readFileSync(
+      path.join(project, ".codebuddy", "floating-island", "scripts", "island-hook.js"),
+      "utf-8",
+    );
+    expect(wrapper).toContain("waitForServer");
+    expect(wrapper).toContain("runtime-win32-x64");
+    expect(wrapper).toContain("main.js");
+    expect(wrapper).toContain("spawn");
+    expect(wrapper).toContain("/status");
   });
 
   test("floating island start script sets a default idle title", async () => {
@@ -459,6 +505,54 @@ describe("shared skill marketplace", () => {
           "svn-toolkit",
           "commands",
           "SVN-log.md",
+        ),
+      ),
+    ).toBe(true);
+  });
+
+  test("installs floating island start command for all supported platforms", async () => {
+    const workspace = tempWorkspace();
+    process.env.SKILL_MARKETPLACE_HOME = path.join(workspace, "home");
+
+    const record = await installPack({
+      registryPath: registryPath(),
+      packName: "floating-island-hooks",
+      scope: "global",
+      cwd: workspace,
+      platform: "all",
+    });
+
+    expect(record.platforms).toEqual(["codex", "claude", "codebuddy"]);
+    expect(
+      fs.existsSync(
+        path.join(
+          workspace,
+          "home",
+          ".codex",
+          "skills",
+          "Start-Floating-Island",
+          "SKILL.md",
+        ),
+      ),
+    ).toBe(true);
+    expect(
+      fs.existsSync(
+        path.join(workspace, "home", ".claude", "commands", "Start-Floating-Island.md"),
+      ),
+    ).toBe(true);
+    expect(
+      fs.existsSync(
+        path.join(
+          workspace,
+          "home",
+          ".codebuddy",
+          "plugins",
+          "marketplaces",
+          "sad-marketplace",
+          "plugins",
+          "floating-island-hooks",
+          "commands",
+          "Start-Floating-Island.md",
         ),
       ),
     ).toBe(true);

@@ -30,7 +30,7 @@
     },
     {
       "name": "floating-island-hooks",
-      "version": "1.0.0",
+      "version": "1.2.0",
       "description": "Project-local Floating Island hooks for CodeBuddy, Claude Code, and Codex",
       "author": {
         "name": "Local Publisher"
@@ -47,7 +47,8 @@
         "unit": "pack"
       },
       "contents": {
-        "skills": ["project-floating-island-hooks"]
+        "skills": ["project-floating-island-hooks"],
+        "commands": ["Start-Floating-Island"]
       }
     },
     {

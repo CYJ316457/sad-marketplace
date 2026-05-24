@@ -212,12 +212,12 @@ def write_launcher_files(destination, port, dry_run=False):
         "@echo off\r\n"
         "setlocal\r\n"
         f"set FLOATING_ISLAND_PORT={port}\r\n"
-        'node "%~dp0islandctl.js" %*\r\n'
+        'node "%~dp0island-hook.js" %*\r\n'
         "exit /b 0\r\n"
     )
     hook_ps1 = (
         f"$env:FLOATING_ISLAND_PORT='{port}'\n"
-        "& node \"$PSScriptRoot/islandctl.js\" @args\n"
+        "& node \"$PSScriptRoot/island-hook.js\" @args\n"
         "exit 0\n"
     )
     (scripts_dir / "island-hook.cmd").write_text(hook_cmd, encoding="utf-8")
@@ -235,7 +235,7 @@ def settings_path_for(project, platform, codebuddy_settings):
 
 
 def hook_command_path(path, port):
-    script_path = Path(path).with_name("islandctl.js")
+    script_path = Path(path).with_name("island-hook.js")
     return f'node "{script_path}" --port {port}'
 
 
@@ -335,6 +335,8 @@ def is_floating_island_group(group):
 
 def is_floating_island_command(command):
     normalized = command.lower().replace("\\", "/")
+    if "island-hook.js" in normalized:
+        return True
     if "island-hook.cmd" in normalized:
         return True
     if "islandctl.js" in normalized and "floating_island_port" in normalized:
