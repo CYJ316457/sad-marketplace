@@ -1,0 +1,9 @@
+{
+  "name": "floating-island-hooks",
+  "description": "Project-local Floating Island hooks for CodeBuddy, Claude Code, and Codex",
+  "version": "1.0.0",
+  "license": "MIT",
+  "skills": [
+    "./skills/project-floating-island-hooks"
+  ]
+}

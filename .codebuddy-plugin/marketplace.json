@@ -1,0 +1,39 @@
+{
+  "name": "sad-marketplace",
+  "description": "Shared skill marketplace for Codex, Claude Code, and CodeBuddy",
+  "owner": {
+    "name": "Local Publisher"
+  },
+  "version": "1.0.0",
+  "plugins": [
+    {
+      "name": "starter-pack",
+      "description": "Starter pack with two reusable workflow skills",
+      "version": "1.0.0",
+      "source": "./packs/starter-pack",
+      "category": "productivity",
+      "author": {
+        "name": "Local Publisher"
+      },
+      "license": "MIT",
+      "skills": [
+        "./packs/starter-pack/skills/writing-clearly",
+        "./packs/starter-pack/skills/release-checklist"
+      ]
+    },
+    {
+      "name": "floating-island-hooks",
+      "description": "Project-local Floating Island hooks for CodeBuddy, Claude Code, and Codex",
+      "version": "1.0.0",
+      "source": "./packs/floating-island-hooks",
+      "category": "productivity",
+      "author": {
+        "name": "Local Publisher"
+      },
+      "license": "MIT",
+      "skills": [
+        "./packs/floating-island-hooks/skills/project-floating-island-hooks"
+      ]
+    }
+  ]
+}

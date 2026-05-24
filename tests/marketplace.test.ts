@@ -32,6 +32,48 @@ afterEach(() => {
 });
 
 describe("shared skill marketplace", () => {
+  test("exposes a CodeBuddy-native marketplace root", async () => {
+    const marketplace = JSON.parse(
+      fs.readFileSync(path.join(repoRoot(), ".codebuddy-plugin", "marketplace.json"), "utf-8"),
+    ) as {
+      name: string;
+      owner: { name: string };
+      plugins: Array<{ name: string; source: string }>;
+    };
+
+    expect(marketplace.name).toBe("sad-marketplace");
+    expect(marketplace.owner.name).toBe("Local Publisher");
+    expect(marketplace.plugins.map((plugin) => plugin.name)).toEqual([
+      "starter-pack",
+      "floating-island-hooks",
+    ]);
+  });
+
+  test("each pack exposes a CodeBuddy plugin manifest", async () => {
+    const starter = JSON.parse(
+      fs.readFileSync(
+        path.join(repoRoot(), "packs", "starter-pack", ".codebuddy-plugin", "plugin.json"),
+        "utf-8",
+      ),
+    ) as { name: string; skills?: string[] };
+    const floating = JSON.parse(
+      fs.readFileSync(
+        path.join(
+          repoRoot(),
+          "packs",
+          "floating-island-hooks",
+          ".codebuddy-plugin",
+          "plugin.json",
+        ),
+        "utf-8",
+      ),
+    ) as { name: string; skills?: string[] };
+
+    expect(starter.name).toBe("starter-pack");
+    expect(floating.name).toBe("floating-island-hooks");
+    expect(floating.skills).toEqual(["./skills/project-floating-island-hooks"]);
+  });
+
   test("lists packs from the registry", async () => {
     const packs = await listPacks({ registryPath: registryPath() });
     expect(packs).toHaveLength(2);
