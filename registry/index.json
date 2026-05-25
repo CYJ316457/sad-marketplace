@@ -114,8 +114,8 @@
     },
     {
       "name": "cb-hud",
-      "version": "1.1.0",
-      "description": "CodeBuddy-only status line HUD with tool and skill activity tracking",
+      "version": "1.2.0",
+      "description": "CodeBuddy-only emoji status line HUD with animated tool and skill activity tracking",
       "author": {
         "name": "Local Publisher"
       },

@@ -751,14 +751,22 @@ describe("shared skill marketplace", () => {
           total_duration_ms: 125000,
           total_lines_added: 12,
           total_lines_removed: 3,
+          total_input_tokens: 1536,
+          total_output_tokens: 2400000,
         },
       }),
     });
 
     expect(result.status).toBe(0);
     expect(result.stdout).toContain("CB HUD");
+    expect(result.stdout).toContain("🟢");
+    expect(result.stdout).toContain("IDLE");
+    expect(result.stdout).toContain("🤖 GPT-5.5");
+    expect(result.stdout).toContain("📁 demo");
     expect(result.stdout).toContain("GPT-5.5");
     expect(result.stdout).toContain("demo");
+    expect(result.stdout).toContain("⬆ 1.5K tok");
+    expect(result.stdout).toContain("⬇ 2.4M tok");
     expect(result.stdout).toContain("+12");
     expect(result.stdout).toContain("-3");
     expect(result.stdout).toContain("\u001b[");
@@ -836,8 +844,10 @@ describe("shared skill marketplace", () => {
     });
 
     expect(statusResult.status).toBe(0);
-    expect(statusResult.stdout).toContain("tool");
+    expect(statusResult.stdout).toContain("🔧");
+    expect(statusResult.stdout).toContain("TOOL");
     expect(statusResult.stdout).toContain("Bash");
+    expect(statusResult.stdout).toMatch(/[⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏]/u);
     expect(statusResult.stdout).not.toContain("\n\n");
 
     const stopResult = spawnSync("node", [script, "hook", "Stop", "--project", workspace], {

@@ -16,6 +16,8 @@ const ANSI = {
   red: "\x1b[31m",
 };
 
+const SPINNER = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"];
+
 const command = process.argv[2] || "statusline";
 
 if (command === "statusline") {
@@ -48,18 +50,20 @@ function renderStatusLine(rawInput) {
   const git = gitInfo(cwd);
   const duration = formatDuration(data.cost?.total_duration_ms);
   const cost = formatCost(data.cost?.total_cost_usd);
+  const tokens = formatTokens(data);
   const diff = formatDiff(data.cost?.total_lines_added, data.cost?.total_lines_removed);
   const version = data.version ? `v${data.version}` : "";
 
   const parts = [
-    `${ANSI.bold}${ANSI.cyan}CB HUD${ANSI.reset}`,
+    hudTitle(activity),
     activityLine(activity),
-    `${ANSI.green}${model}${ANSI.reset}`,
-    `${ANSI.blue}${project}${ANSI.reset}`,
+    `${ANSI.green}🤖 ${model}${ANSI.reset}`,
+    `${ANSI.blue}📁 ${project}${ANSI.reset}`,
     session ? `${ANSI.dim}#${session}${ANSI.reset}` : "",
     git,
     duration,
     cost,
+    tokens,
     diff,
     version ? `${ANSI.dim}${version}${ANSI.reset}` : "",
   ].filter(Boolean);
@@ -225,9 +229,32 @@ function readActivityState(cwd) {
 
 function activityLine(activity) {
   const state = activity.state || "idle";
-  const tool = activity.currentTool ? `Tool:${activity.currentTool}` : activity.lastTool ? `Last:${activity.lastTool}` : "";
-  const skill = activity.lastSkill ? `Skill:${activity.lastSkill}` : "";
-  return [state, tool, skill].filter(Boolean).join(" ");
+  const status = statusBadge(state);
+  const tool = activity.currentTool
+    ? `${ANSI.bold}${ANSI.yellow}🔧 TOOL ${activity.currentTool}${ANSI.reset}`
+    : activity.lastTool
+      ? `${ANSI.yellow}🛠 LAST ${activity.lastTool}${ANSI.reset}`
+      : "";
+  const skill = activity.lastSkill ? `${ANSI.magenta}🧩 ${activity.lastSkill}${ANSI.reset}` : "";
+  return [status, tool, skill].filter(Boolean).join(" ");
+}
+
+function hudTitle(activity) {
+  const state = activity.state || "idle";
+  const emoji = state === "tool-error" ? "🔴" : state === "tool" ? "🔧" : state === "thinking" ? "🟡" : state === "done" ? "✅" : "🟢";
+  return `${ANSI.bold}${ANSI.cyan}${emoji} CB HUD${ANSI.reset}`;
+}
+
+function statusBadge(state) {
+  if (state === "tool") return `${ANSI.bold}${ANSI.yellow}${spinnerFrame()} TOOL${ANSI.reset}`;
+  if (state === "thinking") return `${ANSI.yellow}${spinnerFrame()} THINKING${ANSI.reset}`;
+  if (state === "tool-error") return `${ANSI.bold}${ANSI.red}🔴 TOOL ERROR${ANSI.reset}`;
+  if (state === "done") return `${ANSI.green}✅ DONE${ANSI.reset}`;
+  return `${ANSI.green}🟢 IDLE${ANSI.reset}`;
+}
+
+function spinnerFrame(now = Date.now()) {
+  return SPINNER[Math.floor(now / 200) % SPINNER.length];
 }
 
 function inferSkill(data) {
@@ -272,6 +299,48 @@ function formatCost(value) {
   const cost = Number(value);
   if (!Number.isFinite(cost) || cost <= 0) return "";
   return `${ANSI.magenta}$${cost.toFixed(4)}${ANSI.reset}`;
+}
+
+function formatTokens(data) {
+  const input = firstNumber(
+    data.cost?.total_input_tokens,
+    data.cost?.input_tokens,
+    data.usage?.total_input_tokens,
+    data.usage?.input_tokens,
+    data.usage?.prompt_tokens,
+    data.total_input_tokens,
+    data.input_tokens,
+    data.prompt_tokens,
+  );
+  const output = firstNumber(
+    data.cost?.total_output_tokens,
+    data.cost?.output_tokens,
+    data.usage?.total_output_tokens,
+    data.usage?.output_tokens,
+    data.usage?.completion_tokens,
+    data.total_output_tokens,
+    data.output_tokens,
+    data.completion_tokens,
+  );
+  const parts = [
+    input > 0 ? `⬆ ${formatTokenCount(input)} tok` : "",
+    output > 0 ? `⬇ ${formatTokenCount(output)} tok` : "",
+  ].filter(Boolean);
+  return parts.length ? `${ANSI.cyan}${parts.join(" ")}${ANSI.reset}` : "";
+}
+
+function firstNumber(...values) {
+  for (const value of values) {
+    const number = Number(value);
+    if (Number.isFinite(number) && number > 0) return number;
+  }
+  return 0;
+}
+
+function formatTokenCount(value) {
+  if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(1)}M`;
+  if (value >= 1_000) return `${(value / 1_000).toFixed(1)}K`;
+  return String(Math.round(value));
 }
 
 function formatDiff(added, removed) {

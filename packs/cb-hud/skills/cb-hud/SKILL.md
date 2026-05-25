@@ -1,6 +1,6 @@
 ---
 name: cb-hud
-description: Use when configuring CodeBuddy Code to show a polished status line HUD with model, project, session, git, cost, duration, and code-change state.
+description: Use when configuring CodeBuddy Code to show a polished emoji status line HUD with model, project, session, tool, skill, git, cost, duration, and code-change state.
 ---
 
 # CB HUD
@@ -8,6 +8,8 @@ description: Use when configuring CodeBuddy Code to show a polished status line 
 CB HUD is a CodeBuddy-only status line pack. It configures CodeBuddy's native `statusLine` command and renders a compact ANSI-styled HUD at the bottom of the CodeBuddy interface.
 
 v2 also installs lightweight CodeBuddy hooks. The hooks update `.codebuddy/cb-hud/state.json` on session, prompt, tool, and stop events so the HUD can show current activity.
+
+v2.1 makes the activity area more visible with emoji labels and lightweight spinner frames. The animation advances when CodeBuddy refreshes the status line; it does not start a background process.
 
 ## Commands
 
@@ -21,16 +23,25 @@ v2 also installs lightweight CodeBuddy hooks. The hooks update `.codebuddy/cb-hu
 The status line script reads CodeBuddy JSON from stdin and prints one styled line. It shows:
 
 - current state: `idle`, `thinking`, `tool`, `tool-error`, or `done`
-- current or last tool from CodeBuddy hooks
-- inferred recent skill or command when hook input includes it
+- current or last tool from CodeBuddy hooks, displayed as `🔧 TOOL <name>` or `🛠 LAST <name>`
+- inferred recent skill or command when hook input includes it, displayed as `🧩 <name>`
 - model display name
 - project folder
 - short session id
 - git branch and dirty state when available
 - elapsed duration
 - cost
+- uploaded and downloaded token counts when CodeBuddy provides token fields
 - changed lines
 - CodeBuddy version
+
+Example shape:
+
+```text
+🟡 CB HUD | ⠋ THINKING | 🔧 TOOL Bash | 🧩 cb-hud | 🤖 GPT-5.5 | 📁 TestMarketPlace | ⬆ 1.5K tok ⬇ 2.4M tok
+```
+
+Token counts support raw numbers, `K`, and `M`. Values with a unit keep one decimal place.
 
 `statusLine` only reliably consumes the first stdout line. CB HUD therefore keeps everything on one line. Long output can visually wrap in CodeBuddy versions that support status bar wrapping.
 
