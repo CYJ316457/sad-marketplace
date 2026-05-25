@@ -111,6 +111,34 @@
         "skills": ["gpt-image-2-gen"],
         "commands": ["GPT-image-2-Gen"]
       }
+    },
+    {
+      "name": "cb-hud",
+      "version": "1.0.0",
+      "description": "CodeBuddy-only status line HUD with init, show, hide, and uninstall commands",
+      "author": {
+        "name": "Local Publisher"
+      },
+      "license": "MIT",
+      "tags": ["codebuddy", "hud", "statusline", "status-line", "ansi"],
+      "source": "./packs/cb-hud",
+      "platformSupport": {
+        "codex": false,
+        "claude": false,
+        "codebuddy": true
+      },
+      "install": {
+        "unit": "pack"
+      },
+      "contents": {
+        "skills": ["cb-hud"],
+        "commands": [
+          "CB-HUD-init",
+          "CB-HUD-show",
+          "CB-HUD-hide",
+          "CB-HUD-uninstall"
+        ]
+      }
     }
   ]
 }

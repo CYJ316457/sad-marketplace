@@ -180,10 +180,11 @@ function buildManagedFiles(
   const commandRoots = resolvePlatformCommandRoots(cwd, scope);
 
   for (const platform of platforms) {
+    if (platform === "codebuddy") continue;
+
     const platformRoot = roots[platform];
     ensureDirectory(platformRoot);
     for (const skill of pack.contents.skills) {
-      if (skill.kind === "platform" && platform === "codebuddy") continue;
       copySkillDirectory({
         packDir,
         skillPath: skill.path,
@@ -195,7 +196,6 @@ function buildManagedFiles(
     }
 
     for (const command of pack.contents.commands ?? []) {
-      if (command.kind === "platform" && platform === "codebuddy") continue;
       if (platform === "codex") {
         const source = commandContent(packDir, command.path);
         const destPath = path.join(platformRoot, command.name, "SKILL.md");
@@ -223,44 +223,46 @@ function buildManagedFiles(
     }
   }
 
-  const codebuddy = codebuddyTargets(cwd, scope);
-  ensureDirectory(codebuddy.marketplaceRoot);
-  ensureDirectory(codebuddy.pluginRoot);
-  writeTextFile(path.join(codebuddy.marketplaceRoot, ".codebuddy-plugin", "marketplace.json"), codebuddyMarketplaceJson(pack.name));
-  const pluginDir = path.join(codebuddy.pluginRoot, pack.name);
-  ensureDirectory(path.join(pluginDir, ".codebuddy-plugin"));
-  writeTextFile(path.join(pluginDir, ".codebuddy-plugin", "plugin.json"), codebuddyPluginJson(pack));
-  for (const skill of pack.contents.skills) {
-    copySkillDirectory({
-      packDir,
-      skillPath: skill.path,
-      skillName: skill.name,
-      destRoot: path.join(pluginDir, "skills"),
+  if (platforms.includes("codebuddy")) {
+    const codebuddy = codebuddyTargets(cwd, scope);
+    ensureDirectory(codebuddy.marketplaceRoot);
+    ensureDirectory(codebuddy.pluginRoot);
+    writeTextFile(path.join(codebuddy.marketplaceRoot, ".codebuddy-plugin", "marketplace.json"), codebuddyMarketplaceJson(pack.name));
+    const pluginDir = path.join(codebuddy.pluginRoot, pack.name);
+    ensureDirectory(path.join(pluginDir, ".codebuddy-plugin"));
+    writeTextFile(path.join(pluginDir, ".codebuddy-plugin", "plugin.json"), codebuddyPluginJson(pack));
+    for (const skill of pack.contents.skills) {
+      copySkillDirectory({
+        packDir,
+        skillPath: skill.path,
+        skillName: skill.name,
+        destRoot: path.join(pluginDir, "skills"),
+        platform: "codebuddy",
+        managed,
+      });
+    }
+    for (const command of pack.contents.commands ?? []) {
+      writeCommandFile({
+        packDir,
+        commandPath: command.path,
+        destPath: path.join(pluginDir, "commands", path.basename(command.path)),
+        platform: "codebuddy",
+        managed,
+      });
+    }
+    managed.push({
+      path: path.join(codebuddy.marketplaceRoot, ".codebuddy-plugin", "marketplace.json"),
+      hash: sha256(codebuddyMarketplaceJson(pack.name)),
+      kind: "marketplace",
       platform: "codebuddy",
-      managed,
+    });
+    managed.push({
+      path: path.join(pluginDir, ".codebuddy-plugin", "plugin.json"),
+      hash: sha256(codebuddyPluginJson(pack)),
+      kind: "plugin-meta",
+      platform: "codebuddy",
     });
   }
-  for (const command of pack.contents.commands ?? []) {
-    writeCommandFile({
-      packDir,
-      commandPath: command.path,
-      destPath: path.join(pluginDir, "commands", path.basename(command.path)),
-      platform: "codebuddy",
-      managed,
-    });
-  }
-  managed.push({
-    path: path.join(codebuddy.marketplaceRoot, ".codebuddy-plugin", "marketplace.json"),
-    hash: sha256(codebuddyMarketplaceJson(pack.name)),
-    kind: "marketplace",
-    platform: "codebuddy",
-  });
-  managed.push({
-    path: path.join(pluginDir, ".codebuddy-plugin", "plugin.json"),
-    hash: sha256(codebuddyPluginJson(pack)),
-    kind: "plugin-meta",
-    platform: "codebuddy",
-  });
 
   return managed;
 }

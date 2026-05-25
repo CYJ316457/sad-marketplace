@@ -1,0 +1,50 @@
+{
+  "name": "cb-hud",
+  "version": "1.0.0",
+  "description": "CodeBuddy-only status line HUD with init, show, hide, and uninstall commands",
+  "author": {
+    "name": "Local Publisher"
+  },
+  "license": "MIT",
+  "tags": ["codebuddy", "hud", "statusline", "status-line", "ansi"],
+  "platformSupport": {
+    "codex": false,
+    "claude": false,
+    "codebuddy": true
+  },
+  "contents": {
+    "skills": [
+      {
+        "name": "cb-hud",
+        "path": "skills/cb-hud",
+        "kind": "platform"
+      }
+    ],
+    "commands": [
+      {
+        "name": "CB-HUD-init",
+        "path": "commands/CB-HUD-init.md",
+        "kind": "platform"
+      },
+      {
+        "name": "CB-HUD-show",
+        "path": "commands/CB-HUD-show.md",
+        "kind": "platform"
+      },
+      {
+        "name": "CB-HUD-hide",
+        "path": "commands/CB-HUD-hide.md",
+        "kind": "platform"
+      },
+      {
+        "name": "CB-HUD-uninstall",
+        "path": "commands/CB-HUD-uninstall.md",
+        "kind": "platform"
+      }
+    ]
+  },
+  "codebuddy": {
+    "pluginName": "cb-hud",
+    "category": "productivity"
+  }
+}

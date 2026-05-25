@@ -64,6 +64,7 @@ describe("shared skill marketplace", () => {
       "svn-toolkit",
       "gpt-image-2-gen",
     ]);
+    expect(marketplace.plugins.map((plugin) => plugin.name)).not.toContain("cb-hud");
   });
 
   test("exposes a CodeBuddy-native marketplace root", async () => {
@@ -82,6 +83,7 @@ describe("shared skill marketplace", () => {
       "floating-island-hooks",
       "svn-toolkit",
       "gpt-image-2-gen",
+      "cb-hud",
     ]);
   });
 
@@ -127,6 +129,21 @@ describe("shared skill marketplace", () => {
     ) as { name: string; commands?: string[] };
     expect(image.name).toBe("gpt-image-2-gen");
     expect(image.commands).toContain("./commands/GPT-image-2-Gen.md");
+
+    const cbHud = JSON.parse(
+      fs.readFileSync(
+        path.join(repoRoot(), "packs", "cb-hud", ".codebuddy-plugin", "plugin.json"),
+        "utf-8",
+      ),
+    ) as { name: string; skills?: string[]; commands?: string[] };
+    expect(cbHud.name).toBe("cb-hud");
+    expect(cbHud.skills).toEqual(["./skills/cb-hud"]);
+    expect(cbHud.commands).toEqual([
+      "./commands/CB-HUD-init.md",
+      "./commands/CB-HUD-show.md",
+      "./commands/CB-HUD-hide.md",
+      "./commands/CB-HUD-uninstall.md",
+    ]);
   });
 
   test("each pack exposes a Claude plugin manifest", async () => {
@@ -175,7 +192,7 @@ describe("shared skill marketplace", () => {
 
   test("lists packs from the registry", async () => {
     const packs = await listPacks({ registryPath: registryPath() });
-    expect(packs).toHaveLength(4);
+    expect(packs).toHaveLength(5);
     expect(packs[0]?.name).toBe("starter-pack");
     expect(packs[0]?.contents.skills).toEqual(["writing-clearly", "release-checklist"]);
     expect(packs[1]?.name).toBe("floating-island-hooks");
@@ -202,6 +219,19 @@ describe("shared skill marketplace", () => {
     expect(packs[3]?.name).toBe("gpt-image-2-gen");
     expect(packs[3]?.contents.skills).toEqual(["gpt-image-2-gen"]);
     expect(packs[3]?.contents.commands).toEqual(["GPT-image-2-Gen"]);
+    expect(packs[4]?.name).toBe("cb-hud");
+    expect(packs[4]?.platformSupport).toEqual({
+      codex: false,
+      claude: false,
+      codebuddy: true,
+    });
+    expect(packs[4]?.contents.skills).toEqual(["cb-hud"]);
+    expect(packs[4]?.contents.commands).toEqual([
+      "CB-HUD-init",
+      "CB-HUD-show",
+      "CB-HUD-hide",
+      "CB-HUD-uninstall",
+    ]);
   });
 
   test("installs a pack globally for codex and claude", async () => {
@@ -641,6 +671,97 @@ describe("shared skill marketplace", () => {
         ),
       ),
     ).toBe(true);
+  });
+
+  test("installs cb-hud only for CodeBuddy with status line commands", async () => {
+    const workspace = tempWorkspace();
+    process.env.SKILL_MARKETPLACE_HOME = path.join(workspace, "home");
+
+    const record = await installPack({
+      registryPath: registryPath(),
+      packName: "cb-hud",
+      scope: "global",
+      cwd: workspace,
+      platform: "all",
+    });
+
+    expect(record.platforms).toEqual(["codebuddy"]);
+    expect(
+      fs.existsSync(path.join(workspace, "home", ".codex", "skills", "cb-hud", "SKILL.md")),
+    ).toBe(false);
+    expect(
+      fs.existsSync(path.join(workspace, "home", ".claude", "skills", "cb-hud", "SKILL.md")),
+    ).toBe(false);
+    expect(
+      fs.existsSync(
+        path.join(
+          workspace,
+          "home",
+          ".codebuddy",
+          "plugins",
+          "marketplaces",
+          "sad-marketplace",
+          "plugins",
+          "cb-hud",
+          "skills",
+          "cb-hud",
+          "scripts",
+          "cb-hud.js",
+        ),
+      ),
+    ).toBe(true);
+    expect(
+      fs.existsSync(
+        path.join(
+          workspace,
+          "home",
+          ".codebuddy",
+          "plugins",
+          "marketplaces",
+          "sad-marketplace",
+          "plugins",
+          "cb-hud",
+          "commands",
+          "CB-HUD-init.md",
+        ),
+      ),
+    ).toBe(true);
+  });
+
+  test("cb-hud status line script renders styled session state", async () => {
+    const script = path.join(
+      repoRoot(),
+      "packs",
+      "cb-hud",
+      "skills",
+      "cb-hud",
+      "scripts",
+      "cb-hud.js",
+    );
+    const result = spawnSync("node", [script, "statusline"], {
+      encoding: "utf-8",
+      input: JSON.stringify({
+        session_id: "abcdef123456",
+        cwd: "C:/work/demo",
+        model: { display_name: "GPT-5.5" },
+        workspace: { current_dir: "C:/work/demo" },
+        version: "2.96.0",
+        cost: {
+          total_cost_usd: 0.0123,
+          total_duration_ms: 125000,
+          total_lines_added: 12,
+          total_lines_removed: 3,
+        },
+      }),
+    });
+
+    expect(result.status).toBe(0);
+    expect(result.stdout).toContain("CB HUD");
+    expect(result.stdout).toContain("GPT-5.5");
+    expect(result.stdout).toContain("demo");
+    expect(result.stdout).toContain("+12");
+    expect(result.stdout).toContain("-3");
+    expect(result.stdout).toContain("\u001b[");
   });
 
   test("gpt-image-2 script creates project env demo on first run", async () => {

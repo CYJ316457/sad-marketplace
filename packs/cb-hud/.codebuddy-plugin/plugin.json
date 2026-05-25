@@ -1,0 +1,15 @@
+{
+  "name": "cb-hud",
+  "description": "CodeBuddy-only status line HUD with init, show, hide, and uninstall commands",
+  "version": "1.0.0",
+  "license": "MIT",
+  "skills": [
+    "./skills/cb-hud"
+  ],
+  "commands": [
+    "./commands/CB-HUD-init.md",
+    "./commands/CB-HUD-show.md",
+    "./commands/CB-HUD-hide.md",
+    "./commands/CB-HUD-uninstall.md"
+  ]
+}
