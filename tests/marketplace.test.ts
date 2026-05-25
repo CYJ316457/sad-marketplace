@@ -764,6 +764,141 @@ describe("shared skill marketplace", () => {
     expect(result.stdout).toContain("\u001b[");
   });
 
+  test("cb-hud init wires status line and tool tracking hooks", async () => {
+    const workspace = tempWorkspace();
+    const script = path.join(
+      repoRoot(),
+      "packs",
+      "cb-hud",
+      "skills",
+      "cb-hud",
+      "scripts",
+      "cb-hud.js",
+    );
+
+    const result = spawnSync("node", [script, "init", "--project", workspace], {
+      encoding: "utf-8",
+    });
+
+    expect(result.status).toBe(0);
+    const settings = JSON.parse(
+      fs.readFileSync(path.join(workspace, ".codebuddy", "settings.json"), "utf-8"),
+    ) as {
+      statusLine?: { command?: string };
+      hooks?: Record<string, Array<{ matcher?: string; hooks: Array<{ command: string }> }>>;
+    };
+
+    expect(settings.statusLine?.command).toContain("cb-hud.js");
+    expect(settings.hooks?.UserPromptSubmit?.[0]?.hooks[0]?.command).toContain(
+      "hook UserPromptSubmit",
+    );
+    expect(settings.hooks?.PreToolUse?.[0]?.matcher).toBe("*");
+    expect(settings.hooks?.PreToolUse?.[0]?.hooks[0]?.command).toContain("hook PreToolUse");
+    expect(settings.hooks?.PostToolUse?.[0]?.hooks[0]?.command).toContain("hook PostToolUse");
+    expect(settings.hooks?.Stop?.[0]?.hooks[0]?.command).toContain("hook Stop");
+  });
+
+  test("cb-hud hooks update current tool state for status line rendering", async () => {
+    const workspace = tempWorkspace();
+    const script = path.join(
+      repoRoot(),
+      "packs",
+      "cb-hud",
+      "skills",
+      "cb-hud",
+      "scripts",
+      "cb-hud.js",
+    );
+
+    const hookResult = spawnSync(
+      "node",
+      [script, "hook", "PreToolUse", "--project", workspace],
+      {
+        encoding: "utf-8",
+        input: JSON.stringify({
+          hook_event_name: "PreToolUse",
+          tool_name: "Bash",
+          cwd: workspace,
+          transcript_path: path.join(workspace, "transcript.jsonl"),
+        }),
+      },
+    );
+    expect(hookResult.status).toBe(0);
+
+    const statusResult = spawnSync("node", [script, "statusline"], {
+      encoding: "utf-8",
+      input: JSON.stringify({
+        session_id: "abcdef123456",
+        cwd: workspace,
+        model: { display_name: "GPT-5.5" },
+        workspace: { current_dir: workspace },
+      }),
+    });
+
+    expect(statusResult.status).toBe(0);
+    expect(statusResult.stdout).toContain("tool");
+    expect(statusResult.stdout).toContain("Bash");
+    expect(statusResult.stdout).not.toContain("\n\n");
+
+    const stopResult = spawnSync("node", [script, "hook", "Stop", "--project", workspace], {
+      encoding: "utf-8",
+      input: JSON.stringify({ hook_event_name: "Stop", cwd: workspace }),
+    });
+    expect(stopResult.status).toBe(0);
+    const state = JSON.parse(
+      fs.readFileSync(path.join(workspace, ".codebuddy", "cb-hud", "state.json"), "utf-8"),
+    ) as { activity?: { state?: string; currentTool?: string } };
+    expect(state.activity?.state).toBe("done");
+    expect(state.activity?.currentTool).toBeUndefined();
+  });
+
+  test("cb-hud hide removes only cb-hud hooks and preserves other hooks", async () => {
+    const workspace = tempWorkspace();
+    const script = path.join(
+      repoRoot(),
+      "packs",
+      "cb-hud",
+      "skills",
+      "cb-hud",
+      "scripts",
+      "cb-hud.js",
+    );
+    const settingsPath = path.join(workspace, ".codebuddy", "settings.json");
+    fs.mkdirSync(path.dirname(settingsPath), { recursive: true });
+    fs.writeFileSync(
+      settingsPath,
+      JSON.stringify(
+        {
+          hooks: {
+            Stop: [
+              {
+                hooks: [
+                  { type: "command", command: 'node "cb-hud.js" hook Stop' },
+                  { type: "command", command: "node other-hook.js" },
+                ],
+              },
+            ],
+          },
+        },
+        null,
+        2,
+      ),
+    );
+
+    const result = spawnSync("node", [script, "hide", "--project", workspace], {
+      encoding: "utf-8",
+    });
+
+    expect(result.status).toBe(0);
+    const settings = JSON.parse(fs.readFileSync(settingsPath, "utf-8")) as {
+      hooks?: Record<string, Array<{ hooks: Array<{ command: string }> }>>;
+    };
+    expect(settings.hooks?.Stop).toHaveLength(1);
+    expect(settings.hooks?.Stop?.[0]?.hooks).toEqual([
+      { type: "command", command: "node other-hook.js" },
+    ]);
+  });
+
   test("gpt-image-2 script creates project env demo on first run", async () => {
     const workspace = tempWorkspace();
     process.env.SKILL_MARKETPLACE_HOME = path.join(workspace, "home");

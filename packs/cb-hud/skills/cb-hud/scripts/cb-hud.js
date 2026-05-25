@@ -23,6 +23,9 @@ if (command === "statusline") {
   renderStatusLine(input);
 } else if (["init", "show", "hide", "uninstall"].includes(command)) {
   runProjectCommand(command, process.argv.slice(3));
+} else if (command === "hook") {
+  const input = await readStdin();
+  runHook(process.argv[3], process.argv.slice(4), input);
 } else {
   console.error(`Unknown cb-hud command: ${command}`);
   process.exit(1);
@@ -38,6 +41,7 @@ async function readStdin() {
 function renderStatusLine(rawInput) {
   const data = parseJson(rawInput);
   const cwd = data.workspace?.current_dir || data.cwd || process.cwd();
+  const activity = readActivityState(cwd);
   const project = basename(cwd);
   const model = data.model?.display_name || data.model?.id || "CodeBuddy";
   const session = shortSession(data.session_id);
@@ -49,6 +53,7 @@ function renderStatusLine(rawInput) {
 
   const parts = [
     `${ANSI.bold}${ANSI.cyan}CB HUD${ANSI.reset}`,
+    activityLine(activity),
     `${ANSI.green}${model}${ANSI.reset}`,
     `${ANSI.blue}${project}${ANSI.reset}`,
     session ? `${ANSI.dim}#${session}${ANSI.reset}` : "",
@@ -83,6 +88,7 @@ function runProjectCommand(action, argv) {
       command: commandLine,
       padding: 0,
     };
+    settings.hooks = mergeCbHudHooks(settings.hooks || {}, scriptPath, project);
     state.enabled = true;
     state.command = commandLine;
     writeJson(settingsPath, settings);
@@ -97,6 +103,7 @@ function runProjectCommand(action, argv) {
     const state = readJson(statePath);
     if (settings.statusLine) state.hiddenStatusLine = settings.statusLine;
     if (isCbHudStatusLine(settings.statusLine)) delete settings.statusLine;
+    settings.hooks = removeCbHudHooks(settings.hooks || {});
     state.enabled = false;
     writeJson(settingsPath, settings);
     writeJson(statePath, state);
@@ -106,14 +113,51 @@ function runProjectCommand(action, argv) {
 
   const settings = readJson(settingsPath);
   if (isCbHudStatusLine(settings.statusLine)) delete settings.statusLine;
+  settings.hooks = removeCbHudHooks(settings.hooks || {});
   writeJson(settingsPath, settings);
   fs.rmSync(stateDir, { recursive: true, force: true });
   console.log(`CB HUD uninstalled: ${settingsPath}`);
 }
 
-function resolveProject(argv) {
+function runHook(eventName, argv, rawInput) {
+  const data = parseJson(rawInput);
+  const project = resolveProject(argv, data.cwd || data.workspace?.current_dir);
+  const stateDir = path.join(project, ".codebuddy", "cb-hud");
+  const statePath = path.join(stateDir, "state.json");
+  const state = readJson(statePath);
+  const activity = state.activity || {};
+  const event = eventName || data.hook_event_name || "Status";
+  const now = new Date().toISOString();
+
+  if (event === "UserPromptSubmit") {
+    activity.state = "thinking";
+    activity.currentTool = undefined;
+  } else if (event === "PreToolUse") {
+    activity.state = "tool";
+    activity.currentTool = data.tool_name || data.tool?.name || data.matcher || "tool";
+    activity.lastTool = activity.currentTool;
+  } else if (event === "PostToolUse" || event === "PostToolUseFailure") {
+    activity.state = event === "PostToolUseFailure" ? "tool-error" : "thinking";
+    activity.lastTool = data.tool_name || activity.currentTool || activity.lastTool;
+    activity.currentTool = undefined;
+  } else if (event === "Stop" || event === "SessionEnd") {
+    activity.state = "done";
+    activity.currentTool = undefined;
+  } else if (event === "SessionStart") {
+    activity.state = "idle";
+    activity.currentTool = undefined;
+  }
+
+  activity.lastEvent = event;
+  activity.updatedAt = now;
+  activity.lastSkill = inferSkill(data) || activity.lastSkill;
+  state.activity = activity;
+  writeJson(statePath, state);
+}
+
+function resolveProject(argv, fallback = ".") {
   const index = argv.indexOf("--project");
-  const value = index >= 0 ? argv[index + 1] : ".";
+  const value = index >= 0 ? argv[index + 1] : fallback;
   return path.resolve(value || ".");
 }
 
@@ -129,6 +173,73 @@ function writeJson(filePath, data) {
 
 function isCbHudStatusLine(statusLine) {
   return typeof statusLine?.command === "string" && statusLine.command.includes("cb-hud.js");
+}
+
+function mergeCbHudHooks(hooks, scriptPath, project) {
+  const commandFor = (event) => `node "${scriptPath}" hook ${event} --project "${project}"`;
+  const next = removeCbHudHooks(hooks);
+  const definitions = {
+    SessionStart: [{ hooks: [hookCommand(commandFor("SessionStart"))] }],
+    UserPromptSubmit: [{ hooks: [hookCommand(commandFor("UserPromptSubmit"))] }],
+    PreToolUse: [{ matcher: "*", hooks: [hookCommand(commandFor("PreToolUse"))] }],
+    PostToolUse: [{ matcher: "*", hooks: [hookCommand(commandFor("PostToolUse"))] }],
+    PostToolUseFailure: [{ matcher: "*", hooks: [hookCommand(commandFor("PostToolUseFailure"))] }],
+    Stop: [{ hooks: [hookCommand(commandFor("Stop"))] }],
+    SessionEnd: [{ hooks: [hookCommand(commandFor("SessionEnd"))] }],
+  };
+
+  for (const [event, groups] of Object.entries(definitions)) {
+    next[event] = [...(next[event] || []), ...groups];
+  }
+  return next;
+}
+
+function removeCbHudHooks(hooks) {
+  const next = {};
+  for (const [event, groups] of Object.entries(hooks || {})) {
+    const remaining = (groups || [])
+      .map((group) => ({
+        ...group,
+        hooks: (group.hooks || []).filter((hook) => {
+          return !String(hook.command || "").includes("cb-hud.js");
+        }),
+      }))
+      .filter((group) => group.hooks.length);
+    if (remaining.length) next[event] = remaining;
+  }
+  return next;
+}
+
+function hookCommand(commandLine) {
+  return {
+    type: "command",
+    command: commandLine,
+    timeout: 2,
+  };
+}
+
+function readActivityState(cwd) {
+  const state = readJson(path.join(cwd, ".codebuddy", "cb-hud", "state.json"));
+  return state.activity || {};
+}
+
+function activityLine(activity) {
+  const state = activity.state || "idle";
+  const tool = activity.currentTool ? `Tool:${activity.currentTool}` : activity.lastTool ? `Last:${activity.lastTool}` : "";
+  const skill = activity.lastSkill ? `Skill:${activity.lastSkill}` : "";
+  return [state, tool, skill].filter(Boolean).join(" ");
+}
+
+function inferSkill(data) {
+  const values = [
+    data.skill_name,
+    data.skillName,
+    data.command_name,
+    data.commandName,
+    data.source,
+    data.matcher,
+  ].filter(Boolean);
+  return values.length ? String(values[0]) : "";
 }
 
 function parseJson(rawInput) {
