@@ -778,7 +778,7 @@ describe("shared skill marketplace", () => {
     expect(result.stdout).toContain("\u001b[");
   });
 
-  test("cb-hud status line can experimentally break after session id", async () => {
+  test("cb-hud multiline status line uses three-line layout", async () => {
     const script = path.join(
       repoRoot(),
       "packs",
@@ -793,10 +793,13 @@ describe("shared skill marketplace", () => {
       input: JSON.stringify({
         session_id: "abcdef123456",
         cwd: "C:/work/demo",
+        agent: { name: "frontend-agent" },
         model: { display_name: "GPT-5.5" },
+        version: "2.96.0",
         workspace: { current_dir: "C:/work/demo" },
         cost: {
           total_duration_ms: 125000,
+          total_api_duration_ms: 2300,
           total_lines_added: 12,
           total_lines_removed: 3,
         },
@@ -804,8 +807,22 @@ describe("shared skill marketplace", () => {
     });
 
     expect(result.status).toBe(0);
-    expect(result.stdout).toContain("#abcdef12");
-    expect(result.stdout).toMatch(/#abcdef12\u001b\[0m.*\n.*⏱ 2m5s/s);
+    const lines = result.stdout.trimEnd().split(/\r?\n/);
+    expect(lines).toHaveLength(3);
+    expect(lines[0]).toContain("🐱 CB HUD");
+    expect(lines[0]).toContain("🎯 idle");
+    expect(lines[0]).toContain("📁 demo");
+    expect(lines[0]).toContain("#abcdef12");
+    expect(lines[0]).not.toContain("🤖 GPT-5.5");
+    expect(lines[0]).not.toContain("⏱ 2m5s");
+    expect(lines[1]).toContain("🤝 frontend-agent");
+    expect(lines[2]).toContain("⏱ 2m5s");
+    expect(lines[2]).toContain("API 2.3s");
+    expect(lines[2]).toContain("v2.96.0");
+    expect(lines[2]).toContain("🤖 GPT-5.5");
+    expect(lines[2]).toContain("📝");
+    expect(lines[2]).toContain("+12");
+    expect(lines[2]).toContain("-3");
   });
 
   test("cb-hud init wires status line and tool tracking hooks", async () => {

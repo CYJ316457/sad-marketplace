@@ -15,6 +15,8 @@ v2.2 displays total token usage, explicit changed-line counts, and API duration 
 
 v2.3 uses a fixed cat title, moves skill and tool names to the front without labels, and adds phase, activity duration, and SVN change count.
 
+v2.4 adds a three-line multiline layout. Line 1 shows title, phase, project, and session. Line 2 starts with agent, then shows activity details. Line 3 shows duration, version, model, and file changes.
+
 ## Commands
 
 - `CB-HUD-init`: write `.codebuddy/settings.json` with `statusLine.command` pointing to this pack's `scripts/cb-hud.js statusline`, and install tool-tracking hooks.
@@ -44,7 +46,9 @@ The status line script reads CodeBuddy JSON from stdin and prints one styled lin
 Example shape:
 
 ```text
-🐱 CB HUD | 🎯 tool ⠋ 🔥 18.0s 🧩 cb-hud 🔧 Bash | 🤖 GPT-5.5 | 📁 TestMarketPlace | ⏱ 2m5s / API 2.3s | 🧾 2.4M tok | 📝 +12 -3 | 📦 SVN 3
+🐱 CB HUD | 🎯 tool ⠋ | 📁 TestMarketPlace | #abcdef12
+🤝 frontend-agent | 🎯 tool 🔥 18.0s 🧩 cb-hud 🔧 Bash | 🧾 2.4M tok | 📦 SVN 3
+⏱ 2m5s / API 2.3s | v2.96.0 | 🤖 GPT-5.5 | 📝 +12 -3
 ```
 
 Token counts are shown as a total. Counts support raw numbers, `K`, and `M`; values with a unit keep one decimal place.

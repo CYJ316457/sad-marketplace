@@ -45,6 +45,7 @@ function renderStatusLine(rawInput, argv = []) {
   const cwd = data.workspace?.current_dir || data.cwd || process.cwd();
   const activity = readActivityState(cwd);
   const project = basename(cwd);
+  const agent = formatAgent(data);
   const model = data.model?.display_name || data.model?.id || "CodeBuddy";
   const session = shortSession(data.session_id);
   const git = gitInfo(cwd);
@@ -54,6 +55,7 @@ function renderStatusLine(rawInput, argv = []) {
   const diff = formatDiff(data.cost?.total_lines_added, data.cost?.total_lines_removed);
   const svn = svnInfo(cwd);
   const version = data.version ? `v${data.version}` : "";
+  const separator = `${ANSI.dim} | ${ANSI.reset}`;
 
   const parts = [
     hudTitle(activity),
@@ -70,20 +72,21 @@ function renderStatusLine(rawInput, argv = []) {
     version ? `${ANSI.dim}${version}${ANSI.reset}` : "",
   ].filter(Boolean);
 
-  console.log(joinStatusParts(parts, { multiline: argv.includes("--multiline") }));
-}
+  if (argv.includes("--multiline")) {
+    console.log(
+      [
+        [hudTitle(activity), activityLine(activity, { compact: true }), `${ANSI.blue}📁 ${project}${ANSI.reset}`, session ? `${ANSI.dim}#${session}${ANSI.reset}` : ""],
+        [agent, activityDetails(activity), git, cost, tokens, svn],
+        [duration, version ? `${ANSI.dim}${version}${ANSI.reset}` : "", `${ANSI.green}🤖 ${model}${ANSI.reset}`, diff],
+      ]
+        .map((line) => line.filter(Boolean).join(separator))
+        .filter(Boolean)
+        .join("\n"),
+    );
+    return;
+  }
 
-function joinStatusParts(parts, options = {}) {
-  const separator = `${ANSI.dim} | ${ANSI.reset}`;
-  if (!options.multiline) return parts.join(separator);
-
-  const sessionIndex = parts.findIndex((part) => part.includes("#"));
-  if (sessionIndex < 0 || sessionIndex === parts.length - 1) return parts.join(separator);
-
-  return [
-    parts.slice(0, sessionIndex + 1).join(separator),
-    parts.slice(sessionIndex + 1).join(separator),
-  ].join("\n");
+  console.log(parts.join(separator));
 }
 
 function runProjectCommand(action, argv) {
@@ -250,10 +253,10 @@ function readActivityState(cwd) {
   return state.activity || {};
 }
 
-function activityLine(activity) {
+function activityLine(activity, options = {}) {
   const state = activity.state || "idle";
   const stage = stageBadge(state);
-  const duration = activityDuration(activity);
+  const duration = options.compact ? "" : activityDuration(activity);
   const skill = activity.lastSkill ? `${ANSI.magenta}🧩 ${activity.lastSkill}${ANSI.reset}` : "";
   const tool = activity.currentTool
     ? `${ANSI.bold}${ANSI.yellow}🔧 ${activity.currentTool}${ANSI.reset}`
@@ -265,6 +268,40 @@ function activityLine(activity) {
 
 function hudTitle() {
   return `${ANSI.bold}${ANSI.cyan}🐱 CB HUD${ANSI.reset}`;
+}
+
+function activityDetails(activity) {
+  const duration = activityDuration(activity);
+  const skill = activity.lastSkill ? `${ANSI.magenta}🧩 ${activity.lastSkill}${ANSI.reset}` : "";
+  const tool = activity.currentTool
+    ? `${ANSI.bold}${ANSI.yellow}🔧 ${activity.currentTool}${ANSI.reset}`
+    : activity.lastTool
+      ? `${ANSI.yellow}🛠 ${activity.lastTool}${ANSI.reset}`
+      : "";
+  const phase = stageLabel(activity.state || "idle");
+  return [phase, duration, skill, tool].filter(Boolean).join(" ");
+}
+
+function stageLabel(state) {
+  if (state === "tool") return "🎯 tool";
+  if (state === "thinking") return "🎯 thinking";
+  if (state === "tool-error") return "🎯 error";
+  if (state === "done") return "🎯 done";
+  return "🎯 idle";
+}
+
+function formatAgent(data) {
+  const value =
+    data.agent?.name ||
+    data.agent?.display_name ||
+    data.agent?.displayName ||
+    data.agent_name ||
+    data.agentName ||
+    data.tool?.name ||
+    data.command_name ||
+    data.commandName ||
+    "";
+  return value ? `${ANSI.cyan}🤝 ${value}${ANSI.reset}` : "";
 }
 
 function stageBadge(state) {
