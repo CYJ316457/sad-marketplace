@@ -778,6 +778,36 @@ describe("shared skill marketplace", () => {
     expect(result.stdout).toContain("\u001b[");
   });
 
+  test("cb-hud status line can experimentally break after session id", async () => {
+    const script = path.join(
+      repoRoot(),
+      "packs",
+      "cb-hud",
+      "skills",
+      "cb-hud",
+      "scripts",
+      "cb-hud.js",
+    );
+    const result = spawnSync("node", [script, "statusline", "--multiline"], {
+      encoding: "utf-8",
+      input: JSON.stringify({
+        session_id: "abcdef123456",
+        cwd: "C:/work/demo",
+        model: { display_name: "GPT-5.5" },
+        workspace: { current_dir: "C:/work/demo" },
+        cost: {
+          total_duration_ms: 125000,
+          total_lines_added: 12,
+          total_lines_removed: 3,
+        },
+      }),
+    });
+
+    expect(result.status).toBe(0);
+    expect(result.stdout).toContain("#abcdef12");
+    expect(result.stdout).toMatch(/#abcdef12\u001b\[0m.*\n.*⏱ 2m5s/s);
+  });
+
   test("cb-hud init wires status line and tool tracking hooks", async () => {
     const workspace = tempWorkspace();
     const script = path.join(

@@ -22,7 +22,7 @@ const command = process.argv[2] || "statusline";
 
 if (command === "statusline") {
   const input = await readStdin();
-  renderStatusLine(input);
+  renderStatusLine(input, process.argv.slice(3));
 } else if (["init", "show", "hide", "uninstall"].includes(command)) {
   runProjectCommand(command, process.argv.slice(3));
 } else if (command === "hook") {
@@ -40,7 +40,7 @@ async function readStdin() {
   return data;
 }
 
-function renderStatusLine(rawInput) {
+function renderStatusLine(rawInput, argv = []) {
   const data = parseJson(rawInput);
   const cwd = data.workspace?.current_dir || data.cwd || process.cwd();
   const activity = readActivityState(cwd);
@@ -70,7 +70,20 @@ function renderStatusLine(rawInput) {
     version ? `${ANSI.dim}${version}${ANSI.reset}` : "",
   ].filter(Boolean);
 
-  console.log(parts.join(`${ANSI.dim} | ${ANSI.reset}`));
+  console.log(joinStatusParts(parts, { multiline: argv.includes("--multiline") }));
+}
+
+function joinStatusParts(parts, options = {}) {
+  const separator = `${ANSI.dim} | ${ANSI.reset}`;
+  if (!options.multiline) return parts.join(separator);
+
+  const sessionIndex = parts.findIndex((part) => part.includes("#"));
+  if (sessionIndex < 0 || sessionIndex === parts.length - 1) return parts.join(separator);
+
+  return [
+    parts.slice(0, sessionIndex + 1).join(separator),
+    parts.slice(sessionIndex + 1).join(separator),
+  ].join("\n");
 }
 
 function runProjectCommand(action, argv) {
