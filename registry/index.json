@@ -114,7 +114,7 @@
     },
     {
       "name": "cb-hud",
-      "version": "1.3.2",
+      "version": "1.3.3",
       "description": "CodeBuddy-only cat HUD with skill, tool, phase, duration, SVN, and activity tracking",
       "author": {
         "name": "Local Publisher"

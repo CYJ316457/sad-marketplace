@@ -15,7 +15,7 @@ v2.2 displays total token usage, explicit changed-line counts, and API duration 
 
 v2.3 uses a fixed cat title, moves skill and tool names to the front without labels, and adds phase, activity duration, and SVN change count.
 
-v2.4 adds a three-line multiline layout. Line 1 shows title, phase, project, and session. Line 2 starts with agent, then shows activity details. Line 3 shows duration, version, model, and file changes.
+v2.4 adds a three-line multiline layout. Line 1 shows title, phase, project, and session only. Line 2 starts with agent, then shows active skill/tool details and counters. Line 3 shows duration, version, model, and file changes.
 
 ## Commands
 

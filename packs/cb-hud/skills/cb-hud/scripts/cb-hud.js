@@ -75,8 +75,8 @@ function renderStatusLine(rawInput, argv = []) {
   if (argv.includes("--multiline")) {
     console.log(
       [
-        [hudTitle(activity), activityLine(activity, { compact: true }), `${ANSI.blue}📁 ${project}${ANSI.reset}`, session ? `${ANSI.dim}#${session}${ANSI.reset}` : ""],
-        [agent, activityDetails(activity), git, cost, tokens, svn],
+        [hudTitle(activity), stageBadge(activity.state || "idle"), `${ANSI.blue}📁 ${project}${ANSI.reset}`, session ? `${ANSI.dim}#${session}${ANSI.reset}` : ""],
+        [agent, activityDetails(activity, { includePhase: false }), git, cost, tokens, svn],
         [duration, version ? `${ANSI.dim}${version}${ANSI.reset}` : "", `${ANSI.green}🤖 ${model}${ANSI.reset}`, diff],
       ]
         .map((line) => line.filter(Boolean).join(separator))
@@ -270,7 +270,7 @@ function hudTitle() {
   return `${ANSI.bold}${ANSI.cyan}🐱 CB HUD${ANSI.reset}`;
 }
 
-function activityDetails(activity) {
+function activityDetails(activity, options = {}) {
   const duration = activityDuration(activity);
   const skill = activity.lastSkill ? `${ANSI.magenta}🧩 ${activity.lastSkill}${ANSI.reset}` : "";
   const tool = activity.currentTool
@@ -278,7 +278,7 @@ function activityDetails(activity) {
     : activity.lastTool
       ? `${ANSI.yellow}🛠 ${activity.lastTool}${ANSI.reset}`
       : "";
-  const phase = stageLabel(activity.state || "idle");
+  const phase = options.includePhase === false ? "" : stageLabel(activity.state || "idle");
   return [phase, duration, skill, tool].filter(Boolean).join(" ");
 }
 

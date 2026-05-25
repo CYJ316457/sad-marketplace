@@ -813,9 +813,13 @@ describe("shared skill marketplace", () => {
     expect(lines[0]).toContain("🎯 idle");
     expect(lines[0]).toContain("📁 demo");
     expect(lines[0]).toContain("#abcdef12");
+    expect(lines[0]).not.toContain("🧩");
+    expect(lines[0]).not.toContain("🔧");
+    expect(lines[0]).not.toContain("🛠");
     expect(lines[0]).not.toContain("🤖 GPT-5.5");
     expect(lines[0]).not.toContain("⏱ 2m5s");
     expect(lines[1]).toContain("🤝 frontend-agent");
+    expect(lines[1]).not.toContain("🎯 idle");
     expect(lines[2]).toContain("⏱ 2m5s");
     expect(lines[2]).toContain("API 2.3s");
     expect(lines[2]).toContain("v2.96.0");
@@ -823,6 +827,58 @@ describe("shared skill marketplace", () => {
     expect(lines[2]).toContain("📝");
     expect(lines[2]).toContain("+12");
     expect(lines[2]).toContain("-3");
+  });
+
+  test("cb-hud multiline keeps done skill and tool on second line only", async () => {
+    const workspace = tempWorkspace();
+    const script = path.join(
+      repoRoot(),
+      "packs",
+      "cb-hud",
+      "skills",
+      "cb-hud",
+      "scripts",
+      "cb-hud.js",
+    );
+    const stateDir = path.join(workspace, ".codebuddy", "cb-hud");
+    fs.mkdirSync(stateDir, { recursive: true });
+    fs.writeFileSync(
+      path.join(stateDir, "state.json"),
+      JSON.stringify(
+        {
+          activity: {
+            state: "done",
+            stateStartedAt: new Date(Date.now() - 5000).toISOString(),
+            lastSkill: "startup",
+            lastTool: "Write",
+          },
+        },
+        null,
+        2,
+      ),
+    );
+
+    const result = spawnSync("node", [script, "statusline", "--multiline"], {
+      encoding: "utf-8",
+      input: JSON.stringify({
+        session_id: "abcdef123456",
+        cwd: workspace,
+        agent: { name: "main-agent" },
+        model: { display_name: "GPT-5.5" },
+        workspace: { current_dir: workspace },
+      }),
+    });
+
+    expect(result.status).toBe(0);
+    const lines = result.stdout.trimEnd().split(/\r?\n/);
+    expect(lines).toHaveLength(3);
+    expect(lines[0]).toContain("🎯 done");
+    expect(lines[0]).not.toContain("🧩 startup");
+    expect(lines[0]).not.toContain("🛠 Write");
+    expect(lines[1]).toContain("🤝 main-agent");
+    expect(lines[1]).toContain("🧩 startup");
+    expect(lines[1]).toContain("🛠 Write");
+    expect(lines[1]).not.toContain("🎯 done");
   });
 
   test("cb-hud init wires status line and tool tracking hooks", async () => {
