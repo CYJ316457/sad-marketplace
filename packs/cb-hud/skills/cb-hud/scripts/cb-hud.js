@@ -48,7 +48,7 @@ function renderStatusLine(rawInput) {
   const model = data.model?.display_name || data.model?.id || "CodeBuddy";
   const session = shortSession(data.session_id);
   const git = gitInfo(cwd);
-  const duration = formatDuration(data.cost?.total_duration_ms);
+  const duration = formatDuration(data.cost?.total_duration_ms, data.cost?.total_api_duration_ms);
   const cost = formatCost(data.cost?.total_cost_usd);
   const tokens = formatTokens(data);
   const diff = formatDiff(data.cost?.total_lines_added, data.cost?.total_lines_removed);
@@ -286,13 +286,22 @@ function shortSession(value) {
   return value ? String(value).slice(0, 8) : "";
 }
 
-function formatDuration(ms) {
+function formatDuration(ms, apiMs) {
   const value = Number(ms);
-  if (!Number.isFinite(value) || value <= 0) return "";
-  const totalSeconds = Math.round(value / 1000);
-  const minutes = Math.floor(totalSeconds / 60);
-  const seconds = totalSeconds % 60;
-  return `${ANSI.yellow}${minutes}m${seconds}s${ANSI.reset}`;
+  const apiValue = Number(apiMs);
+  const parts = [];
+  if (Number.isFinite(value) && value > 0) parts.push(`⏱ ${formatDurationValue(value)}`);
+  if (Number.isFinite(apiValue) && apiValue > 0) parts.push(`API ${formatDurationValue(apiValue)}`);
+  return parts.length ? `${ANSI.yellow}${parts.join(" / ")}${ANSI.reset}` : "";
+}
+
+function formatDurationValue(ms) {
+  const totalSeconds = ms / 1000;
+  if (totalSeconds < 60) return `${totalSeconds.toFixed(1)}s`;
+  const roundedSeconds = Math.round(totalSeconds);
+  const minutes = Math.floor(roundedSeconds / 60);
+  const seconds = roundedSeconds % 60;
+  return `${minutes}m${seconds}s`;
 }
 
 function formatCost(value) {
@@ -322,11 +331,8 @@ function formatTokens(data) {
     data.output_tokens,
     data.completion_tokens,
   );
-  const parts = [
-    input > 0 ? `⬆ ${formatTokenCount(input)} tok` : "",
-    output > 0 ? `⬇ ${formatTokenCount(output)} tok` : "",
-  ].filter(Boolean);
-  return parts.length ? `${ANSI.cyan}${parts.join(" ")}${ANSI.reset}` : "";
+  const total = input + output;
+  return total > 0 ? `${ANSI.cyan}🧾 ${formatTokenCount(total)} tok${ANSI.reset}` : "";
 }
 
 function firstNumber(...values) {
@@ -347,7 +353,7 @@ function formatDiff(added, removed) {
   const plus = Number(added) || 0;
   const minus = Number(removed) || 0;
   if (!plus && !minus) return "";
-  return `${ANSI.green}+${plus}${ANSI.reset} ${ANSI.red}-${minus}${ANSI.reset}`;
+  return `📝 ${ANSI.green}+${plus}${ANSI.reset} ${ANSI.red}-${minus}${ANSI.reset}`;
 }
 
 function gitInfo(cwd) {

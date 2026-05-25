@@ -749,6 +749,7 @@ describe("shared skill marketplace", () => {
         cost: {
           total_cost_usd: 0.0123,
           total_duration_ms: 125000,
+          total_api_duration_ms: 2300,
           total_lines_added: 12,
           total_lines_removed: 3,
           total_input_tokens: 1536,
@@ -765,10 +766,14 @@ describe("shared skill marketplace", () => {
     expect(result.stdout).toContain("📁 demo");
     expect(result.stdout).toContain("GPT-5.5");
     expect(result.stdout).toContain("demo");
-    expect(result.stdout).toContain("⬆ 1.5K tok");
-    expect(result.stdout).toContain("⬇ 2.4M tok");
+    expect(result.stdout).toContain("⏱ 2m5s");
+    expect(result.stdout).toContain("API 2.3s");
+    expect(result.stdout).toContain("🧾 2.4M tok");
+    expect(result.stdout).toContain("📝");
     expect(result.stdout).toContain("+12");
     expect(result.stdout).toContain("-3");
+    expect(result.stdout).not.toContain("⬆");
+    expect(result.stdout).not.toContain("⬇");
     expect(result.stdout).toContain("\u001b[");
   });
 

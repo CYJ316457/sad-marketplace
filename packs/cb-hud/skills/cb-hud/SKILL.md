@@ -9,7 +9,9 @@ CB HUD is a CodeBuddy-only status line pack. It configures CodeBuddy's native `s
 
 v2 also installs lightweight CodeBuddy hooks. The hooks update `.codebuddy/cb-hud/state.json` on session, prompt, tool, and stop events so the HUD can show current activity.
 
-v2.1 makes the activity area more visible with emoji labels and lightweight spinner frames. The animation advances when CodeBuddy refreshes the status line; it does not start a background process.
+v2.1 makes the activity area more visible with emoji labels and lightweight spinner frames. The spinner advances only when CodeBuddy refreshes the status line; it does not start a background process.
+
+v2.2 displays total token usage, explicit changed-line counts, and API duration when CodeBuddy provides those fields.
 
 ## Commands
 
@@ -29,19 +31,19 @@ The status line script reads CodeBuddy JSON from stdin and prints one styled lin
 - project folder
 - short session id
 - git branch and dirty state when available
-- elapsed duration
+- elapsed duration and API duration
 - cost
-- uploaded and downloaded token counts when CodeBuddy provides token fields
-- changed lines
+- total token count when CodeBuddy provides token fields
+- changed lines, displayed as `📝 +<added> -<removed>`
 - CodeBuddy version
 
 Example shape:
 
 ```text
-🟡 CB HUD | ⠋ THINKING | 🔧 TOOL Bash | 🧩 cb-hud | 🤖 GPT-5.5 | 📁 TestMarketPlace | ⬆ 1.5K tok ⬇ 2.4M tok
+🟡 CB HUD | ⠋ THINKING | 🔧 TOOL Bash | 🧩 cb-hud | 🤖 GPT-5.5 | 📁 TestMarketPlace | ⏱ 2m5s / API 2.3s | 🧾 2.4M tok | 📝 +12 -3
 ```
 
-Token counts support raw numbers, `K`, and `M`. Values with a unit keep one decimal place.
+Token counts are shown as a total. Counts support raw numbers, `K`, and `M`; values with a unit keep one decimal place.
 
 `statusLine` only reliably consumes the first stdout line. CB HUD therefore keeps everything on one line. Long output can visually wrap in CodeBuddy versions that support status bar wrapping.
 
