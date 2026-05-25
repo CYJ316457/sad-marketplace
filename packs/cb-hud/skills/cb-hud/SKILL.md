@@ -1,6 +1,6 @@
 ---
 name: cb-hud
-description: Use when configuring CodeBuddy Code to show a polished emoji status line HUD with model, project, session, tool, skill, git, cost, duration, and code-change state.
+description: Use when configuring CodeBuddy Code to show a polished cat status line HUD with current skill, tool, phase, duration, SVN, model, project, git, cost, token, and code-change state.
 ---
 
 # CB HUD
@@ -13,6 +13,8 @@ v2.1 makes the activity area more visible with emoji labels and lightweight spin
 
 v2.2 displays total token usage, explicit changed-line counts, and API duration when CodeBuddy provides those fields.
 
+v2.3 uses a fixed cat title, moves skill and tool names to the front without labels, and adds phase, activity duration, and SVN change count.
+
 ## Commands
 
 - `CB-HUD-init`: write `.codebuddy/settings.json` with `statusLine.command` pointing to this pack's `scripts/cb-hud.js statusline`, and install tool-tracking hooks.
@@ -24,9 +26,10 @@ v2.2 displays total token usage, explicit changed-line counts, and API duration 
 
 The status line script reads CodeBuddy JSON from stdin and prints one styled line. It shows:
 
-- current state: `idle`, `thinking`, `tool`, `tool-error`, or `done`
-- current or last tool from CodeBuddy hooks, displayed as `🔧 TOOL <name>` or `🛠 LAST <name>`
+- current phase: `idle`, `thinking`, `tool`, `error`, or `done`, displayed as `🎯 <phase>`
+- current or last tool from CodeBuddy hooks, displayed as `🔧 <name>` or `🛠 <name>`
 - inferred recent skill or command when hook input includes it, displayed as `🧩 <name>`
+- activity duration, displayed as `🔥 <duration>`
 - model display name
 - project folder
 - short session id
@@ -35,12 +38,13 @@ The status line script reads CodeBuddy JSON from stdin and prints one styled lin
 - cost
 - total token count when CodeBuddy provides token fields
 - changed lines, displayed as `📝 +<added> -<removed>`
+- SVN changed item count, displayed as `📦 SVN <count>` when `svn status` is available
 - CodeBuddy version
 
 Example shape:
 
 ```text
-🟡 CB HUD | ⠋ THINKING | 🔧 TOOL Bash | 🧩 cb-hud | 🤖 GPT-5.5 | 📁 TestMarketPlace | ⏱ 2m5s / API 2.3s | 🧾 2.4M tok | 📝 +12 -3
+🐱 CB HUD | 🎯 tool ⠋ 🔥 18.0s 🧩 cb-hud 🔧 Bash | 🤖 GPT-5.5 | 📁 TestMarketPlace | ⏱ 2m5s / API 2.3s | 🧾 2.4M tok | 📝 +12 -3 | 📦 SVN 3
 ```
 
 Token counts are shown as a total. Counts support raw numbers, `K`, and `M`; values with a unit keep one decimal place.

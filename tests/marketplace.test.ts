@@ -760,8 +760,9 @@ describe("shared skill marketplace", () => {
 
     expect(result.status).toBe(0);
     expect(result.stdout).toContain("CB HUD");
-    expect(result.stdout).toContain("🟢");
-    expect(result.stdout).toContain("IDLE");
+    expect(result.stdout).toContain("🐱 CB HUD");
+    expect(result.stdout).toContain("🎯 idle");
+    expect(result.stdout).not.toContain("🟢 CB HUD");
     expect(result.stdout).toContain("🤖 GPT-5.5");
     expect(result.stdout).toContain("📁 demo");
     expect(result.stdout).toContain("GPT-5.5");
@@ -831,15 +832,46 @@ describe("shared skill marketplace", () => {
         input: JSON.stringify({
           hook_event_name: "PreToolUse",
           tool_name: "Bash",
+          skill_name: "cb-hud",
           cwd: workspace,
           transcript_path: path.join(workspace, "transcript.jsonl"),
         }),
       },
     );
     expect(hookResult.status).toBe(0);
+    const statePath = path.join(workspace, ".codebuddy", "cb-hud", "state.json");
+    const state = JSON.parse(fs.readFileSync(statePath, "utf-8")) as {
+      activity?: { stateStartedAt?: string };
+    };
+    fs.writeFileSync(
+      statePath,
+      JSON.stringify(
+        {
+          ...state,
+          activity: {
+            ...state.activity,
+            stateStartedAt: new Date(Date.now() - 18000).toISOString(),
+          },
+        },
+        null,
+        2,
+      ),
+    );
+    const svnBin = path.join(workspace, process.platform === "win32" ? "svn.cmd" : "svn");
+    fs.writeFileSync(
+      svnBin,
+      process.platform === "win32"
+        ? "@echo off\r\necho M file-a\r\necho ? file-b\r\necho A file-c\r\n"
+        : "#!/bin/sh\nprintf 'M file-a\\n? file-b\\nA file-c\\n'\n",
+    );
+    if (process.platform !== "win32") fs.chmodSync(svnBin, 0o755);
 
+    const statusEnv = { ...process.env };
+    statusEnv.PATH = `${workspace}${path.delimiter}${process.env.PATH || process.env.Path || ""}`;
+    statusEnv.Path = statusEnv.PATH;
     const statusResult = spawnSync("node", [script, "statusline"], {
       encoding: "utf-8",
+      env: statusEnv,
       input: JSON.stringify({
         session_id: "abcdef123456",
         cwd: workspace,
@@ -849,9 +881,16 @@ describe("shared skill marketplace", () => {
     });
 
     expect(statusResult.status).toBe(0);
+    expect(statusResult.stdout).toContain("🐱 CB HUD");
+    expect(statusResult.stdout).not.toContain("🟢 CB HUD");
+    expect(statusResult.stdout).toContain("🎯 tool");
+    expect(statusResult.stdout).toContain("🔥");
+    expect(statusResult.stdout).toContain("🧩 cb-hud");
     expect(statusResult.stdout).toContain("🔧");
-    expect(statusResult.stdout).toContain("TOOL");
     expect(statusResult.stdout).toContain("Bash");
+    expect(statusResult.stdout).toContain("📦 SVN 3");
+    expect(statusResult.stdout).not.toContain("skill:");
+    expect(statusResult.stdout).not.toContain("tool:");
     expect(statusResult.stdout).toMatch(/[⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏]/u);
     expect(statusResult.stdout).not.toContain("\n\n");
 
@@ -860,11 +899,11 @@ describe("shared skill marketplace", () => {
       input: JSON.stringify({ hook_event_name: "Stop", cwd: workspace }),
     });
     expect(stopResult.status).toBe(0);
-    const state = JSON.parse(
+    const stoppedState = JSON.parse(
       fs.readFileSync(path.join(workspace, ".codebuddy", "cb-hud", "state.json"), "utf-8"),
     ) as { activity?: { state?: string; currentTool?: string } };
-    expect(state.activity?.state).toBe("done");
-    expect(state.activity?.currentTool).toBeUndefined();
+    expect(stoppedState.activity?.state).toBe("done");
+    expect(stoppedState.activity?.currentTool).toBeUndefined();
   });
 
   test("cb-hud hide removes only cb-hud hooks and preserves other hooks", async () => {

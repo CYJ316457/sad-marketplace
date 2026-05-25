@@ -52,6 +52,7 @@ function renderStatusLine(rawInput) {
   const cost = formatCost(data.cost?.total_cost_usd);
   const tokens = formatTokens(data);
   const diff = formatDiff(data.cost?.total_lines_added, data.cost?.total_lines_removed);
+  const svn = svnInfo(cwd);
   const version = data.version ? `v${data.version}` : "";
 
   const parts = [
@@ -65,6 +66,7 @@ function renderStatusLine(rawInput) {
     cost,
     tokens,
     diff,
+    svn,
     version ? `${ANSI.dim}${version}${ANSI.reset}` : "",
   ].filter(Boolean);
 
@@ -134,21 +136,22 @@ function runHook(eventName, argv, rawInput) {
   const now = new Date().toISOString();
 
   if (event === "UserPromptSubmit") {
+    setActivityState(activity, "thinking", now);
     activity.state = "thinking";
     activity.currentTool = undefined;
   } else if (event === "PreToolUse") {
-    activity.state = "tool";
+    setActivityState(activity, "tool", now);
     activity.currentTool = data.tool_name || data.tool?.name || data.matcher || "tool";
     activity.lastTool = activity.currentTool;
   } else if (event === "PostToolUse" || event === "PostToolUseFailure") {
-    activity.state = event === "PostToolUseFailure" ? "tool-error" : "thinking";
+    setActivityState(activity, event === "PostToolUseFailure" ? "tool-error" : "thinking", now);
     activity.lastTool = data.tool_name || activity.currentTool || activity.lastTool;
     activity.currentTool = undefined;
   } else if (event === "Stop" || event === "SessionEnd") {
-    activity.state = "done";
+    setActivityState(activity, "done", now);
     activity.currentTool = undefined;
   } else if (event === "SessionStart") {
-    activity.state = "idle";
+    setActivityState(activity, "idle", now);
     activity.currentTool = undefined;
   }
 
@@ -157,6 +160,13 @@ function runHook(eventName, argv, rawInput) {
   activity.lastSkill = inferSkill(data) || activity.lastSkill;
   state.activity = activity;
   writeJson(statePath, state);
+}
+
+function setActivityState(activity, state, now) {
+  if (activity.state !== state) {
+    activity.stateStartedAt = now;
+  }
+  activity.state = state;
 }
 
 function resolveProject(argv, fallback = ".") {
@@ -229,28 +239,34 @@ function readActivityState(cwd) {
 
 function activityLine(activity) {
   const state = activity.state || "idle";
-  const status = statusBadge(state);
-  const tool = activity.currentTool
-    ? `${ANSI.bold}${ANSI.yellow}🔧 TOOL ${activity.currentTool}${ANSI.reset}`
-    : activity.lastTool
-      ? `${ANSI.yellow}🛠 LAST ${activity.lastTool}${ANSI.reset}`
-      : "";
+  const stage = stageBadge(state);
+  const duration = activityDuration(activity);
   const skill = activity.lastSkill ? `${ANSI.magenta}🧩 ${activity.lastSkill}${ANSI.reset}` : "";
-  return [status, tool, skill].filter(Boolean).join(" ");
+  const tool = activity.currentTool
+    ? `${ANSI.bold}${ANSI.yellow}🔧 ${activity.currentTool}${ANSI.reset}`
+    : activity.lastTool
+      ? `${ANSI.yellow}🛠 ${activity.lastTool}${ANSI.reset}`
+      : "";
+  return [stage, duration, skill, tool].filter(Boolean).join(" ");
 }
 
-function hudTitle(activity) {
-  const state = activity.state || "idle";
-  const emoji = state === "tool-error" ? "🔴" : state === "tool" ? "🔧" : state === "thinking" ? "🟡" : state === "done" ? "✅" : "🟢";
-  return `${ANSI.bold}${ANSI.cyan}${emoji} CB HUD${ANSI.reset}`;
+function hudTitle() {
+  return `${ANSI.bold}${ANSI.cyan}🐱 CB HUD${ANSI.reset}`;
 }
 
-function statusBadge(state) {
-  if (state === "tool") return `${ANSI.bold}${ANSI.yellow}${spinnerFrame()} TOOL${ANSI.reset}`;
-  if (state === "thinking") return `${ANSI.yellow}${spinnerFrame()} THINKING${ANSI.reset}`;
-  if (state === "tool-error") return `${ANSI.bold}${ANSI.red}🔴 TOOL ERROR${ANSI.reset}`;
-  if (state === "done") return `${ANSI.green}✅ DONE${ANSI.reset}`;
-  return `${ANSI.green}🟢 IDLE${ANSI.reset}`;
+function stageBadge(state) {
+  if (state === "tool") return `${ANSI.bold}${ANSI.yellow}🎯 tool ${spinnerFrame()}${ANSI.reset}`;
+  if (state === "thinking") return `${ANSI.yellow}🎯 thinking ${spinnerFrame()}${ANSI.reset}`;
+  if (state === "tool-error") return `${ANSI.bold}${ANSI.red}🎯 error${ANSI.reset}`;
+  if (state === "done") return `${ANSI.green}🎯 done${ANSI.reset}`;
+  return `${ANSI.green}🎯 idle${ANSI.reset}`;
+}
+
+function activityDuration(activity) {
+  const startedAt = Date.parse(activity.stateStartedAt || activity.updatedAt || "");
+  if (!Number.isFinite(startedAt)) return "";
+  const elapsed = Math.max(0, Date.now() - startedAt);
+  return `${ANSI.yellow}🔥 ${formatDurationValue(elapsed)}${ANSI.reset}`;
 }
 
 function spinnerFrame(now = Date.now()) {
@@ -354,6 +370,23 @@ function formatDiff(added, removed) {
   const minus = Number(removed) || 0;
   if (!plus && !minus) return "";
   return `📝 ${ANSI.green}+${plus}${ANSI.reset} ${ANSI.red}-${minus}${ANSI.reset}`;
+}
+
+function svnInfo(cwd) {
+  try {
+    const output = execFileSync("svn status", {
+      cwd,
+      encoding: "utf-8",
+      stdio: ["ignore", "pipe", "ignore"],
+      shell: true,
+      timeout: 1000,
+    }).trim();
+    if (!output) return "";
+    const count = output.split(/\r?\n/).filter((line) => line.trim()).length;
+    return count > 0 ? `${ANSI.cyan}📦 SVN ${count}${ANSI.reset}` : "";
+  } catch {
+    return "";
+  }
 }
 
 function gitInfo(cwd) {
