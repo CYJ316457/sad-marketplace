@@ -95,7 +95,7 @@ function runProjectCommand(action, argv) {
   const stateDir = path.join(project, ".codebuddy", "cb-hud");
   const statePath = path.join(stateDir, "state.json");
   const scriptPath = fileURLToPath(import.meta.url);
-  const commandLine = `node "${scriptPath}" statusline`;
+  const commandLine = `node "${scriptPath}" statusline --multiline`;
 
   if (action === "init" || action === "show") {
     const settings = readJson(settingsPath);
