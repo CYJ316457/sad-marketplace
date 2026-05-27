@@ -29,7 +29,7 @@ def main() -> int:
     parser.add_argument('--open', action='store_true')
     parser.add_argument('--dry-run', action='store_true')
     parser.add_argument('--host', default='127.0.0.1')
-    parser.add_argument('--port', default='3477')
+    parser.add_argument('--port')
     args = parser.parse_args()
 
     scripts_dir = Path(__file__).resolve().parent
@@ -52,7 +52,7 @@ def main() -> int:
 
     dashboard_script = scripts_dir / 'dashboard-server.js'
     if args.start:
-        commands.append([
+        command = [
             'node',
             str(dashboard_script),
             'start',
@@ -60,9 +60,10 @@ def main() -> int:
             str(project),
             '--host',
             args.host,
-            '--port',
-            args.port,
-        ])
+        ]
+        if args.port:
+            command.extend(['--port', args.port])
+        commands.append(command)
     if args.open:
         commands.append([
             'node',

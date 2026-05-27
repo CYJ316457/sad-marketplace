@@ -170,6 +170,34 @@ describe("shared skill marketplace", () => {
     expect(claude.commands).toContain("./commands/Trellis-Dashboard-Install-OpenCode.md");
   });
 
+  test("trellis-dashboard start command assigns per-project dashboard records", async () => {
+    const script = path.join(
+      repoRoot(),
+      "packs",
+      "trellis-dashboard",
+      "skills",
+      "trellis-dashboard",
+      "scripts",
+      "dashboard-server.js",
+    );
+    const workspace = tempWorkspace();
+    const project = path.join(workspace, "project");
+    fs.mkdirSync(path.join(project, ".trellis", ".runtime", "dashboard"), { recursive: true });
+    fs.mkdirSync(path.join(project, ".trellis", "tasks"), { recursive: true });
+
+    const first = spawnSync("node", [script, "start", "--project", project], { encoding: "utf-8" });
+    expect(first.status).toBe(0);
+    const payload = JSON.parse(first.stdout.trim());
+    expect(payload.repoRoot || project).toContain(project);
+    expect(payload.url).toContain("http://127.0.0.1:");
+
+    const open = spawnSync("node", [script, "open", "--project", project], { encoding: "utf-8" });
+    expect(open.status).toBe(0);
+
+    const stop = spawnSync("node", [script, "stop", "--project", project], { encoding: "utf-8" });
+    expect(stop.status).toBe(0);
+  });
+
   test("trellis-dashboard init bootstrap script supports auto platform and startup flags", async () => {
     const script = path.join(
       repoRoot(),
