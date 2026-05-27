@@ -1,0 +1,16 @@
+{
+  "name": "trellis-dashboard",
+  "description": "Realtime Trellis dashboard with a local web service and hook-based event stream",
+  "author": {
+    "name": "Local Publisher"
+  },
+  "skills": ["./skills/trellis-dashboard"],
+  "commands": [
+    "./commands/Trellis-Dashboard-Start.md",
+    "./commands/Trellis-Dashboard-Open.md",
+    "./commands/Trellis-Dashboard-Stop.md",
+    "./commands/Trellis-Dashboard-Install-CodeBuddy.md",
+    "./commands/Trellis-Dashboard-Install-Claude.md",
+    "./commands/Trellis-Dashboard-Install-OpenCode.md"
+  ]
+}

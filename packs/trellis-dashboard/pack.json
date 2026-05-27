@@ -1,0 +1,61 @@
+{
+  "name": "trellis-dashboard",
+  "version": "0.1.0",
+  "description": "Realtime Trellis dashboard with a local web service for CodeBuddy, Claude Code, Codex, and OpenCode projects",
+  "author": {
+    "name": "Local Publisher"
+  },
+  "license": "MIT",
+  "tags": ["trellis", "dashboard", "workflow", "codebuddy", "claude", "codex", "opencode"],
+  "platformSupport": {
+    "codex": true,
+    "claude": true,
+    "codebuddy": true,
+    "opencode": true
+  },
+  "contents": {
+    "skills": [
+      {
+        "name": "trellis-dashboard",
+        "path": "skills/trellis-dashboard",
+        "kind": "shared"
+      }
+    ],
+    "commands": [
+      {
+        "name": "Trellis-Dashboard-Start",
+        "path": "commands/Trellis-Dashboard-Start.md",
+        "kind": "shared"
+      },
+      {
+        "name": "Trellis-Dashboard-Open",
+        "path": "commands/Trellis-Dashboard-Open.md",
+        "kind": "shared"
+      },
+      {
+        "name": "Trellis-Dashboard-Stop",
+        "path": "commands/Trellis-Dashboard-Stop.md",
+        "kind": "shared"
+      },
+      {
+        "name": "Trellis-Dashboard-Install-CodeBuddy",
+        "path": "commands/Trellis-Dashboard-Install-CodeBuddy.md",
+        "kind": "shared"
+      },
+      {
+        "name": "Trellis-Dashboard-Install-Claude",
+        "path": "commands/Trellis-Dashboard-Install-Claude.md",
+        "kind": "shared"
+      },
+      {
+        "name": "Trellis-Dashboard-Install-OpenCode",
+        "path": "commands/Trellis-Dashboard-Install-OpenCode.md",
+        "kind": "shared"
+      }
+    ]
+  },
+  "codebuddy": {
+    "pluginName": "trellis-dashboard",
+    "category": "productivity"
+  }
+}
