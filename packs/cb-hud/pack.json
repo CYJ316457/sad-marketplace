@@ -6,11 +6,18 @@
     "name": "Local Publisher"
   },
   "license": "MIT",
-  "tags": ["codebuddy", "hud", "statusline", "status-line", "ansi"],
+  "tags": [
+    "codebuddy",
+    "hud",
+    "statusline",
+    "status-line",
+    "ansi"
+  ],
   "platformSupport": {
     "codex": false,
     "claude": false,
-    "codebuddy": true
+    "codebuddy": true,
+    "opencode": false
   },
   "contents": {
     "skills": [

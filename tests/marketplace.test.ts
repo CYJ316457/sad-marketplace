@@ -63,6 +63,7 @@ describe("shared skill marketplace", () => {
       "floating-island-hooks",
       "svn-toolkit",
       "gpt-image-2-gen",
+      "trellis-dashboard",
     ]);
     expect(marketplace.plugins.map((plugin) => plugin.name)).not.toContain("cb-hud");
   });
@@ -84,6 +85,7 @@ describe("shared skill marketplace", () => {
       "svn-toolkit",
       "gpt-image-2-gen",
       "cb-hud",
+      "trellis-dashboard",
     ]);
   });
 
@@ -146,6 +148,27 @@ describe("shared skill marketplace", () => {
     ]);
   });
 
+  test("trellis-dashboard plugin manifests include commands", async () => {
+    const codebuddy = JSON.parse(
+      fs.readFileSync(
+        path.join(repoRoot(), "packs", "trellis-dashboard", ".codebuddy-plugin", "plugin.json"),
+        "utf-8",
+      ),
+    ) as { name: string; commands?: string[]; skills?: string[] };
+    const claude = JSON.parse(
+      fs.readFileSync(
+        path.join(repoRoot(), "packs", "trellis-dashboard", ".claude-plugin", "plugin.json"),
+        "utf-8",
+      ),
+    ) as { name: string; commands?: string[]; skills?: string[] };
+
+    expect(codebuddy.name).toBe("trellis-dashboard");
+    expect(codebuddy.skills).toEqual(["./skills/trellis-dashboard"]);
+    expect(codebuddy.commands).toContain("./commands/Trellis-Dashboard-Start.md");
+    expect(claude.name).toBe("trellis-dashboard");
+    expect(claude.commands).toContain("./commands/Trellis-Dashboard-Install-OpenCode.md");
+  });
+
   test("each pack exposes a Claude plugin manifest", async () => {
     const starter = JSON.parse(
       fs.readFileSync(
@@ -192,7 +215,7 @@ describe("shared skill marketplace", () => {
 
   test("lists packs from the registry", async () => {
     const packs = await listPacks({ registryPath: registryPath() });
-    expect(packs).toHaveLength(5);
+    expect(packs).toHaveLength(6);
     expect(packs[0]?.name).toBe("starter-pack");
     expect(packs[0]?.contents.skills).toEqual(["writing-clearly", "release-checklist"]);
     expect(packs[1]?.name).toBe("floating-island-hooks");
@@ -224,6 +247,7 @@ describe("shared skill marketplace", () => {
       codex: false,
       claude: false,
       codebuddy: true,
+      opencode: false,
     });
     expect(packs[4]?.contents.skills).toEqual(["cb-hud"]);
     expect(packs[4]?.contents.commands).toEqual([
@@ -231,6 +255,22 @@ describe("shared skill marketplace", () => {
       "CB-HUD-show",
       "CB-HUD-hide",
       "CB-HUD-uninstall",
+    ]);
+    expect(packs[5]?.name).toBe("trellis-dashboard");
+    expect(packs[5]?.platformSupport).toEqual({
+      codex: true,
+      claude: true,
+      codebuddy: true,
+      opencode: true,
+    });
+    expect(packs[5]?.contents.skills).toEqual(["trellis-dashboard"]);
+    expect(packs[5]?.contents.commands).toEqual([
+      "Trellis-Dashboard-Start",
+      "Trellis-Dashboard-Open",
+      "Trellis-Dashboard-Stop",
+      "Trellis-Dashboard-Install-CodeBuddy",
+      "Trellis-Dashboard-Install-Claude",
+      "Trellis-Dashboard-Install-OpenCode",
     ]);
   });
 
@@ -246,7 +286,7 @@ describe("shared skill marketplace", () => {
       platform: "all",
     });
 
-    expect(record.platforms).toEqual(["codex", "claude", "codebuddy"]);
+    expect(record.platforms).toEqual(["codex", "claude", "codebuddy", "opencode"]);
     expect(
       fs.existsSync(
         path.join(workspace, "home", ".codex", "skills", "writing-clearly", "SKILL.md"),
@@ -271,7 +311,7 @@ describe("shared skill marketplace", () => {
       platform: "all",
     });
 
-    expect(record.platforms).toEqual(["codex", "claude", "codebuddy"]);
+    expect(record.platforms).toEqual(["codex", "claude", "codebuddy", "opencode"]);
     expect(
       fs.existsSync(
         path.join(
@@ -325,6 +365,19 @@ describe("shared skill marketplace", () => {
           "sad-marketplace",
           "plugins",
           "floating-island-hooks",
+          "skills",
+          "project-floating-island-hooks",
+          "scripts",
+          "install_codebuddy_hooks.py",
+        ),
+      ),
+    ).toBe(true);
+    expect(
+      fs.existsSync(
+        path.join(
+          workspace,
+          "home",
+          ".opencode",
           "skills",
           "project-floating-island-hooks",
           "scripts",
@@ -515,7 +568,7 @@ describe("shared skill marketplace", () => {
       platform: "all",
     });
 
-    expect(record.platforms).toEqual(["codex", "claude", "codebuddy"]);
+    expect(record.platforms).toEqual(["codex", "claude", "codebuddy", "opencode"]);
     expect(
       fs.existsSync(path.join(workspace, "home", ".codex", "skills", "SVN-log", "SKILL.md")),
     ).toBe(true);
@@ -538,6 +591,9 @@ describe("shared skill marketplace", () => {
         ),
       ),
     ).toBe(true);
+    expect(
+      fs.existsSync(path.join(workspace, "home", ".opencode", "skills", "SVN-log", "SKILL.md")),
+    ).toBe(true);
   });
 
   test("installs floating island start command for all supported platforms", async () => {
@@ -552,7 +608,7 @@ describe("shared skill marketplace", () => {
       platform: "all",
     });
 
-    expect(record.platforms).toEqual(["codex", "claude", "codebuddy"]);
+    expect(record.platforms).toEqual(["codex", "claude", "codebuddy", "opencode"]);
     expect(
       fs.existsSync(
         path.join(
@@ -586,6 +642,11 @@ describe("shared skill marketplace", () => {
         ),
       ),
     ).toBe(true);
+    expect(
+      fs.existsSync(
+        path.join(workspace, "home", ".opencode", "skills", "Start-Floating-Island", "SKILL.md"),
+      ),
+    ).toBe(true);
   });
 
   test("installs gpt-image-2 generator skill assets", async () => {
@@ -600,7 +661,7 @@ describe("shared skill marketplace", () => {
       platform: "all",
     });
 
-    expect(record.platforms).toEqual(["codex", "claude", "codebuddy"]);
+    expect(record.platforms).toEqual(["codex", "claude", "codebuddy", "opencode"]);
     expect(
       fs.existsSync(
         path.join(
@@ -669,6 +730,11 @@ describe("shared skill marketplace", () => {
           "scripts",
           "generate_gpt_image_2.py",
         ),
+      ),
+    ).toBe(true);
+    expect(
+      fs.existsSync(
+        path.join(workspace, "home", ".opencode", "skills", "gpt-image-2-gen", "scripts", "generate_gpt_image_2.py"),
       ),
     ).toBe(true);
   });
@@ -1258,5 +1324,53 @@ describe("shared skill marketplace", () => {
     expect(
       fs.existsSync(path.join(workspace, ".agents", "skills", "writing-clearly", "SKILL.md")),
     ).toBe(false);
+  });
+
+  test("installs trellis-dashboard for all supported platforms including opencode", async () => {
+    const workspace = tempWorkspace();
+    process.env.SKILL_MARKETPLACE_HOME = path.join(workspace, "home");
+
+    const record = await installPack({
+      registryPath: registryPath(),
+      packName: "trellis-dashboard",
+      scope: "global",
+      cwd: workspace,
+      platform: "all",
+    });
+
+    expect(record.platforms).toEqual(["codex", "claude", "codebuddy", "opencode"]);
+    expect(
+      fs.existsSync(
+        path.join(workspace, "home", ".codex", "skills", "trellis-dashboard", "scripts", "dashboard-server.js"),
+      ),
+    ).toBe(true);
+    expect(
+      fs.existsSync(
+        path.join(workspace, "home", ".claude", "skills", "trellis-dashboard", "web", "index.html"),
+      ),
+    ).toBe(true);
+    expect(
+      fs.existsSync(
+        path.join(workspace, "home", ".opencode", "skills", "trellis-dashboard", "scripts", "install_opencode_hooks.py"),
+      ),
+    ).toBe(true);
+    expect(
+      fs.existsSync(
+        path.join(
+          workspace,
+          "home",
+          ".codebuddy",
+          "plugins",
+          "marketplaces",
+          "sad-marketplace",
+          "plugins",
+          "trellis-dashboard",
+          "skills",
+          "trellis-dashboard",
+          "scripts",
+          "dashboard-server.js",
+        ),
+      ),
+    ).toBe(true);
   });
 });

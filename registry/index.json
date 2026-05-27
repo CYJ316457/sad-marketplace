@@ -1,7 +1,7 @@
 {
   "marketplace": {
     "name": "shared-skill-marketplace",
-    "description": "Shared skill marketplace for Codex, Claude Code, and CodeBuddy",
+    "description": "Shared skill marketplace for Codex, Claude Code, CodeBuddy, and OpenCode",
     "source": "local-registry",
     "version": "1"
   },
@@ -14,18 +14,25 @@
         "name": "Local Publisher"
       },
       "license": "MIT",
-      "tags": ["starter", "workflow"],
+      "tags": [
+        "starter",
+        "workflow"
+      ],
       "source": "./packs/starter-pack",
       "platformSupport": {
         "codex": true,
         "claude": true,
-        "codebuddy": true
+        "codebuddy": true,
+        "opencode": true
       },
       "install": {
         "unit": "pack"
       },
       "contents": {
-        "skills": ["writing-clearly", "release-checklist"]
+        "skills": [
+          "writing-clearly",
+          "release-checklist"
+        ]
       }
     },
     {
@@ -36,19 +43,31 @@
         "name": "Local Publisher"
       },
       "license": "MIT",
-      "tags": ["floating-island", "hooks", "status", "codebuddy", "claude", "codex"],
+      "tags": [
+        "floating-island",
+        "hooks",
+        "status",
+        "codebuddy",
+        "claude",
+        "codex"
+      ],
       "source": "./packs/floating-island-hooks",
       "platformSupport": {
         "codex": true,
         "claude": true,
-        "codebuddy": true
+        "codebuddy": true,
+        "opencode": true
       },
       "install": {
         "unit": "pack"
       },
       "contents": {
-        "skills": ["project-floating-island-hooks"],
-        "commands": ["Start-Floating-Island"]
+        "skills": [
+          "project-floating-island-hooks"
+        ],
+        "commands": [
+          "Start-Floating-Island"
+        ]
       }
     },
     {
@@ -59,18 +78,27 @@
         "name": "Local Publisher"
       },
       "license": "MIT",
-      "tags": ["svn", "subversion", "command", "workflow", "chinese"],
+      "tags": [
+        "svn",
+        "subversion",
+        "command",
+        "workflow",
+        "chinese"
+      ],
       "source": "./packs/svn-toolkit",
       "platformSupport": {
         "codex": true,
         "claude": true,
-        "codebuddy": true
+        "codebuddy": true,
+        "opencode": true
       },
       "install": {
         "unit": "pack"
       },
       "contents": {
-        "skills": ["svn-workflow"],
+        "skills": [
+          "svn-workflow"
+        ],
         "commands": [
           "SVN-info",
           "SVN-log",
@@ -97,19 +125,30 @@
         "name": "Local Publisher"
       },
       "license": "MIT",
-      "tags": ["image", "gpt-image-2", "openai", "generation", "chinese"],
+      "tags": [
+        "image",
+        "gpt-image-2",
+        "openai",
+        "generation",
+        "chinese"
+      ],
       "source": "./packs/gpt-image-2-gen",
       "platformSupport": {
         "codex": true,
         "claude": true,
-        "codebuddy": true
+        "codebuddy": true,
+        "opencode": true
       },
       "install": {
         "unit": "pack"
       },
       "contents": {
-        "skills": ["gpt-image-2-gen"],
-        "commands": ["GPT-image-2-Gen"]
+        "skills": [
+          "gpt-image-2-gen"
+        ],
+        "commands": [
+          "GPT-image-2-Gen"
+        ]
       }
     },
     {
@@ -120,23 +159,73 @@
         "name": "Local Publisher"
       },
       "license": "MIT",
-      "tags": ["codebuddy", "hud", "statusline", "status-line", "ansi"],
+      "tags": [
+        "codebuddy",
+        "hud",
+        "statusline",
+        "status-line",
+        "ansi"
+      ],
       "source": "./packs/cb-hud",
       "platformSupport": {
         "codex": false,
         "claude": false,
-        "codebuddy": true
+        "codebuddy": true,
+        "opencode": false
       },
       "install": {
         "unit": "pack"
       },
       "contents": {
-        "skills": ["cb-hud"],
+        "skills": [
+          "cb-hud"
+        ],
         "commands": [
           "CB-HUD-init",
           "CB-HUD-show",
           "CB-HUD-hide",
           "CB-HUD-uninstall"
+        ]
+      }
+    },
+    {
+      "name": "trellis-dashboard",
+      "version": "0.1.0",
+      "description": "Realtime Trellis dashboard with a local web service for CodeBuddy, Claude Code, Codex, and OpenCode projects",
+      "author": {
+        "name": "Local Publisher"
+      },
+      "license": "MIT",
+      "tags": [
+        "trellis",
+        "dashboard",
+        "workflow",
+        "codebuddy",
+        "claude",
+        "codex",
+        "opencode"
+      ],
+      "source": "./packs/trellis-dashboard",
+      "platformSupport": {
+        "codex": true,
+        "claude": true,
+        "codebuddy": true,
+        "opencode": true
+      },
+      "install": {
+        "unit": "pack"
+      },
+      "contents": {
+        "skills": [
+          "trellis-dashboard"
+        ],
+        "commands": [
+          "Trellis-Dashboard-Start",
+          "Trellis-Dashboard-Open",
+          "Trellis-Dashboard-Stop",
+          "Trellis-Dashboard-Install-CodeBuddy",
+          "Trellis-Dashboard-Install-Claude",
+          "Trellis-Dashboard-Install-OpenCode"
         ]
       }
     }

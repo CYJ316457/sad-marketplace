@@ -26,6 +26,7 @@ const registryIndexSchema = z.object({
         codex: z.boolean(),
         claude: z.boolean(),
         codebuddy: z.boolean(),
+        opencode: z.boolean(),
       }),
       install: z.object({
         unit: z.literal("pack"),
@@ -52,6 +53,7 @@ const packManifestSchema = z.object({
     codex: z.boolean(),
     claude: z.boolean(),
     codebuddy: z.boolean(),
+    opencode: z.boolean(),
   }),
   contents: z.object({
     skills: z.array(

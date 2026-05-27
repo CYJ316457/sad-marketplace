@@ -1,6 +1,6 @@
 {
   "name": "sad-marketplace",
-  "description": "Shared skill marketplace for Codex, Claude Code, and CodeBuddy",
+  "description": "Shared skill marketplace for Codex, Claude Code, CodeBuddy, and OpenCode",
   "owner": {
     "name": "Local Publisher"
   },
@@ -84,6 +84,28 @@
         "./packs/cb-hud/commands/CB-HUD-show.md",
         "./packs/cb-hud/commands/CB-HUD-hide.md",
         "./packs/cb-hud/commands/CB-HUD-uninstall.md"
+      ]
+    },
+    {
+      "name": "trellis-dashboard",
+      "description": "Realtime Trellis dashboard with a local web service and hook-based event stream",
+      "version": "0.1.0",
+      "source": "./packs/trellis-dashboard",
+      "category": "productivity",
+      "author": {
+        "name": "Local Publisher"
+      },
+      "license": "MIT",
+      "skills": [
+        "./packs/trellis-dashboard/skills/trellis-dashboard"
+      ],
+      "commands": [
+        "./packs/trellis-dashboard/commands/Trellis-Dashboard-Start.md",
+        "./packs/trellis-dashboard/commands/Trellis-Dashboard-Open.md",
+        "./packs/trellis-dashboard/commands/Trellis-Dashboard-Stop.md",
+        "./packs/trellis-dashboard/commands/Trellis-Dashboard-Install-CodeBuddy.md",
+        "./packs/trellis-dashboard/commands/Trellis-Dashboard-Install-Claude.md",
+        "./packs/trellis-dashboard/commands/Trellis-Dashboard-Install-OpenCode.md"
       ]
     }
   ]

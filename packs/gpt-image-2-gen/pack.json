@@ -6,11 +6,18 @@
     "name": "Local Publisher"
   },
   "license": "MIT",
-  "tags": ["image", "gpt-image-2", "openai", "generation", "chinese"],
+  "tags": [
+    "image",
+    "gpt-image-2",
+    "openai",
+    "generation",
+    "chinese"
+  ],
   "platformSupport": {
     "codex": true,
     "claude": true,
-    "codebuddy": true
+    "codebuddy": true,
+    "opencode": true
   },
   "contents": {
     "skills": [

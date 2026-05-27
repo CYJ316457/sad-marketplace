@@ -6,11 +6,19 @@
     "name": "Local Publisher"
   },
   "license": "MIT",
-  "tags": ["floating-island", "hooks", "status", "codebuddy", "claude", "codex"],
+  "tags": [
+    "floating-island",
+    "hooks",
+    "status",
+    "codebuddy",
+    "claude",
+    "codex"
+  ],
   "platformSupport": {
     "codex": true,
     "claude": true,
-    "codebuddy": true
+    "codebuddy": true,
+    "opencode": true
   },
   "contents": {
     "skills": [

@@ -1,7 +1,7 @@
 {
   "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
   "name": "sad-marketplace",
-  "description": "Shared skill marketplace for Codex, Claude Code, and CodeBuddy",
+  "description": "Shared skill marketplace for Codex, Claude Code, CodeBuddy, and OpenCode",
   "owner": {
     "name": "Local Publisher"
   },
@@ -41,6 +41,15 @@
       },
       "category": "productivity",
       "source": "./packs/gpt-image-2-gen"
+    },
+    {
+      "name": "trellis-dashboard",
+      "description": "Realtime Trellis dashboard with a local web service and hook-based event stream",
+      "author": {
+        "name": "Local Publisher"
+      },
+      "category": "productivity",
+      "source": "./packs/trellis-dashboard"
     }
   ]
 }

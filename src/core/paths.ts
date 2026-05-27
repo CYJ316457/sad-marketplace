@@ -38,6 +38,10 @@ export function resolvePlatformRoots(
       scope === "global"
         ? path.join(baseDir, ".codebuddy", "plugins", "marketplaces", "sad-marketplace")
         : path.join(baseDir, ".codebuddy", "plugins", "marketplaces", "sad-marketplace"),
+    opencode:
+      scope === "global"
+        ? path.join(baseDir, ".opencode", "skills")
+        : path.join(baseDir, ".opencode", "skills"),
   };
 }
 
@@ -57,6 +61,7 @@ export function resolvePlatformCommandRoots(
       scope === "global"
         ? path.join(baseDir, ".codebuddy", "plugins", "marketplaces", "sad-marketplace")
         : path.join(baseDir, ".codebuddy", "plugins", "marketplaces", "sad-marketplace"),
+    opencode: path.join(baseDir, ".opencode", "commands"),
   };
 }
 

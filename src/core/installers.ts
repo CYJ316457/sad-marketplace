@@ -12,7 +12,7 @@ function selectedPlatforms(
 ): Platform[] {
   const requested: Platform[] =
     platform === "all" || !platform
-      ? ["codex", "claude", "codebuddy"]
+      ? ["codex", "claude", "codebuddy", "opencode"]
       : [platform];
   return requested.filter((item) => manifest.platformSupport[item]);
 }
@@ -157,6 +157,10 @@ function codexCommandAsSkill(commandName: string, content: string): string {
   return `---\nname: ${commandName}\ndescription: Use when the user explicitly invokes /${commandName} or asks in Chinese for the ${commandName} SVN workflow.\n---\n\n${stripFrontmatter(content)}\n`;
 }
 
+function opencodeCommandAsSkill(commandName: string, content: string): string {
+  return `---\nname: ${commandName}\ndescription: Use when the user explicitly invokes /trellis/${commandName} or asks to run the ${commandName} trellis dashboard workflow in OpenCode.\n---\n\n${stripFrontmatter(content)}\n`;
+}
+
 function codebuddyTargets(cwd: string, scope: InstallScope): { marketplaceRoot: string; pluginRoot: string } {
   const base =
     scope === "global"
@@ -200,6 +204,21 @@ function buildManagedFiles(
         const source = commandContent(packDir, command.path);
         const destPath = path.join(platformRoot, command.name, "SKILL.md");
         const content = codexCommandAsSkill(command.name, source);
+        ensureDirectory(path.dirname(destPath));
+        fs.writeFileSync(destPath, content, "utf-8");
+        managed.push({
+          path: destPath,
+          hash: sha256(content),
+          kind: "command",
+          platform,
+        });
+        continue;
+      }
+
+      if (platform === "opencode") {
+        const source = commandContent(packDir, command.path);
+        const destPath = path.join(platformRoot, command.name, "SKILL.md");
+        const content = opencodeCommandAsSkill(command.name, source);
         ensureDirectory(path.dirname(destPath));
         fs.writeFileSync(destPath, content, "utf-8");
         managed.push({

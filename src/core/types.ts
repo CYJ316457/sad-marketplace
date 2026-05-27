@@ -1,4 +1,4 @@
-export type Platform = "codex" | "claude" | "codebuddy";
+export type Platform = "codex" | "claude" | "codebuddy" | "opencode";
 export type InstallScope = "global" | "project";
 
 export interface PackAuthor {
