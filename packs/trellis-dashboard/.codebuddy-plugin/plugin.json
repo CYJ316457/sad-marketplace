@@ -3,8 +3,11 @@
   "description": "Realtime Trellis dashboard with a local web service and hook-based event stream",
   "version": "0.1.0",
   "license": "MIT",
-  "skills": ["./skills/trellis-dashboard"],
+  "skills": [
+    "./skills/trellis-dashboard"
+  ],
   "commands": [
+    "./commands/Trellis-Dashboard-Init.md",
     "./commands/Trellis-Dashboard-Start.md",
     "./commands/Trellis-Dashboard-Open.md",
     "./commands/Trellis-Dashboard-Stop.md",

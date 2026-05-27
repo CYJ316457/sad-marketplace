@@ -4,8 +4,11 @@
   "author": {
     "name": "Local Publisher"
   },
-  "skills": ["./skills/trellis-dashboard"],
+  "skills": [
+    "./skills/trellis-dashboard"
+  ],
   "commands": [
+    "./commands/Trellis-Dashboard-Init.md",
     "./commands/Trellis-Dashboard-Start.md",
     "./commands/Trellis-Dashboard-Open.md",
     "./commands/Trellis-Dashboard-Stop.md",

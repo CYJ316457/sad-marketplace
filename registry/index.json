@@ -220,6 +220,7 @@
           "trellis-dashboard"
         ],
         "commands": [
+          "Trellis-Dashboard-Init",
           "Trellis-Dashboard-Start",
           "Trellis-Dashboard-Open",
           "Trellis-Dashboard-Stop",

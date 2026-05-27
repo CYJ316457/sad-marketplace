@@ -164,9 +164,46 @@ describe("shared skill marketplace", () => {
 
     expect(codebuddy.name).toBe("trellis-dashboard");
     expect(codebuddy.skills).toEqual(["./skills/trellis-dashboard"]);
+    expect(codebuddy.commands).toContain("./commands/Trellis-Dashboard-Init.md");
     expect(codebuddy.commands).toContain("./commands/Trellis-Dashboard-Start.md");
     expect(claude.name).toBe("trellis-dashboard");
     expect(claude.commands).toContain("./commands/Trellis-Dashboard-Install-OpenCode.md");
+  });
+
+  test("trellis-dashboard init bootstrap script supports auto platform and startup flags", async () => {
+    const script = path.join(
+      repoRoot(),
+      "packs",
+      "trellis-dashboard",
+      "skills",
+      "trellis-dashboard",
+      "scripts",
+      "install_hooks.py",
+    );
+    const workspace = tempWorkspace();
+    fs.mkdirSync(path.join(workspace, ".claude"), { recursive: true });
+
+    const py = pythonCommand();
+    const result = spawnSync(
+      py.cmd,
+      [
+        ...py.args,
+        script,
+        "--project",
+        workspace,
+        "--platform",
+        "auto",
+        "--start",
+        "--open",
+        "--dry-run",
+      ],
+      { encoding: "utf-8" },
+    );
+
+    expect(result.status).toBe(0);
+    expect(result.stdout).toContain("install_claude_hooks.py");
+    expect(result.stdout).toContain("dashboard-server.js start");
+    expect(result.stdout).toContain("dashboard-server.js open");
   });
 
   test("each pack exposes a Claude plugin manifest", async () => {
@@ -265,6 +302,7 @@ describe("shared skill marketplace", () => {
     });
     expect(packs[5]?.contents.skills).toEqual(["trellis-dashboard"]);
     expect(packs[5]?.contents.commands).toEqual([
+      "Trellis-Dashboard-Init",
       "Trellis-Dashboard-Start",
       "Trellis-Dashboard-Open",
       "Trellis-Dashboard-Stop",

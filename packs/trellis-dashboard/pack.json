@@ -6,7 +6,15 @@
     "name": "Local Publisher"
   },
   "license": "MIT",
-  "tags": ["trellis", "dashboard", "workflow", "codebuddy", "claude", "codex", "opencode"],
+  "tags": [
+    "trellis",
+    "dashboard",
+    "workflow",
+    "codebuddy",
+    "claude",
+    "codex",
+    "opencode"
+  ],
   "platformSupport": {
     "codex": true,
     "claude": true,
@@ -22,6 +30,11 @@
       }
     ],
     "commands": [
+      {
+        "name": "Trellis-Dashboard-Init",
+        "path": "commands/Trellis-Dashboard-Init.md",
+        "kind": "shared"
+      },
       {
         "name": "Trellis-Dashboard-Start",
         "path": "commands/Trellis-Dashboard-Start.md",
