@@ -9,16 +9,31 @@
 <body>
   <div id="app">
     <header class="topbar">
-      <div>
+      <div class="topbar-main">
         <h1>Trellis Dashboard</h1>
         <div id="repoMeta" class="muted"></div>
       </div>
       <div class="stats" id="summaryStats"></div>
     </header>
     <main class="layout">
-      <aside class="sidebar">
-        <div class="section-title">Tasks</div>
+      <aside class="sidebar panel">
+        <div class="sidebar-head">
+          <div class="section-title">Tasks</div>
+          <div id="taskCount" class="muted small"></div>
+        </div>
+        <div class="task-controls">
+          <div id="statusFilters" class="filter-chips"></div>
+          <div class="filter-row">
+            <label class="filter-label" for="assigneeFilter">人员</label>
+            <select id="assigneeFilter" class="filter-select"></select>
+          </div>
+        </div>
         <div id="taskList" class="task-list"></div>
+        <div class="pagination" id="taskPagination">
+          <button id="prevPage" class="page-btn" type="button">上一页</button>
+          <div id="pageInfo" class="muted"></div>
+          <button id="nextPage" class="page-btn" type="button">下一页</button>
+        </div>
       </aside>
       <section class="content">
         <div class="panel hero" id="currentPanel"></div>
