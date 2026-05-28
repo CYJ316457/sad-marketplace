@@ -18,6 +18,17 @@ def find_repo_root(start: Path) -> Path | None:
         current = parent
 
 
+def sanitize_json(value):
+    if isinstance(value, str):
+        return value.encode('utf-8', errors='replace').decode('utf-8')
+    if isinstance(value, list):
+        return [sanitize_json(item) for item in value]
+    if isinstance(value, dict):
+        return {
+            sanitize_json(key): sanitize_json(item)
+            for key, item in value.items()
+        }
+    return value
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument('--project')
@@ -29,7 +40,7 @@ def main() -> int:
     args = parser.parse_args()
 
     try:
-        payload = json.load(sys.stdin)
+        payload = sanitize_json(json.load(sys.stdin))
     except Exception:
         payload = {}
 
@@ -52,6 +63,7 @@ def main() -> int:
         'details': args.details,
         'payload': payload,
     }
+    event = sanitize_json(event)
     with (runtime_dir / 'dashboard-events.jsonl').open('a', encoding='utf-8') as handle:
         handle.write(json.dumps(event, ensure_ascii=False) + '\n')
     print(json.dumps({'ok': True}, ensure_ascii=False))

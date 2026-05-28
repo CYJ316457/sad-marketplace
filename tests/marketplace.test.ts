@@ -198,6 +198,36 @@ describe("shared skill marketplace", () => {
     expect(stop.status).toBe(0);
   });
 
+  test("trellis-dashboard event writer tolerates invalid unicode surrogates", async () => {
+    const script = path.join(
+      repoRoot(),
+      "packs",
+      "trellis-dashboard",
+      "skills",
+      "trellis-dashboard",
+      "scripts",
+      "write_dashboard_event.py",
+    );
+    const workspace = tempWorkspace();
+    fs.mkdirSync(path.join(workspace, ".trellis", ".runtime"), { recursive: true });
+
+    const py = pythonCommand();
+    const result = spawnSync(
+      py.cmd,
+      [...py.args, script, "--project", workspace, "--host", "codebuddy", "--stage", "Stop"],
+      {
+        encoding: "utf-8",
+        input: "{\"cwd\":\"" + workspace.replace(/\\/g, "\\\\") + "\",\"message\":\"\\udcad\"}",
+      },
+    );
+
+    expect(result.status).toBe(0);
+    const events = fs.readFileSync(
+      path.join(workspace, ".trellis", ".runtime", "dashboard-events.jsonl"),
+      "utf-8",
+    );
+    expect(events).toContain('"host": "codebuddy"');
+  });
   test("trellis-dashboard init bootstrap script supports auto platform and startup flags", async () => {
     const script = path.join(
       repoRoot(),
