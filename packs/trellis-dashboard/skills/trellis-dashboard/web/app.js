@@ -69,7 +69,7 @@ function getStatusOptions(tasks) {
   const preferred = ['planning', 'in_progress', 'blocked', 'review', 'completed'];
   const seen = new Set(tasks.map((task) => task.status).filter(Boolean));
   const ordered = preferred.filter((status) => seen.has(status));
-  const extra = [...seen].filter((status) => !preferred.includes(status)).sort();
+  const extra = [...seen].filter((status) => status !== 'unknown' && !preferred.includes(status)).sort();
   return [ALL_STATUS, ...ordered, ...extra];
 }
 
@@ -273,3 +273,4 @@ stream.addEventListener('update', (event) => {
 });
 
 refresh();
+
