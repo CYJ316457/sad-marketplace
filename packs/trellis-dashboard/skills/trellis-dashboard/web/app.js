@@ -9,6 +9,7 @@ const state = {
   selectedStatus: ALL_STATUS,
   selectedAssignee: ALL_ASSIGNEES,
   currentPage: 1,
+  selectedSpecName: '',
 };
 
 const repoMeta = document.getElementById('repoMeta');
@@ -23,6 +24,7 @@ const taskCount = document.getElementById('taskCount');
 const pageInfo = document.getElementById('pageInfo');
 const prevPage = document.getElementById('prevPage');
 const nextPage = document.getElementById('nextPage');
+const deleteTaskBtn = document.getElementById('deleteTaskBtn');
 const tabs = [...document.querySelectorAll('.tab')];
 
 tabs.forEach((tab) => tab.addEventListener('click', () => {
@@ -53,6 +55,22 @@ nextPage.addEventListener('click', () => {
     renderOverview();
     renderDetail();
   }
+});
+
+deleteTaskBtn.addEventListener('click', async () => {
+  if (!state.selectedTaskId) return;
+  const task = getAllTasks().find((item) => item.id === state.selectedTaskId);
+  const label = task ? `${task.title} (${task.id})` : state.selectedTaskId;
+  if (!window.confirm(`确认删除 task：${label}？\n该操作会删除 task 目录。`)) return;
+  const res = await fetch(`/api/tasks/${encodeURIComponent(state.selectedTaskId)}`, { method: 'DELETE' });
+  if (!res.ok) {
+    const payload = await res.json().catch(() => ({}));
+    window.alert(`删除失败：${payload.error || res.statusText}`);
+    return;
+  }
+  state.selectedTaskId = null;
+  state.selectedSpecName = '';
+  await refresh();
 });
 
 function escapeHtml(value) {
@@ -160,6 +178,7 @@ function renderTaskList(tasks) {
     ].join('');
     card.addEventListener('click', () => {
       state.selectedTaskId = task.id;
+      state.selectedSpecName = '';
       renderOverview();
       renderDetail();
     });
@@ -217,6 +236,10 @@ function renderOverview() {
 }
 
 async function renderDetail() {
+  if (state.selectedTab === 'trellis-summary') {
+    await renderTrellisSummary();
+    return;
+  }
   if (!state.selectedTaskId) {
     detailBody.innerHTML = '<div class="muted">Select a task.</div>';
     return;
@@ -254,7 +277,75 @@ async function renderDetail() {
     detailBody.innerHTML = `<div class="code">${escapeHtml(detail.summary || '(missing)')}</div>`;
     return;
   }
+  if (state.selectedTab === 'specs') {
+    await renderSpecs();
+    return;
+  }
   detailBody.innerHTML = `<div class="code">${escapeHtml(JSON.stringify(detail.task, null, 2))}</div>`;
+}
+
+async function renderSpecs() {
+  const res = await fetch(`/api/tasks/${encodeURIComponent(state.selectedTaskId)}/specs`);
+  if (!res.ok) {
+    detailBody.textContent = 'Specs not available';
+    return;
+  }
+  const data = await res.json();
+  const files = data.files || [];
+  if (!files.length) {
+    detailBody.innerHTML = '<div class="muted">No specs found for this task.</div>';
+    return;
+  }
+  if (!state.selectedSpecName || !files.some((file) => file.name === state.selectedSpecName)) {
+    state.selectedSpecName = files[0].name;
+  }
+  const selected = files.find((file) => file.name === state.selectedSpecName) || files[0];
+  detailBody.innerHTML = [
+    '<div class="spec-toolbar">',
+    `<select id="specSelect" class="filter-select">${files.map((file) => `<option value="${escapeHtml(file.name)}" ${file.name === selected.name ? 'selected' : ''}>${escapeHtml(file.label)} · ${escapeHtml(file.name)}</option>`).join('')}</select>`,
+    '<button id="saveSpecBtn" class="page-btn" type="button">保存 Spec</button>',
+    '<span id="specSaveState" class="muted small"></span>',
+    '</div>',
+    `<textarea id="specEditor" class="spec-editor" spellcheck="false">${escapeHtml(selected.content || '')}</textarea>`,
+  ].join('');
+  const specSelect = document.getElementById('specSelect');
+  const saveSpecBtn = document.getElementById('saveSpecBtn');
+  const specEditor = document.getElementById('specEditor');
+  const specSaveState = document.getElementById('specSaveState');
+  specSelect.addEventListener('change', () => {
+    state.selectedSpecName = specSelect.value;
+    renderSpecs();
+  });
+  saveSpecBtn.addEventListener('click', async () => {
+    specSaveState.textContent = '保存中...';
+    const saveRes = await fetch(`/api/tasks/${encodeURIComponent(state.selectedTaskId)}/specs`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: state.selectedSpecName, content: specEditor.value }),
+    });
+    if (!saveRes.ok) {
+      const payload = await saveRes.json().catch(() => ({}));
+      specSaveState.textContent = `保存失败：${payload.error || saveRes.statusText}`;
+      return;
+    }
+    specSaveState.textContent = '已保存';
+    await refresh();
+  });
+}
+
+async function renderTrellisSummary() {
+  const res = await fetch('/api/trellis-summary');
+  if (!res.ok) {
+    detailBody.textContent = 'Trellis summary not available';
+    return;
+  }
+  const data = await res.json();
+  const files = data.files || [];
+  if (!files.length) {
+    detailBody.innerHTML = `<div class="muted">${escapeHtml(data.fallback || 'No Trellis summary found.')}</div>`;
+    return;
+  }
+  detailBody.innerHTML = files.map((file) => `<h3>${escapeHtml(file.name)}</h3><div class="code">${escapeHtml(file.content || '(empty)')}</div>`).join('');
 }
 
 async function refresh() {

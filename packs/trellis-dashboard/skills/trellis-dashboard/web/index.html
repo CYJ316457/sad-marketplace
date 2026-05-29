@@ -37,6 +37,10 @@
       </aside>
       <section class="content">
         <div class="panel hero" id="currentPanel"></div>
+        <div class="panel task-actions">
+          <button id="deleteTaskBtn" class="danger-btn" type="button">删除当前 Task</button>
+          <div class="muted small">删除会移除当前 task 目录；Specs 可在 Specs 标签页预览和编辑。</div>
+        </div>
         <div class="panel tabs">
           <div class="tab-row">
             <button data-tab="overview" class="tab active">Overview</button>
@@ -45,6 +49,8 @@
             <button data-tab="context" class="tab">Context</button>
             <button data-tab="research" class="tab">Research</button>
             <button data-tab="summary" class="tab">Summary</button>
+            <button data-tab="specs" class="tab">Specs</button>
+            <button data-tab="trellis-summary" class="tab">Trellis Summary</button>
             <button data-tab="raw" class="tab">Raw</button>
           </div>
           <div id="detailBody" class="detail-body"></div>

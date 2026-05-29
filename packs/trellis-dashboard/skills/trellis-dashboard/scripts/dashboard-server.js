@@ -68,6 +68,89 @@ function readJsonl(file) {
     });
 }
 
+
+function readRequestBody(req) {
+  return new Promise((resolve, reject) => {
+    let body = '';
+    req.on('data', (chunk) => {
+      body += chunk;
+      if (body.length > 2 * 1024 * 1024) {
+        reject(new Error('request-body-too-large'));
+        req.destroy();
+      }
+    });
+    req.on('end', () => resolve(body));
+    req.on('error', reject);
+  });
+}
+
+function isSafeChild(parentDir, targetPath) {
+  const parent = path.resolve(parentDir);
+  const target = path.resolve(targetPath);
+  return target === parent || target.startsWith(parent + path.sep);
+}
+
+function findTaskById(state, id) {
+  return [...state.tasks, ...state.archivedTasks].find((item) => item.id === id) || null;
+}
+
+function listSpecFiles(taskDir) {
+  const files = [];
+  const addFile = (relPath, label) => {
+    const fullPath = path.join(taskDir, relPath);
+    if (!isSafeChild(taskDir, fullPath) || !fs.existsSync(fullPath) || !fs.statSync(fullPath).isFile()) return;
+    files.push({
+      name: relPath.replace(/\\/g, '/'),
+      label,
+      content: readText(fullPath),
+    });
+  };
+
+  addFile('task.json', 'Task JSON');
+  addFile('prd.md', 'PRD');
+  addFile('info.md', 'Info');
+  addFile('summary.md', 'Task Summary');
+  addFile('implement.jsonl', 'Implement Context');
+  addFile('check.jsonl', 'Check Context');
+
+  const researchDir = path.join(taskDir, 'research');
+  if (fs.existsSync(researchDir)) {
+    for (const entry of fs.readdirSync(researchDir, { withFileTypes: true }).sort((a, b) => a.name.localeCompare(b.name))) {
+      if (!entry.isFile()) continue;
+      addFile(path.join('research', entry.name), `Research: ${entry.name}`);
+    }
+  }
+
+  return files;
+}
+
+function readTrellisSummary(repoRoot) {
+  const trellisRoot = path.join(repoRoot, '.trellis');
+  const candidates = [
+    'summary.md',
+    'SUMMARY.md',
+    'trellis-summary.md',
+    'Trellis-Summary.md',
+    path.join('.runtime', 'summary.md'),
+    path.join('.runtime', 'trellis-summary.md'),
+  ];
+  const files = [];
+  const seen = new Set();
+
+  for (const relPath of candidates) {
+    const fullPath = path.join(trellisRoot, relPath);
+    const key = path.resolve(fullPath).toLowerCase();
+    if (seen.has(key) || !isSafeChild(trellisRoot, fullPath) || !fs.existsSync(fullPath) || !fs.statSync(fullPath).isFile()) continue;
+    seen.add(key);
+    files.push({ name: relPath.replace(/\\/g, '/'), content: readText(fullPath) });
+  }
+
+  return {
+    files,
+    fallback: files.length ? '' : 'No Trellis summary file found under .trellis. Checked summary.md, SUMMARY.md, trellis-summary.md, and .runtime summary files.',
+  };
+}
+
 function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
@@ -289,22 +372,26 @@ async function selectPort(repoRoot, host, requestedPort) {
 function createServer(repoRoot, host, port) {
   let state = buildState(repoRoot);
   const clients = new Set();
+  const refreshAndBroadcast = (reason) => {
+    state = buildState(repoRoot);
+    const payload = `event: update\ndata: ${JSON.stringify({ reason, state })}\n\n`;
+    for (const client of clients) client.write(payload);
+  };
   const watchers = [
     path.join(repoRoot, '.trellis', 'tasks'),
     path.join(repoRoot, '.trellis', '.runtime'),
   ]
     .filter((target) => fs.existsSync(target))
     .map((target) => fs.watch(target, { recursive: true }, () => {
-      state = buildState(repoRoot);
       const reason = path.relative(repoRoot, target).replace(/\\/g, '/');
-      const payload = `event: update\ndata: ${JSON.stringify({ reason, state })}\n\n`;
-      for (const client of clients) client.write(payload);
+      refreshAndBroadcast(reason);
     }));
 
   const server = http.createServer((req, res) => {
     const url = new URL(req.url || '/', `http://${host}:${port}`);
 
     if (url.pathname === '/api/overview') return sendJson(res, 200, state);
+    if (url.pathname === '/api/trellis-summary') return sendJson(res, 200, readTrellisSummary(repoRoot));
     if (url.pathname === '/api/tasks') {
       return sendJson(res, 200, {
         tasks: state.tasks,
@@ -313,9 +400,41 @@ function createServer(repoRoot, host, port) {
       });
     }
     if (url.pathname.startsWith('/api/tasks/')) {
-      const id = decodeURIComponent(url.pathname.slice('/api/tasks/'.length));
-      const task = [...state.tasks, ...state.archivedTasks].find((item) => item.id === id);
+      const parts = url.pathname.slice('/api/tasks/'.length).split('/');
+      const id = decodeURIComponent(parts[0] || '');
+      const task = findTaskById(state, id);
       if (!task) return sendJson(res, 404, { error: 'task-not-found' });
+
+      if (parts[1] === 'specs') {
+        if (req.method === 'GET') return sendJson(res, 200, { files: listSpecFiles(task.taskDir) });
+        if (req.method === 'PUT') {
+          readRequestBody(req)
+            .then((body) => {
+              const payload = JSON.parse(body || '{}');
+              const relPath = String(payload.name || '').replace(/\\/g, '/');
+              const spec = listSpecFiles(task.taskDir).find((item) => item.name === relPath);
+              if (!spec) return sendJson(res, 404, { error: 'spec-not-found' });
+              const target = path.join(task.taskDir, relPath);
+              if (!isSafeChild(task.taskDir, target)) return sendJson(res, 400, { error: 'unsafe-path' });
+              fs.writeFileSync(target, String(payload.content ?? ''), 'utf8');
+              refreshAndBroadcast(`task-spec:${task.id}`);
+              return sendJson(res, 200, { ok: true, file: relPath });
+            })
+            .catch((error) => sendJson(res, 400, { error: error.message || 'invalid-request' }));
+          return;
+        }
+        return sendJson(res, 405, { error: 'method-not-allowed' });
+      }
+
+      if (req.method === 'DELETE') {
+        if (!isSafeChild(path.join(repoRoot, '.trellis', 'tasks'), task.taskDir)) return sendJson(res, 400, { error: 'unsafe-task-path' });
+        fs.rmSync(task.taskDir, { recursive: true, force: true });
+        if (state.currentTask?.id === task.id) state.currentTask = null;
+        refreshAndBroadcast(`task-delete:${task.id}`);
+        return sendJson(res, 200, { ok: true, deleted: task.id });
+      }
+
+      if (req.method !== 'GET') return sendJson(res, 405, { error: 'method-not-allowed' });
       return sendJson(res, 200, { summary: task, detail: buildTaskDetail(task.taskDir) });
     }
     if (url.pathname === '/api/events') return sendJson(res, 200, { events: state.events });
