@@ -16,7 +16,6 @@
       <div class="topbar-actions">
         <button data-page="tasks" class="page-tab active" type="button">Tasks</button>
         <button data-page="specs" class="page-tab" type="button">Specs</button>
-        <button data-page="trellis-summary" class="page-tab" type="button">Trellis Summary</button>
       </div>
       <div class="stats" id="summaryStats"></div>
     </header>
@@ -70,12 +69,16 @@
         <div id="specsBody" class="project-body"></div>
       </section>
     </main>
-    <main id="summaryPage" class="project-page page-view">
-      <section class="panel project-panel">
-        <div class="section-title">Trellis Summary</div>
-        <div id="summaryBody" class="project-body"></div>
-      </section>
-    </main>
+  </div>
+  <div id="modalBackdrop" class="modal-backdrop" hidden>
+    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+      <div id="modalTitle" class="modal-title"></div>
+      <div id="modalMessage" class="modal-message"></div>
+      <div class="modal-actions">
+        <button id="modalCancel" class="page-btn" type="button">\u53d6\u6d88</button>
+        <button id="modalConfirm" class="danger-btn" type="button">\u786e\u8ba4</button>
+      </div>
+    </div>
   </div>
   <script type="module" src="/app.js"></script>
 </body>

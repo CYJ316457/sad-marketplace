@@ -11,6 +11,7 @@ const state = {
   selectedAssignee: ALL_ASSIGNEES,
   currentPage: 1,
   selectedSpecName: '',
+  specEditMode: false,
 };
 
 const repoMeta = document.getElementById('repoMeta');
@@ -27,10 +28,14 @@ const prevPage = document.getElementById('prevPage');
 const nextPage = document.getElementById('nextPage');
 const deleteTaskBtn = document.getElementById('deleteTaskBtn');
 const specsBody = document.getElementById('specsBody');
-const summaryBody = document.getElementById('summaryBody');
 const pageViews = [...document.querySelectorAll('.page-view')];
 const pageTabs = [...document.querySelectorAll('.page-tab')];
 const tabs = [...document.querySelectorAll('.tab')];
+const modalBackdrop = document.getElementById('modalBackdrop');
+const modalTitle = document.getElementById('modalTitle');
+const modalMessage = document.getElementById('modalMessage');
+const modalCancel = document.getElementById('modalCancel');
+const modalConfirm = document.getElementById('modalConfirm');
 
 tabs.forEach((tab) => tab.addEventListener('click', () => {
   state.selectedTab = tab.dataset.tab;
@@ -41,9 +46,8 @@ tabs.forEach((tab) => tab.addEventListener('click', () => {
 pageTabs.forEach((tab) => tab.addEventListener('click', async () => {
   state.selectedPage = tab.dataset.page;
   pageTabs.forEach((item) => item.classList.toggle('active', item === tab));
-  pageViews.forEach((view) => view.classList.toggle('active', view.id === `${state.selectedPage === 'trellis-summary' ? 'summary' : state.selectedPage}Page`));
+  pageViews.forEach((view) => view.classList.toggle('active', view.id === `${state.selectedPage}Page`));
   if (state.selectedPage === 'specs') await renderSpecs();
-  if (state.selectedPage === 'trellis-summary') await renderTrellisSummary();
 }));
 
 assigneeFilter.addEventListener('change', () => {
@@ -75,11 +79,23 @@ deleteTaskBtn.addEventListener('click', async () => {
   const taskId = state.selectedTaskId;
   const task = getAllTasks().find((item) => item.id === taskId);
   const label = task ? `${task.title} (${task.id})` : taskId;
-  if (!window.confirm(`确认删除 task：${label}？\n该操作会删除 task 目录。`)) return;
+  const confirmed = await showModal({
+    title: '\u5220\u9664 Task\uff1f',
+    message: `\u786e\u8ba4\u5220\u9664 ${label}\uff1f\n\u8be5\u64cd\u4f5c\u4f1a\u5220\u9664 task \u76ee\u5f55\uff0c\u65e0\u6cd5\u4ece Dashboard \u64a4\u9500\u3002`,
+    confirmText: '\u5220\u9664',
+    danger: true,
+  });
+  if (!confirmed) return;
+
   const res = await fetch(`/api/tasks/${encodeURIComponent(taskId)}`, { method: 'DELETE' });
   const payload = await res.json().catch(() => ({}));
   if (!res.ok || payload.existsAfterDelete) {
-    window.alert(`删除失败：${payload.error || res.statusText}${payload.taskDir ? `\n${payload.taskDir}` : ''}`);
+    await showModal({
+      title: '\u5220\u9664\u5931\u8d25',
+      message: `${payload.error || res.statusText}${payload.taskDir ? `\n${payload.taskDir}` : ''}`,
+      confirmText: '\u77e5\u9053\u4e86',
+      showCancel: false,
+    });
     await refresh();
     return;
   }
@@ -87,14 +103,24 @@ deleteTaskBtn.addEventListener('click', async () => {
   if (!removedFromOverview) {
     renderOverview();
     await renderDetail();
-    window.alert(`后端返回删除成功，但刷新后任务仍在列表里：${payload.deleted || label}\n${payload.taskDir || ''}`);
+    await showModal({
+      title: '\u5220\u9664\u672a\u5b8c\u6210',
+      message: `\u540e\u7aef\u8fd4\u56de\u5220\u9664\u6210\u529f\uff0c\u4f46\u5237\u65b0\u540e\u4efb\u52a1\u4ecd\u5728\u5217\u8868\u91cc\uff1a${payload.deleted || label}\n${payload.taskDir || ''}`,
+      confirmText: '\u77e5\u9053\u4e86',
+      showCancel: false,
+    });
     return;
   }
-  window.alert(`删除成功：${payload.deleted || label}`);
   state.selectedTaskId = null;
   state.selectedSpecName = '';
   renderOverview();
   await renderDetail();
+  await showModal({
+    title: '\u5220\u9664\u6210\u529f',
+    message: `${payload.deleted || label} \u5df2\u5220\u9664\uff0c\u5e76\u4e14\u5237\u65b0\u540e\u4e0d\u518d\u51fa\u73b0\u5728\u4efb\u52a1\u5217\u8868\u3002`,
+    confirmText: '\u5b8c\u6210',
+    showCancel: false,
+  });
 });
 
 async function fetchOverview() {
@@ -121,6 +147,96 @@ async function waitForTaskRemoval(taskId) {
 
 function escapeHtml(value) {
   return String(value ?? '').replace(/[&<>\"]/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch]));
+}
+
+function showModal({ title, message, confirmText = '\u786e\u8ba4', cancelText = '\u53d6\u6d88', showCancel = true, danger = false }) {
+  modalTitle.textContent = title;
+  modalMessage.textContent = message;
+  modalConfirm.textContent = confirmText;
+  modalCancel.textContent = cancelText;
+  modalCancel.hidden = !showCancel;
+  modalConfirm.className = danger ? 'danger-btn' : 'page-btn primary-btn';
+  modalBackdrop.hidden = false;
+  modalConfirm.focus();
+
+  return new Promise((resolve) => {
+    const cleanup = (result) => {
+      modalBackdrop.hidden = true;
+      modalConfirm.removeEventListener('click', onConfirm);
+      modalCancel.removeEventListener('click', onCancel);
+      modalBackdrop.removeEventListener('click', onBackdrop);
+      document.removeEventListener('keydown', onKeyDown);
+      resolve(result);
+    };
+    const onConfirm = () => cleanup(true);
+    const onCancel = () => cleanup(false);
+    const onBackdrop = (event) => {
+      if (event.target === modalBackdrop) cleanup(false);
+    };
+    const onKeyDown = (event) => {
+      if (event.key === 'Escape') cleanup(false);
+    };
+    modalConfirm.addEventListener('click', onConfirm);
+    modalCancel.addEventListener('click', onCancel);
+    modalBackdrop.addEventListener('click', onBackdrop);
+    document.addEventListener('keydown', onKeyDown);
+  });
+}
+
+function renderMarkdown(value) {
+  const source = String(value || '').replace(/\r\n/g, '\n');
+  const lines = source.split('\n');
+  const out = [];
+  let listOpen = false;
+  let codeOpen = false;
+  const closeList = () => {
+    if (listOpen) {
+      out.push('</ul>');
+      listOpen = false;
+    }
+  };
+  const inline = (text) => escapeHtml(text)
+    .replace(/`([^`]+)`/g, '<code>$1</code>')
+    .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+    .replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, '<a href="$2" target="_blank" rel="noreferrer">$1</a>');
+
+  for (const line of lines) {
+    if (/^```/.test(line)) {
+      closeList();
+      out.push(codeOpen ? '</code></pre>' : '<pre><code>');
+      codeOpen = !codeOpen;
+      continue;
+    }
+    if (codeOpen) {
+      out.push(`${escapeHtml(line)}\n`);
+      continue;
+    }
+    const heading = line.match(/^(#{1,6})\s+(.*)$/);
+    if (heading) {
+      closeList();
+      const level = heading[1].length;
+      out.push(`<h${level}>${inline(heading[2])}</h${level}>`);
+      continue;
+    }
+    const bullet = line.match(/^\s*[-*]\s+(.*)$/);
+    if (bullet) {
+      if (!listOpen) {
+        out.push('<ul>');
+        listOpen = true;
+      }
+      out.push(`<li>${inline(bullet[1])}</li>`);
+      continue;
+    }
+    closeList();
+    if (!line.trim()) {
+      out.push('');
+      continue;
+    }
+    out.push(`<p>${inline(line)}</p>`);
+  }
+  closeList();
+  if (codeOpen) out.push('</code></pre>');
+  return out.join('\n') || '<p class="muted">(empty)</p>';
 }
 
 function getAllTasks() {
@@ -347,6 +463,7 @@ async function renderSpecs() {
   }
   if (!state.selectedSpecName || !files.some((file) => file.name === state.selectedSpecName)) {
     state.selectedSpecName = files[0].name;
+    state.specEditMode = false;
   }
   const selected = files.find((file) => file.name === state.selectedSpecName) || files[0];
   specsBody.innerHTML = [
@@ -355,52 +472,52 @@ async function renderSpecs() {
     '<section class="spec-edit-panel">',
     '<div class="spec-toolbar">',
     `<div class="spec-path">${escapeHtml(selected.name)}</div>`,
-    '<button id="saveSpecBtn" class="page-btn" type="button">保存 Spec</button>',
+    state.specEditMode
+      ? '<button id="saveSpecBtn" class="page-btn primary-btn" type="button">\u4fdd\u5b58</button>'
+      : '<button id="editSpecBtn" class="page-btn" type="button">\u7f16\u8f91</button>',
     '<span id="specSaveState" class="muted small"></span>',
     '</div>',
-    `<textarea id="specEditor" class="spec-editor" spellcheck="false">${escapeHtml(selected.content || '')}</textarea>`,
+    state.specEditMode
+      ? `<textarea id="specEditor" class="spec-editor" spellcheck="false">${escapeHtml(selected.content || '')}</textarea>`
+      : `<article class="markdown-preview">${renderMarkdown(selected.content || '')}</article>`,
     '</section>',
     '</div>',
   ].join('');
   for (const button of specsBody.querySelectorAll('.spec-tree-file')) {
     button.addEventListener('click', () => {
       state.selectedSpecName = button.dataset.specName;
+      state.specEditMode = false;
+      renderSpecs();
+    });
+  }
+  const editSpecBtn = specsBody.querySelector('#editSpecBtn');
+  if (editSpecBtn) {
+    editSpecBtn.addEventListener('click', () => {
+      state.specEditMode = true;
       renderSpecs();
     });
   }
   const saveSpecBtn = specsBody.querySelector('#saveSpecBtn');
-  const specEditor = specsBody.querySelector('#specEditor');
-  const specSaveState = specsBody.querySelector('#specSaveState');
-  saveSpecBtn.addEventListener('click', async () => {
-    specSaveState.textContent = '保存中...';
-    const saveRes = await fetch('/api/specs', {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name: state.selectedSpecName, content: specEditor.value }),
+  if (saveSpecBtn) {
+    const specEditor = specsBody.querySelector('#specEditor');
+    const specSaveState = specsBody.querySelector('#specSaveState');
+    saveSpecBtn.addEventListener('click', async () => {
+      specSaveState.textContent = '\u4fdd\u5b58\u4e2d...';
+      const saveRes = await fetch('/api/specs', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: state.selectedSpecName, content: specEditor.value }),
+      });
+      if (!saveRes.ok) {
+        const payload = await saveRes.json().catch(() => ({}));
+        specSaveState.textContent = `\u4fdd\u5b58\u5931\u8d25\uff1a${payload.error || saveRes.statusText}`;
+        return;
+      }
+      specSaveState.textContent = '\u5df2\u4fdd\u5b58';
+      state.specEditMode = false;
+      await renderSpecs();
     });
-    if (!saveRes.ok) {
-      const payload = await saveRes.json().catch(() => ({}));
-      specSaveState.textContent = `保存失败：${payload.error || saveRes.statusText}`;
-      return;
-    }
-    specSaveState.textContent = '已保存';
-    await renderSpecs();
-  });
-}
-
-async function renderTrellisSummary() {
-  const res = await fetch('/api/trellis-summary');
-  if (!res.ok) {
-    summaryBody.textContent = 'Trellis summary not available';
-    return;
   }
-  const data = await res.json();
-  const files = data.files || [];
-  if (!files.length) {
-    summaryBody.innerHTML = `<div class="muted">${escapeHtml(data.fallback || 'No Trellis summary found.')}</div>`;
-    return;
-  }
-  summaryBody.innerHTML = files.map((file) => `<h3>${escapeHtml(file.name)}</h3><div class="code">${escapeHtml(file.content || '(empty)')}</div>`).join('');
 }
 
 async function refresh() {
