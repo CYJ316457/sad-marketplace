@@ -13,9 +13,14 @@
         <h1>Trellis Dashboard</h1>
         <div id="repoMeta" class="muted"></div>
       </div>
+      <div class="topbar-actions">
+        <button data-page="tasks" class="page-tab active" type="button">Tasks</button>
+        <button data-page="specs" class="page-tab" type="button">Specs</button>
+        <button data-page="trellis-summary" class="page-tab" type="button">Trellis Summary</button>
+      </div>
       <div class="stats" id="summaryStats"></div>
     </header>
-    <main class="layout">
+    <main id="tasksPage" class="layout page-view active">
       <aside class="sidebar panel">
         <div class="sidebar-head">
           <div class="section-title">Tasks</div>
@@ -39,7 +44,7 @@
         <div class="panel hero" id="currentPanel"></div>
         <div class="panel task-actions">
           <button id="deleteTaskBtn" class="danger-btn" type="button">删除当前 Task</button>
-          <div class="muted small">删除会移除当前 task 目录；Specs 可在 Specs 标签页预览和编辑项目级 .trellis/spec。</div>
+          <div class="muted small">删除会移除当前 task 目录；Specs 在顶部 Specs 页面预览和编辑项目级 .trellis/spec。</div>
         </div>
         <div class="panel tabs">
           <div class="tab-row">
@@ -49,8 +54,6 @@
             <button data-tab="context" class="tab">Context</button>
             <button data-tab="research" class="tab">Research</button>
             <button data-tab="summary" class="tab">Summary</button>
-            <button data-tab="specs" class="tab">Specs</button>
-            <button data-tab="trellis-summary" class="tab">Trellis Summary</button>
             <button data-tab="raw" class="tab">Raw</button>
           </div>
           <div id="detailBody" class="detail-body"></div>
@@ -60,6 +63,18 @@
         <div class="section-title">Recent Events</div>
         <div id="eventList" class="event-list"></div>
       </aside>
+    </main>
+    <main id="specsPage" class="project-page page-view">
+      <section class="panel project-panel">
+        <div class="section-title">Project Specs (.trellis/spec)</div>
+        <div id="specsBody" class="project-body"></div>
+      </section>
+    </main>
+    <main id="summaryPage" class="project-page page-view">
+      <section class="panel project-panel">
+        <div class="section-title">Trellis Summary</div>
+        <div id="summaryBody" class="project-body"></div>
+      </section>
     </main>
   </div>
   <script type="module" src="/app.js"></script>

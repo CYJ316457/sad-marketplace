@@ -6,6 +6,7 @@ const state = {
   overview: null,
   selectedTaskId: null,
   selectedTab: 'overview',
+  selectedPage: 'tasks',
   selectedStatus: ALL_STATUS,
   selectedAssignee: ALL_ASSIGNEES,
   currentPage: 1,
@@ -25,12 +26,24 @@ const pageInfo = document.getElementById('pageInfo');
 const prevPage = document.getElementById('prevPage');
 const nextPage = document.getElementById('nextPage');
 const deleteTaskBtn = document.getElementById('deleteTaskBtn');
+const specsBody = document.getElementById('specsBody');
+const summaryBody = document.getElementById('summaryBody');
+const pageViews = [...document.querySelectorAll('.page-view')];
+const pageTabs = [...document.querySelectorAll('.page-tab')];
 const tabs = [...document.querySelectorAll('.tab')];
 
 tabs.forEach((tab) => tab.addEventListener('click', () => {
   state.selectedTab = tab.dataset.tab;
   tabs.forEach((item) => item.classList.toggle('active', item === tab));
   renderDetail();
+}));
+
+pageTabs.forEach((tab) => tab.addEventListener('click', async () => {
+  state.selectedPage = tab.dataset.page;
+  pageTabs.forEach((item) => item.classList.toggle('active', item === tab));
+  pageViews.forEach((view) => view.classList.toggle('active', view.id === `${state.selectedPage === 'trellis-summary' ? 'summary' : state.selectedPage}Page`));
+  if (state.selectedPage === 'specs') await renderSpecs();
+  if (state.selectedPage === 'trellis-summary') await renderTrellisSummary();
 }));
 
 assigneeFilter.addEventListener('change', () => {
@@ -59,21 +72,52 @@ nextPage.addEventListener('click', () => {
 
 deleteTaskBtn.addEventListener('click', async () => {
   if (!state.selectedTaskId) return;
-  const task = getAllTasks().find((item) => item.id === state.selectedTaskId);
-  const label = task ? `${task.title} (${task.id})` : state.selectedTaskId;
+  const taskId = state.selectedTaskId;
+  const task = getAllTasks().find((item) => item.id === taskId);
+  const label = task ? `${task.title} (${task.id})` : taskId;
   if (!window.confirm(`确认删除 task：${label}？\n该操作会删除 task 目录。`)) return;
-  const res = await fetch(`/api/tasks/${encodeURIComponent(state.selectedTaskId)}`, { method: 'DELETE' });
+  const res = await fetch(`/api/tasks/${encodeURIComponent(taskId)}`, { method: 'DELETE' });
   const payload = await res.json().catch(() => ({}));
   if (!res.ok || payload.existsAfterDelete) {
     window.alert(`删除失败：${payload.error || res.statusText}${payload.taskDir ? `\n${payload.taskDir}` : ''}`);
     await refresh();
     return;
   }
+  const removedFromOverview = await waitForTaskRemoval(taskId);
+  if (!removedFromOverview) {
+    renderOverview();
+    await renderDetail();
+    window.alert(`后端返回删除成功，但刷新后任务仍在列表里：${payload.deleted || label}\n${payload.taskDir || ''}`);
+    return;
+  }
   window.alert(`删除成功：${payload.deleted || label}`);
   state.selectedTaskId = null;
   state.selectedSpecName = '';
-  await refresh();
+  renderOverview();
+  await renderDetail();
 });
+
+async function fetchOverview() {
+  const res = await fetch('/api/overview', { cache: 'no-store' });
+  return res.json();
+}
+
+function taskExistsInOverview(overview, taskId) {
+  return [...(overview.tasks || []), ...(overview.archivedTasks || [])].some((task) => task.id === taskId);
+}
+
+async function waitForTaskRemoval(taskId) {
+  for (let attempt = 0; attempt < 5; attempt += 1) {
+    const overview = await fetchOverview();
+    if (!taskExistsInOverview(overview, taskId)) {
+      state.overview = overview;
+      return true;
+    }
+    await new Promise((resolve) => setTimeout(resolve, 200));
+  }
+  state.overview = await fetchOverview();
+  return !taskExistsInOverview(state.overview, taskId);
+}
 
 function escapeHtml(value) {
   return String(value ?? '').replace(/[&<>\"]/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch]));
@@ -238,10 +282,6 @@ function renderOverview() {
 }
 
 async function renderDetail() {
-  if (state.selectedTab === 'trellis-summary') {
-    await renderTrellisSummary();
-    return;
-  }
   if (!state.selectedTaskId) {
     detailBody.innerHTML = '<div class="muted">Select a task.</div>';
     return;
@@ -279,10 +319,6 @@ async function renderDetail() {
     detailBody.innerHTML = `<div class="code">${escapeHtml(detail.summary || '(missing)')}</div>`;
     return;
   }
-  if (state.selectedTab === 'specs') {
-    await renderSpecs();
-    return;
-  }
   detailBody.innerHTML = `<div class="code">${escapeHtml(JSON.stringify(detail.task, null, 2))}</div>`;
 }
 
@@ -300,20 +336,20 @@ function renderSpecTree(nodes) {
 async function renderSpecs() {
   const res = await fetch('/api/specs');
   if (!res.ok) {
-    detailBody.textContent = 'Specs not available';
+    specsBody.textContent = 'Specs not available';
     return;
   }
   const data = await res.json();
   const files = data.files || [];
   if (!files.length) {
-    detailBody.innerHTML = '<div class="muted">No project specs found under .trellis/spec.</div>';
+    specsBody.innerHTML = '<div class="muted">No project specs found under .trellis/spec.</div>';
     return;
   }
   if (!state.selectedSpecName || !files.some((file) => file.name === state.selectedSpecName)) {
     state.selectedSpecName = files[0].name;
   }
   const selected = files.find((file) => file.name === state.selectedSpecName) || files[0];
-  detailBody.innerHTML = [
+  specsBody.innerHTML = [
     '<div class="spec-layout">',
     `<aside class="spec-tree-panel"><div class="section-title">.trellis/spec</div>${renderSpecTree(data.tree || [])}</aside>`,
     '<section class="spec-edit-panel">',
@@ -326,15 +362,15 @@ async function renderSpecs() {
     '</section>',
     '</div>',
   ].join('');
-  for (const button of detailBody.querySelectorAll('.spec-tree-file')) {
+  for (const button of specsBody.querySelectorAll('.spec-tree-file')) {
     button.addEventListener('click', () => {
       state.selectedSpecName = button.dataset.specName;
       renderSpecs();
     });
   }
-  const saveSpecBtn = document.getElementById('saveSpecBtn');
-  const specEditor = document.getElementById('specEditor');
-  const specSaveState = document.getElementById('specSaveState');
+  const saveSpecBtn = specsBody.querySelector('#saveSpecBtn');
+  const specEditor = specsBody.querySelector('#specEditor');
+  const specSaveState = specsBody.querySelector('#specSaveState');
   saveSpecBtn.addEventListener('click', async () => {
     specSaveState.textContent = '保存中...';
     const saveRes = await fetch('/api/specs', {
@@ -355,21 +391,20 @@ async function renderSpecs() {
 async function renderTrellisSummary() {
   const res = await fetch('/api/trellis-summary');
   if (!res.ok) {
-    detailBody.textContent = 'Trellis summary not available';
+    summaryBody.textContent = 'Trellis summary not available';
     return;
   }
   const data = await res.json();
   const files = data.files || [];
   if (!files.length) {
-    detailBody.innerHTML = `<div class="muted">${escapeHtml(data.fallback || 'No Trellis summary found.')}</div>`;
+    summaryBody.innerHTML = `<div class="muted">${escapeHtml(data.fallback || 'No Trellis summary found.')}</div>`;
     return;
   }
-  detailBody.innerHTML = files.map((file) => `<h3>${escapeHtml(file.name)}</h3><div class="code">${escapeHtml(file.content || '(empty)')}</div>`).join('');
+  summaryBody.innerHTML = files.map((file) => `<h3>${escapeHtml(file.name)}</h3><div class="code">${escapeHtml(file.content || '(empty)')}</div>`).join('');
 }
 
 async function refresh() {
-  const res = await fetch('/api/overview');
-  state.overview = await res.json();
+  state.overview = await fetchOverview();
   renderOverview();
   await renderDetail();
 }
