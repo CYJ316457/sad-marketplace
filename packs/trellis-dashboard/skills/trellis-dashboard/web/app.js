@@ -63,11 +63,13 @@ deleteTaskBtn.addEventListener('click', async () => {
   const label = task ? `${task.title} (${task.id})` : state.selectedTaskId;
   if (!window.confirm(`确认删除 task：${label}？\n该操作会删除 task 目录。`)) return;
   const res = await fetch(`/api/tasks/${encodeURIComponent(state.selectedTaskId)}`, { method: 'DELETE' });
-  if (!res.ok) {
-    const payload = await res.json().catch(() => ({}));
-    window.alert(`删除失败：${payload.error || res.statusText}`);
+  const payload = await res.json().catch(() => ({}));
+  if (!res.ok || payload.existsAfterDelete) {
+    window.alert(`删除失败：${payload.error || res.statusText}${payload.taskDir ? `\n${payload.taskDir}` : ''}`);
+    await refresh();
     return;
   }
+  window.alert(`删除成功：${payload.deleted || label}`);
   state.selectedTaskId = null;
   state.selectedSpecName = '';
   await refresh();
@@ -284,8 +286,19 @@ async function renderDetail() {
   detailBody.innerHTML = `<div class="code">${escapeHtml(JSON.stringify(detail.task, null, 2))}</div>`;
 }
 
+function renderSpecTree(nodes) {
+  if (!nodes || !nodes.length) return '';
+  return `<ul class="spec-tree">${nodes.map((node) => {
+    if (node.type === 'dir') {
+      return `<li><details open><summary>${escapeHtml(node.name)}</summary>${renderSpecTree(node.children || [])}</details></li>`;
+    }
+    const active = node.path === state.selectedSpecName ? ' active' : '';
+    return `<li><button class="spec-tree-file${active}" data-spec-name="${escapeHtml(node.path)}" type="button">${escapeHtml(node.name)}</button></li>`;
+  }).join('')}</ul>`;
+}
+
 async function renderSpecs() {
-  const res = await fetch(`/api/tasks/${encodeURIComponent(state.selectedTaskId)}/specs`);
+  const res = await fetch('/api/specs');
   if (!res.ok) {
     detailBody.textContent = 'Specs not available';
     return;
@@ -293,7 +306,7 @@ async function renderSpecs() {
   const data = await res.json();
   const files = data.files || [];
   if (!files.length) {
-    detailBody.innerHTML = '<div class="muted">No specs found for this task.</div>';
+    detailBody.innerHTML = '<div class="muted">No project specs found under .trellis/spec.</div>';
     return;
   }
   if (!state.selectedSpecName || !files.some((file) => file.name === state.selectedSpecName)) {
@@ -301,24 +314,30 @@ async function renderSpecs() {
   }
   const selected = files.find((file) => file.name === state.selectedSpecName) || files[0];
   detailBody.innerHTML = [
+    '<div class="spec-layout">',
+    `<aside class="spec-tree-panel"><div class="section-title">.trellis/spec</div>${renderSpecTree(data.tree || [])}</aside>`,
+    '<section class="spec-edit-panel">',
     '<div class="spec-toolbar">',
-    `<select id="specSelect" class="filter-select">${files.map((file) => `<option value="${escapeHtml(file.name)}" ${file.name === selected.name ? 'selected' : ''}>${escapeHtml(file.label)} · ${escapeHtml(file.name)}</option>`).join('')}</select>`,
+    `<div class="spec-path">${escapeHtml(selected.name)}</div>`,
     '<button id="saveSpecBtn" class="page-btn" type="button">保存 Spec</button>',
     '<span id="specSaveState" class="muted small"></span>',
     '</div>',
     `<textarea id="specEditor" class="spec-editor" spellcheck="false">${escapeHtml(selected.content || '')}</textarea>`,
+    '</section>',
+    '</div>',
   ].join('');
-  const specSelect = document.getElementById('specSelect');
+  for (const button of detailBody.querySelectorAll('.spec-tree-file')) {
+    button.addEventListener('click', () => {
+      state.selectedSpecName = button.dataset.specName;
+      renderSpecs();
+    });
+  }
   const saveSpecBtn = document.getElementById('saveSpecBtn');
   const specEditor = document.getElementById('specEditor');
   const specSaveState = document.getElementById('specSaveState');
-  specSelect.addEventListener('change', () => {
-    state.selectedSpecName = specSelect.value;
-    renderSpecs();
-  });
   saveSpecBtn.addEventListener('click', async () => {
     specSaveState.textContent = '保存中...';
-    const saveRes = await fetch(`/api/tasks/${encodeURIComponent(state.selectedTaskId)}/specs`, {
+    const saveRes = await fetch('/api/specs', {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ name: state.selectedSpecName, content: specEditor.value }),
@@ -329,7 +348,7 @@ async function renderSpecs() {
       return;
     }
     specSaveState.textContent = '已保存';
-    await refresh();
+    await renderSpecs();
   });
 }
 
