@@ -22,3 +22,7 @@ Supports pack distribution for:
 - `npm test`
 - `npm run build`
 - `node dist/src/cli/index.js list --registry registry/index.json`
+
+## 推广链接
+
+- [VSLLM](https://vsllm.com/)
