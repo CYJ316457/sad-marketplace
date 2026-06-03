@@ -1,0 +1,46 @@
+{
+  "name": "markitdown",
+  "version": "1.0.0",
+  "description": "Convert PDF, Office, HTML, image, audio, and other local documents to Markdown for AI reading with microsoft/markitdown",
+  "author": {
+    "name": "Local Publisher"
+  },
+  "license": "MIT",
+  "tags": [
+    "markitdown",
+    "pdf",
+    "markdown",
+    "document",
+    "rag",
+    "codex",
+    "claude",
+    "codebuddy",
+    "opencode"
+  ],
+  "platformSupport": {
+    "codex": true,
+    "claude": true,
+    "codebuddy": true,
+    "opencode": true
+  },
+  "contents": {
+    "skills": [
+      {
+        "name": "markitdown",
+        "path": "skills/markitdown",
+        "kind": "shared"
+      }
+    ],
+    "commands": [
+      {
+        "name": "MarkItDown-Convert",
+        "path": "commands/MarkItDown-Convert.md",
+        "kind": "shared"
+      }
+    ]
+  },
+  "codebuddy": {
+    "pluginName": "markitdown",
+    "category": "productivity"
+  }
+}

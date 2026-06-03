@@ -229,6 +229,44 @@
           "Trellis-Dashboard-Install-OpenCode"
         ]
       }
+    },
+    {
+      "name": "markitdown",
+      "version": "1.0.0",
+      "description": "Convert PDF, Office, HTML, image, audio, and other local documents to Markdown for AI reading with microsoft/markitdown",
+      "author": {
+        "name": "Local Publisher"
+      },
+      "license": "MIT",
+      "tags": [
+        "markitdown",
+        "pdf",
+        "markdown",
+        "document",
+        "rag",
+        "codex",
+        "claude",
+        "codebuddy",
+        "opencode"
+      ],
+      "source": "./packs/markitdown",
+      "platformSupport": {
+        "codex": true,
+        "claude": true,
+        "codebuddy": true,
+        "opencode": true
+      },
+      "install": {
+        "unit": "pack"
+      },
+      "contents": {
+        "skills": [
+          "markitdown"
+        ],
+        "commands": [
+          "MarkItDown-Convert"
+        ]
+      }
     }
   ]
 }

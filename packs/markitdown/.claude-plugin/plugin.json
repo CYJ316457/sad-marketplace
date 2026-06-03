@@ -1,0 +1,13 @@
+{
+  "name": "markitdown",
+  "description": "Convert PDF, Office, HTML, image, audio, and other local documents to Markdown for AI reading with microsoft/markitdown",
+  "author": {
+    "name": "Local Publisher"
+  },
+  "skills": [
+    "./skills/markitdown"
+  ],
+  "commands": [
+    "./commands"
+  ]
+}

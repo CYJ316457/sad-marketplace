@@ -50,6 +50,15 @@
       },
       "category": "productivity",
       "source": "./packs/trellis-dashboard"
+    },
+    {
+      "name": "markitdown",
+      "description": "Convert PDF, Office, HTML, image, audio, and other local documents to Markdown for AI reading with microsoft/markitdown",
+      "author": {
+        "name": "Local Publisher"
+      },
+      "category": "productivity",
+      "source": "./packs/markitdown"
     }
   ]
 }

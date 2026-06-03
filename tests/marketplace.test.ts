@@ -11,7 +11,7 @@ import {
 } from "../src/core/api.js";
 
 function repoRoot(): string {
-  return "C:\\AI\\Codex\\Install\\sad-marketplace";
+  return process.cwd();
 }
 
 function registryPath(): string {
@@ -64,6 +64,7 @@ describe("shared skill marketplace", () => {
       "svn-toolkit",
       "gpt-image-2-gen",
       "trellis-dashboard",
+      "markitdown",
     ]);
     expect(marketplace.plugins.map((plugin) => plugin.name)).not.toContain("cb-hud");
   });
@@ -86,6 +87,7 @@ describe("shared skill marketplace", () => {
       "gpt-image-2-gen",
       "cb-hud",
       "trellis-dashboard",
+      "markitdown",
     ]);
   });
 
@@ -131,6 +133,16 @@ describe("shared skill marketplace", () => {
     ) as { name: string; commands?: string[] };
     expect(image.name).toBe("gpt-image-2-gen");
     expect(image.commands).toContain("./commands/GPT-image-2-Gen.md");
+
+    const markitdown = JSON.parse(
+      fs.readFileSync(
+        path.join(repoRoot(), "packs", "markitdown", ".codebuddy-plugin", "plugin.json"),
+        "utf-8",
+      ),
+    ) as { name: string; skills?: string[]; commands?: string[] };
+    expect(markitdown.name).toBe("markitdown");
+    expect(markitdown.skills).toEqual(["./skills/markitdown"]);
+    expect(markitdown.commands).toContain("./commands/MarkItDown-Convert.md");
 
     const cbHud = JSON.parse(
       fs.readFileSync(
@@ -306,11 +318,21 @@ describe("shared skill marketplace", () => {
     ) as { name: string; commands?: string[] };
     expect(image.name).toBe("gpt-image-2-gen");
     expect(image.commands).toContain("./commands");
+
+    const markitdown = JSON.parse(
+      fs.readFileSync(
+        path.join(repoRoot(), "packs", "markitdown", ".claude-plugin", "plugin.json"),
+        "utf-8",
+      ),
+    ) as { name: string; commands?: string[]; skills?: string[] };
+    expect(markitdown.name).toBe("markitdown");
+    expect(markitdown.skills).toEqual(["./skills/markitdown"]);
+    expect(markitdown.commands).toContain("./commands");
   });
 
   test("lists packs from the registry", async () => {
     const packs = await listPacks({ registryPath: registryPath() });
-    expect(packs).toHaveLength(6);
+    expect(packs).toHaveLength(7);
     expect(packs[0]?.name).toBe("starter-pack");
     expect(packs[0]?.contents.skills).toEqual(["writing-clearly", "release-checklist"]);
     expect(packs[1]?.name).toBe("floating-island-hooks");
@@ -368,6 +390,16 @@ describe("shared skill marketplace", () => {
       "Trellis-Dashboard-Install-Claude",
       "Trellis-Dashboard-Install-OpenCode",
     ]);
+
+    expect(packs[6]?.name).toBe("markitdown");
+    expect(packs[6]?.platformSupport).toEqual({
+      codex: true,
+      claude: true,
+      codebuddy: true,
+      opencode: true,
+    });
+    expect(packs[6]?.contents.skills).toEqual(["markitdown"]);
+    expect(packs[6]?.contents.commands).toEqual(["MarkItDown-Convert"]);
   });
 
   test("installs a pack globally for codex and claude", async () => {
@@ -1324,6 +1356,54 @@ describe("shared skill marketplace", () => {
     expect(commandDoc).toContain("--aspect-ratio");
     expect(skillDoc).toContain("--size");
     expect(skillDoc).toContain("--aspect-ratio");
+  });
+
+  test("installs markitdown for all supported platforms", async () => {
+    const workspace = tempWorkspace();
+    process.env.SKILL_MARKETPLACE_HOME = path.join(workspace, "home");
+
+    const record = await installPack({
+      registryPath: registryPath(),
+      packName: "markitdown",
+      scope: "global",
+      cwd: workspace,
+      platform: "all",
+    });
+
+    expect(record.platforms).toEqual(["codex", "claude", "codebuddy", "opencode"]);
+    expect(
+      fs.existsSync(
+        path.join(workspace, "home", ".codex", "skills", "markitdown", "scripts", "convert_to_markdown.py"),
+      ),
+    ).toBe(true);
+    expect(
+      fs.existsSync(
+        path.join(workspace, "home", ".claude", "skills", "markitdown", "SKILL.md"),
+      ),
+    ).toBe(true);
+    expect(
+      fs.existsSync(
+        path.join(workspace, "home", ".opencode", "skills", "markitdown", "scripts", "convert_to_markdown.py"),
+      ),
+    ).toBe(true);
+    expect(
+      fs.existsSync(
+        path.join(
+          workspace,
+          "home",
+          ".codebuddy",
+          "plugins",
+          "marketplaces",
+          "sad-marketplace",
+          "plugins",
+          "markitdown",
+          "skills",
+          "markitdown",
+          "scripts",
+          "convert_to_markdown.py",
+        ),
+      ),
+    ).toBe(true);
   });
 
   test("installs a pack in project mode with codex shared skills and codebuddy plugin layout", async () => {

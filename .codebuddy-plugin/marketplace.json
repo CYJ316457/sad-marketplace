@@ -107,6 +107,23 @@
         "./packs/trellis-dashboard/commands/Trellis-Dashboard-Install-Claude.md",
         "./packs/trellis-dashboard/commands/Trellis-Dashboard-Install-OpenCode.md"
       ]
+    },
+    {
+      "name": "markitdown",
+      "description": "Convert PDF, Office, HTML, image, audio, and other local documents to Markdown for AI reading with microsoft/markitdown",
+      "version": "1.0.0",
+      "source": "./packs/markitdown",
+      "category": "productivity",
+      "author": {
+        "name": "Local Publisher"
+      },
+      "license": "MIT",
+      "skills": [
+        "./packs/markitdown/skills/markitdown"
+      ],
+      "commands": [
+        "./packs/markitdown/commands/MarkItDown-Convert.md"
+      ]
     }
   ]
 }
