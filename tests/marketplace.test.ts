@@ -1358,6 +1358,99 @@ describe("shared skill marketplace", () => {
     expect(skillDoc).toContain("--aspect-ratio");
   });
 
+  test("markitdown script selects Office extras by input suffix", async () => {
+    const script = path.join(
+      repoRoot(),
+      "packs",
+      "markitdown",
+      "skills",
+      "markitdown",
+      "scripts",
+      "convert_to_markdown.py",
+    );
+    const probe = path.join(tempWorkspace(), "probe_markitdown_specs.py");
+    fs.writeFileSync(
+      probe,
+      [
+        "import importlib.util",
+        "import json",
+        "from pathlib import Path",
+        `spec = importlib.util.spec_from_file_location('convert_to_markdown', r'''${script}''')`,
+        "mod = importlib.util.module_from_spec(spec)",
+        "spec.loader.exec_module(mod)",
+        "suffixes = ['demo.pdf', 'demo.docx', 'demo.pptx', 'demo.xlsx', 'demo.xls', 'demo.html']",
+        "print(json.dumps({name: mod.markitdown_install_spec(Path(name)) for name in suffixes}, sort_keys=True))",
+      ].join("\n"),
+      "utf-8",
+    );
+
+    const py = pythonCommand();
+    const result = spawnSync(py.cmd, [...py.args, probe], { encoding: "utf-8" });
+
+    expect(result.status).toBe(0);
+    expect(JSON.parse(result.stdout.trim())).toEqual({
+      "demo.docx": "markitdown[docx]",
+      "demo.html": "markitdown",
+      "demo.pdf": "markitdown[pdf]",
+      "demo.pptx": "markitdown[pptx]",
+      "demo.xls": "markitdown[xls]",
+      "demo.xlsx": "markitdown[xlsx]",
+    });
+  });
+
+  test("markitdown script retries Office conversion after installing missing extras", async () => {
+    const script = path.join(
+      repoRoot(),
+      "packs",
+      "markitdown",
+      "skills",
+      "markitdown",
+      "scripts",
+      "convert_to_markdown.py",
+    );
+    const workspace = tempWorkspace();
+    const probe = path.join(workspace, "probe_markitdown_retry.py");
+    fs.writeFileSync(
+      probe,
+      [
+        "import importlib.util",
+        "import json",
+        "from pathlib import Path",
+        "from types import SimpleNamespace",
+        `spec = importlib.util.spec_from_file_location('convert_to_markdown', r'''${script}''')`,
+        "mod = importlib.util.module_from_spec(spec)",
+        "spec.loader.exec_module(mod)",
+        "installed = []",
+        "calls = []",
+        "def fake_install(spec):",
+        "    installed.append(spec)",
+        "def fake_convert_once(input_path):",
+        "    calls.append(input_path.suffix.lower())",
+        "    if len(calls) == 1:",
+        "        raise ImportError('Missing optional dependency [pptx]')",
+        "    return SimpleNamespace(text_content='Converted office document with enough content for this retry test.')",
+        "mod.run_pip_install = fake_install",
+        "mod.convert_once = fake_convert_once",
+        "input_path = Path(r'''" + path.join(workspace, "deck.pptx") + "''')",
+        "input_path.write_text('pptx placeholder', encoding='utf-8')",
+        "output_path = Path(r'''" + path.join(workspace, "deck.md") + "''')",
+        "mod.convert(input_path, output_path, no_clean=True)",
+        "print(json.dumps({'installed': installed, 'calls': calls, 'output': output_path.read_text(encoding='utf-8')}, sort_keys=True))",
+      ].join("\n"),
+      "utf-8",
+    );
+
+    const py = pythonCommand();
+    const result = spawnSync(py.cmd, [...py.args, probe], { encoding: "utf-8" });
+
+    expect(result.status).toBe(0);
+    expect(JSON.parse(result.stdout.trim().split(/\r?\n/).at(-1) ?? "{}")).toEqual({
+      calls: [".pptx", ".pptx"],
+      installed: ["markitdown[pptx]"],
+      output: "Converted office document with enough content for this retry test.",
+    });
+  });
+
   test("installs markitdown for all supported platforms", async () => {
     const workspace = tempWorkspace();
     process.env.SKILL_MARKETPLACE_HOME = path.join(workspace, "home");

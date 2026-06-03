@@ -20,5 +20,6 @@ Use this command when the user asks to convert a PDF/document to Markdown or ask
 python .\scripts\convert_to_markdown.py "<input-file>" "<optional-output.md>"
 ```
 
+   The script automatically installs missing `markitdown` optional extras for PDF and Office files: `.pdf`, `.docx`, `.pptx`, `.xls`, and `.xlsx`.
 3. Read the generated Markdown before summarizing or extracting information.
 4. If conversion output is empty/short, report that OCR may be needed instead of fabricating content.

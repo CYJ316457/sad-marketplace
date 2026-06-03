@@ -38,7 +38,17 @@ Optional explicit output path:
 python .\scripts\convert_to_markdown.py "D:\docs\example.pdf" "D:\docs\example.md"
 ```
 
-For PDF files, the script installs the `markitdown[pdf]` extra automatically when needed. It does not require cloning the GitHub repository.
+For PDF and Office files, the script installs the needed `markitdown` optional extra automatically when missing:
+
+| File type | Auto-installed extra |
+|-----------|----------------------|
+| PDF (`.pdf`) | `markitdown[pdf]` |
+| Word (`.docx`) | `markitdown[docx]` |
+| PowerPoint (`.pptx`) | `markitdown[pptx]` |
+| Excel (`.xls`) | `markitdown[xls]` |
+| Excel (`.xlsx`) | `markitdown[xlsx]` |
+
+It does not require cloning the GitHub repository.
 
 ## Output rules
 

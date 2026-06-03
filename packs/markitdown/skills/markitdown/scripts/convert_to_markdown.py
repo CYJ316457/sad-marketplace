@@ -7,12 +7,24 @@ import unicodedata
 from pathlib import Path
 from typing import Iterable
 
+OPTIONAL_EXTRA_BY_SUFFIX = {
+    ".pdf": "pdf",
+    ".docx": "docx",
+    ".pptx": "pptx",
+    ".xls": "xls",
+    ".xlsx": "xlsx",
+}
 PDF_SUFFIXES = {".pdf"}
 PDF_GLYPH_REPLACEMENTS = {
     "\u2ecb": "车",
     "\u2eda": "页",
     "\u2ec5": "见",
 }
+
+
+def markitdown_install_spec(input_path: Path) -> str:
+    extra = OPTIONAL_EXTRA_BY_SUFFIX.get(input_path.suffix.lower())
+    return f"markitdown[{extra}]" if extra else "markitdown"
 
 
 def run_pip_install(spec: str) -> None:
@@ -29,18 +41,25 @@ def ensure_markitdown(input_path: Path):
     try:
         return import_markitdown()
     except Exception:
-        spec = "markitdown[pdf]" if input_path.suffix.lower() in PDF_SUFFIXES else "markitdown"
+        spec = markitdown_install_spec(input_path)
         print(f"markitdown is not installed; installing {spec} with pip...", file=sys.stderr)
         run_pip_install(spec)
         return import_markitdown()
+
+
+def ensure_optional_extra(input_path: Path) -> None:
+    spec = markitdown_install_spec(input_path)
+    if spec == "markitdown":
+        return
+    print(f"Support for {input_path.suffix.lower()} is missing; installing {spec} with pip...", file=sys.stderr)
+    run_pip_install(spec)
 
 
 def ensure_pdf_extra() -> None:
     try:
         import pdfplumber  # noqa: F401
     except Exception:
-        print("PDF support is missing; installing markitdown[pdf] with pip...", file=sys.stderr)
-        run_pip_install("markitdown[pdf]")
+        ensure_optional_extra(Path("document.pdf"))
 
 
 def clean_markdown(text: str) -> str:
@@ -67,6 +86,29 @@ def conversion_error_mentions_pdf_extra(error: BaseException) -> bool:
     return "markitdown[pdf]" in message or "optional dependency [pdf]" in message or "pdfconverter" in message
 
 
+def conversion_error_mentions_optional_extra(input_path: Path, error: BaseException) -> bool:
+    extra = OPTIONAL_EXTRA_BY_SUFFIX.get(input_path.suffix.lower())
+    if extra is None:
+        return False
+
+    message = str(error).lower()
+    markers = [
+        f"markitdown[{extra}]",
+        f"optional dependency [{extra}]",
+        f"{extra}converter",
+    ]
+    if extra == "docx":
+        markers.extend(["mammoth", "lxml"])
+    elif extra == "pptx":
+        markers.append("python-pptx")
+    elif extra == "xlsx":
+        markers.extend(["openpyxl", "pandas"])
+    elif extra == "xls":
+        markers.extend(["xlrd", "pandas"])
+
+    return any(marker in message for marker in markers)
+
+
 def convert(input_path: Path, output_path: Path, *, no_clean: bool = False) -> None:
     if not input_path.exists():
         raise FileNotFoundError(f"Input file not found: {input_path}")
@@ -79,6 +121,9 @@ def convert(input_path: Path, output_path: Path, *, no_clean: bool = False) -> N
     except Exception as error:
         if input_path.suffix.lower() in PDF_SUFFIXES and conversion_error_mentions_pdf_extra(error):
             ensure_pdf_extra()
+            result = convert_once(input_path)
+        elif conversion_error_mentions_optional_extra(input_path, error):
+            ensure_optional_extra(input_path)
             result = convert_once(input_path)
         else:
             raise
