@@ -1,0 +1,10 @@
+{
+  "name": "ppt-master",
+  "description": "AI 生成原生可编辑 PPTX，支持 PDF、DOCX、Markdown、URL 等输入",
+  "author": {
+    "name": "Hugo He"
+  },
+  "skills": [
+    "./skills/ppt-master"
+  ]
+}

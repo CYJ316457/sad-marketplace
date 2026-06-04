@@ -1,0 +1,13 @@
+{
+  "name": "android-adb",
+  "description": "Control Android devices via ADB with UI hierarchy analysis and screenshot-based visual verification",
+  "author": {
+    "name": "staticai"
+  },
+  "skills": [
+    "./skills/android-adb"
+  ],
+  "commands": [
+    "./commands"
+  ]
+}

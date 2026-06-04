@@ -1,0 +1,9 @@
+{
+  "name": "ppt-master",
+  "description": "AI 生成原生可编辑 PPTX，支持 PDF、DOCX、Markdown、URL 等输入",
+  "version": "2.9.0",
+  "license": "MIT",
+  "skills": [
+    "./skills/ppt-master"
+  ]
+}

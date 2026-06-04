@@ -1,0 +1,38 @@
+{
+  "name": "ppt-master",
+  "version": "2.9.0",
+  "description": "AI 生成原生可编辑 PPTX，支持 PDF、DOCX、Markdown、URL 等输入",
+  "author": {
+    "name": "Hugo He"
+  },
+  "license": "MIT",
+  "tags": [
+    "ppt",
+    "pptx",
+    "presentation",
+    "slides",
+    "svg",
+    "document",
+    "ai",
+    "chinese"
+  ],
+  "platformSupport": {
+    "codex": true,
+    "claude": true,
+    "codebuddy": true,
+    "opencode": true
+  },
+  "contents": {
+    "skills": [
+      {
+        "name": "ppt-master",
+        "path": "skills/ppt-master",
+        "kind": "shared"
+      }
+    ]
+  },
+  "codebuddy": {
+    "pluginName": "ppt-master",
+    "category": "productivity"
+  }
+}

@@ -8,6 +8,7 @@
 
 | 技能包 | 描述 | Codex | Claude Code | CodeBuddy | OpenCode |
 |--------|------|:-----:|:-----------:|:---------:|:--------:|
+| android-adb | 通过 ADB 控制 Android 设备，支持 UI 层级分析和截图验证 | ✓ | ✓ | ✓ | ✓ |
 | floating-island-hooks | 项目级浮窗状态助手，AI 工作时显示 busy/ask/idle | ✓ | ✓ | ✓ | ✓ |
 | gpt-image-2-gen | 使用 gpt-image-2 在项目内生成图片 | ✓ | ✓ | ✓ | ✓ |
 | markitdown | 将 PDF、Office、HTML、图片、音频等文档转为 Markdown 供 AI 阅读 | ✓ | ✓ | ✓ | ✓ |
@@ -17,6 +18,20 @@
 | cb-hud | CodeBuddy 专属猫咪状态栏 HUD | — | — | ✓ | — |
 
 ## 技能包详情
+
+### android-adb
+
+Android ADB 自动化技能，来自 SkillHub 的 **ADB Connection**（`staticai/android-adb`）。
+
+- **技能：** `android-adb`
+- **命令：** `ADB-Devices`、`ADB-Pair`、`ADB-Connect`、`ADB-Disconnect`、`ADB-Shell`、`ADB-Install`、`ADB-Launch`、`ADB-Packages`、`ADB-UI-Dump`、`ADB-Screenshot`、`ADB-Tap`、`ADB-Text`、`ADB-Keyevent`、`ADB-Swipe`、`ADB-Pull`、`ADB-Logcat`、`ADB-Screenrecord`、`ADB-Push`、`ADB-Clear-Data`、`ADB-Force-Stop`
+- 命令文件名使用 Windows 安全的 `ADB-*`，命令文档标题统一显示为 `ADB: ...`
+- 使用系统 `adb`、`uiautomator` 和 `screencap` 控制 Android 设备
+- 支持 USB / Android 11+ 无线调试连接说明
+- 覆盖常见操作：设备列表、配对/连接/断开、启动应用、安装 APK、package 查询、dump UI 层级、点击、输入、按键、滑动、截图、logcat、录屏、push/pull、清除应用数据、强制停止应用
+- 所有截图、UI dump、日志和录屏建议保存到 `./adb-artifacts/`，避免覆盖项目文件
+
+---
 
 ### floating-island-hooks
 

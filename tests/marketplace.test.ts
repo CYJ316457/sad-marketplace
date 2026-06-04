@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import os from "node:os";
+import net from "node:net";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
 import { afterEach, describe, expect, test } from "vitest";
@@ -18,12 +19,58 @@ function registryPath(): string {
   return path.join(repoRoot(), "registry", "index.json");
 }
 
+const ANDROID_ADB_COMMANDS = [
+  "ADB-Devices",
+  "ADB-Pair",
+  "ADB-Connect",
+  "ADB-Disconnect",
+  "ADB-Shell",
+  "ADB-Install",
+  "ADB-Launch",
+  "ADB-Packages",
+  "ADB-UI-Dump",
+  "ADB-Screenshot",
+  "ADB-Tap",
+  "ADB-Text",
+  "ADB-Keyevent",
+  "ADB-Swipe",
+  "ADB-Pull",
+  "ADB-Logcat",
+  "ADB-Screenrecord",
+  "ADB-Push",
+  "ADB-Clear-Data",
+  "ADB-Force-Stop",
+];
+
+const ANDROID_ADB_CODEBUDDY_COMMANDS = ANDROID_ADB_COMMANDS.map(
+  (command) => `./commands/${command}.md`,
+);
+
 const tempDirs: string[] = [];
 
 function tempWorkspace(): string {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), "sad-marketplace-"));
   tempDirs.push(dir);
   return dir;
+}
+
+
+function reserveFreePort(): Promise<{ port: number; release: () => Promise<void> }> {
+  return new Promise((resolve, reject) => {
+    const server = net.createServer();
+    server.once("error", reject);
+    server.listen(0, "127.0.0.1", () => {
+      const address = server.address();
+      if (!address || typeof address === "string") {
+        server.close(() => reject(new Error("Unable to reserve test port")));
+        return;
+      }
+      resolve({
+        port: address.port,
+        release: () => new Promise((closeResolve) => server.close(() => closeResolve())),
+      });
+    });
+  });
 }
 
 function pythonCommand(): { cmd: string; args: string[] } {
@@ -44,7 +91,7 @@ afterEach(() => {
   for (const dir of tempDirs.splice(0)) {
     fs.rmSync(dir, { recursive: true, force: true });
   }
-});
+}, 60_000);
 
 describe("shared skill marketplace", () => {
   test("exposes a Claude-native marketplace root", async () => {
@@ -65,6 +112,8 @@ describe("shared skill marketplace", () => {
       "gpt-image-2-gen",
       "trellis-dashboard",
       "markitdown",
+      "android-adb",
+      "ppt-master",
     ]);
     expect(marketplace.plugins.map((plugin) => plugin.name)).not.toContain("cb-hud");
   });
@@ -88,6 +137,8 @@ describe("shared skill marketplace", () => {
       "cb-hud",
       "trellis-dashboard",
       "markitdown",
+      "android-adb",
+      "ppt-master",
     ]);
   });
 
@@ -144,6 +195,25 @@ describe("shared skill marketplace", () => {
     expect(markitdown.skills).toEqual(["./skills/markitdown"]);
     expect(markitdown.commands).toContain("./commands/MarkItDown-Convert.md");
 
+    const androidAdb = JSON.parse(
+      fs.readFileSync(
+        path.join(repoRoot(), "packs", "android-adb", ".codebuddy-plugin", "plugin.json"),
+        "utf-8",
+      ),
+    ) as { name: string; skills?: string[]; commands?: string[] };
+    expect(androidAdb.name).toBe("android-adb");
+    expect(androidAdb.skills).toEqual(["./skills/android-adb"]);
+    expect(androidAdb.commands).toEqual(ANDROID_ADB_CODEBUDDY_COMMANDS);
+
+    const pptMaster = JSON.parse(
+      fs.readFileSync(
+        path.join(repoRoot(), "packs", "ppt-master", ".codebuddy-plugin", "plugin.json"),
+        "utf-8",
+      ),
+    ) as { name: string; skills?: string[] };
+    expect(pptMaster.name).toBe("ppt-master");
+    expect(pptMaster.skills).toEqual(["./skills/ppt-master"]);
+
     const cbHud = JSON.parse(
       fs.readFileSync(
         path.join(repoRoot(), "packs", "cb-hud", ".codebuddy-plugin", "plugin.json"),
@@ -197,7 +267,13 @@ describe("shared skill marketplace", () => {
     fs.mkdirSync(path.join(project, ".trellis", ".runtime", "dashboard"), { recursive: true });
     fs.mkdirSync(path.join(project, ".trellis", "tasks"), { recursive: true });
 
-    const first = spawnSync("node", [script, "start", "--project", project], { encoding: "utf-8" });
+    const reserved = await reserveFreePort();
+    const port = reserved.port;
+    await reserved.release();
+
+    const first = spawnSync("node", [script, "start", "--project", project, "--port", String(port)], {
+      encoding: "utf-8",
+    });
     expect(first.status).toBe(0);
     const payload = JSON.parse(first.stdout.trim());
     expect(payload.repoRoot || project).toContain(project);
@@ -328,11 +404,30 @@ describe("shared skill marketplace", () => {
     expect(markitdown.name).toBe("markitdown");
     expect(markitdown.skills).toEqual(["./skills/markitdown"]);
     expect(markitdown.commands).toContain("./commands");
+
+    const androidAdb = JSON.parse(
+      fs.readFileSync(
+        path.join(repoRoot(), "packs", "android-adb", ".claude-plugin", "plugin.json"),
+        "utf-8",
+      ),
+    ) as { name: string; commands?: string[]; skills?: string[] };
+    expect(androidAdb.name).toBe("android-adb");
+    expect(androidAdb.skills).toEqual(["./skills/android-adb"]);
+    expect(androidAdb.commands).toEqual(["./commands"]);
+
+    const pptMaster = JSON.parse(
+      fs.readFileSync(
+        path.join(repoRoot(), "packs", "ppt-master", ".claude-plugin", "plugin.json"),
+        "utf-8",
+      ),
+    ) as { name: string; skills?: string[] };
+    expect(pptMaster.name).toBe("ppt-master");
+    expect(pptMaster.skills).toEqual(["./skills/ppt-master"]);
   });
 
   test("lists packs from the registry", async () => {
     const packs = await listPacks({ registryPath: registryPath() });
-    expect(packs).toHaveLength(7);
+    expect(packs).toHaveLength(9);
     expect(packs[0]?.name).toBe("starter-pack");
     expect(packs[0]?.contents.skills).toEqual(["writing-clearly", "release-checklist"]);
     expect(packs[1]?.name).toBe("floating-island-hooks");
@@ -400,6 +495,25 @@ describe("shared skill marketplace", () => {
     });
     expect(packs[6]?.contents.skills).toEqual(["markitdown"]);
     expect(packs[6]?.contents.commands).toEqual(["MarkItDown-Convert"]);
+
+    expect(packs[7]?.name).toBe("android-adb");
+    expect(packs[7]?.platformSupport).toEqual({
+      codex: true,
+      claude: true,
+      codebuddy: true,
+      opencode: true,
+    });
+    expect(packs[7]?.contents.skills).toEqual(["android-adb"]);
+    expect(packs[7]?.contents.commands).toEqual(ANDROID_ADB_COMMANDS);
+
+    expect(packs[8]?.name).toBe("ppt-master");
+    expect(packs[8]?.platformSupport).toEqual({
+      codex: true,
+      claude: true,
+      codebuddy: true,
+      opencode: true,
+    });
+    expect(packs[8]?.contents.skills).toEqual(["ppt-master"]);
   });
 
   test("installs a pack globally for codex and claude", async () => {
@@ -1494,6 +1608,202 @@ describe("shared skill marketplace", () => {
           "markitdown",
           "scripts",
           "convert_to_markdown.py",
+        ),
+      ),
+    ).toBe(true);
+  });
+
+  test("android-adb commands use Windows-safe filenames with user-facing ADB titles", async () => {
+    const commandTitles = new Map([
+      ["ADB-Devices", "ADB: Devices"],
+      ["ADB-Pair", "ADB: Pair"],
+      ["ADB-Connect", "ADB: Connect"],
+      ["ADB-Disconnect", "ADB: Disconnect"],
+      ["ADB-Shell", "ADB: Shell"],
+      ["ADB-Install", "ADB: Install"],
+      ["ADB-Launch", "ADB: Launch"],
+      ["ADB-Packages", "ADB: Packages"],
+      ["ADB-UI-Dump", "ADB: UI Dump"],
+      ["ADB-Screenshot", "ADB: Screenshot"],
+      ["ADB-Tap", "ADB: Tap"],
+      ["ADB-Text", "ADB: Text"],
+      ["ADB-Keyevent", "ADB: Keyevent"],
+      ["ADB-Swipe", "ADB: Swipe"],
+      ["ADB-Pull", "ADB: Pull"],
+      ["ADB-Logcat", "ADB: Logcat"],
+      ["ADB-Screenrecord", "ADB: Screenrecord"],
+      ["ADB-Push", "ADB: Push"],
+      ["ADB-Clear-Data", "ADB: Clear Data"],
+      ["ADB-Force-Stop", "ADB: Force Stop"],
+    ]);
+    const commandDir = path.join(repoRoot(), "packs", "android-adb", "commands");
+
+    for (const command of ANDROID_ADB_COMMANDS) {
+      const fileName = `${command}.md`;
+      expect(fileName).not.toContain(":");
+      expect(fileName).toMatch(/^ADB-[A-Za-z0-9-]+\.md$/);
+
+      const commandDoc = fs.readFileSync(path.join(commandDir, fileName), "utf-8");
+      expect(commandDoc).toContain(`# ${commandTitles.get(command)}`);
+      expect(commandDoc).toContain("Use this command when");
+      expect(commandDoc).toContain("adb ");
+      expect(commandDoc).toContain("## Safety");
+    }
+  });
+
+  test("android-adb pack and Claude plugin manifests include explicit commands", async () => {
+    const pack = JSON.parse(
+      fs.readFileSync(path.join(repoRoot(), "packs", "android-adb", "pack.json"), "utf-8"),
+    ) as {
+      contents: {
+        commands?: Array<{ name: string; path: string; kind: string }>;
+      };
+    };
+
+    expect(pack.contents.commands).toEqual(
+      ANDROID_ADB_COMMANDS.map((command) => ({
+        name: command,
+        path: `commands/${command}.md`,
+        kind: "shared",
+      })),
+    );
+
+    const claude = JSON.parse(
+      fs.readFileSync(
+        path.join(repoRoot(), "packs", "android-adb", ".claude-plugin", "plugin.json"),
+        "utf-8",
+      ),
+    ) as { commands?: string[] };
+
+    expect(claude.commands).toEqual(["./commands"]);
+  });
+
+  test("android-adb skill metadata and safety guidance stay aligned", async () => {
+    const skillDoc = fs.readFileSync(
+      path.join(repoRoot(), "packs", "android-adb", "skills", "android-adb", "SKILL.md"),
+      "utf-8",
+    );
+
+    expect(skillDoc).toContain("name: android-adb");
+    expect(skillDoc).toContain("## Command Safety");
+    expect(skillDoc).toContain("## Explicit Commands");
+    expect(skillDoc).toContain("Windows does not allow `:`");
+    expect(skillDoc).toContain("ADB-Devices` — ADB: Devices");
+    expect(skillDoc).toContain("ADB-Connect` — ADB: Connect");
+    expect(skillDoc).toContain("ADB-Launch` — ADB: Launch");
+    expect(skillDoc).toContain("ADB-UI-Dump` — ADB: UI Dump");
+    expect(skillDoc).toContain("ADB-Screenshot` — ADB: Screenshot");
+    expect(skillDoc).toContain("ADB-Logcat` — ADB: Logcat");
+    expect(skillDoc).toContain("ADB-Screenrecord` — ADB: Screenrecord");
+    expect(skillDoc).toContain("ADB-Clear-Data` — ADB: Clear Data");
+    expect(skillDoc).toContain("ADB-Force-Stop` — ADB: Force Stop");
+    expect(skillDoc).toContain("^[A-Za-z0-9_.]+$");
+    expect(skillDoc).toContain('execFile("adb", ["shell", "input", "text", sanitizedText])');
+    expect(skillDoc).toContain("./adb-artifacts/screen.png");
+  });
+
+  test("installs ppt-master for all supported platforms", async () => {
+    const workspace = tempWorkspace();
+    process.env.SKILL_MARKETPLACE_HOME = path.join(workspace, "home");
+
+    const record = await installPack({
+      registryPath: registryPath(),
+      packName: "ppt-master",
+      scope: "global",
+      cwd: workspace,
+      platform: "all",
+    });
+
+    expect(record.platforms).toEqual(["codex", "claude", "codebuddy", "opencode"]);
+    expect(
+      fs.existsSync(path.join(workspace, "home", ".codex", "skills", "ppt-master", "SKILL.md")),
+    ).toBe(true);
+    expect(
+      fs.existsSync(path.join(workspace, "home", ".claude", "skills", "ppt-master", "scripts", "svg_to_pptx.py")),
+    ).toBe(true);
+    expect(
+      fs.existsSync(path.join(workspace, "home", ".opencode", "skills", "ppt-master", "requirements.txt")),
+    ).toBe(true);
+    expect(
+      fs.existsSync(
+        path.join(
+          workspace,
+          "home",
+          ".codebuddy",
+          "plugins",
+          "marketplaces",
+          "sad-marketplace",
+          "plugins",
+          "ppt-master",
+          "skills",
+          "ppt-master",
+          "templates",
+        ),
+      ),
+    ).toBe(true);
+  }, 120_000);
+
+  test("installs android-adb for all supported platforms", async () => {
+    const workspace = tempWorkspace();
+    process.env.SKILL_MARKETPLACE_HOME = path.join(workspace, "home");
+
+    const record = await installPack({
+      registryPath: registryPath(),
+      packName: "android-adb",
+      scope: "global",
+      cwd: workspace,
+      platform: "all",
+    });
+
+    expect(record.platforms).toEqual(["codex", "claude", "codebuddy", "opencode"]);
+    expect(
+      fs.existsSync(path.join(workspace, "home", ".codex", "skills", "android-adb", "SKILL.md")),
+    ).toBe(true);
+    expect(
+      fs.existsSync(path.join(workspace, "home", ".claude", "skills", "android-adb", "SKILL.md")),
+    ).toBe(true);
+    expect(
+      fs.existsSync(path.join(workspace, "home", ".opencode", "skills", "android-adb", "SKILL.md")),
+    ).toBe(true);
+    expect(
+      fs.existsSync(
+        path.join(
+          workspace,
+          "home",
+          ".codebuddy",
+          "plugins",
+          "marketplaces",
+          "sad-marketplace",
+          "plugins",
+          "android-adb",
+          "skills",
+          "android-adb",
+          "SKILL.md",
+        ),
+      ),
+    ).toBe(true);
+    expect(
+      fs.existsSync(path.join(workspace, "home", ".codex", "skills", "ADB-Screenshot", "SKILL.md")),
+    ).toBe(true);
+    expect(
+      fs.existsSync(path.join(workspace, "home", ".claude", "commands", "ADB-Screenshot.md")),
+    ).toBe(true);
+    expect(
+      fs.existsSync(path.join(workspace, "home", ".opencode", "skills", "ADB-Screenshot", "SKILL.md")),
+    ).toBe(true);
+    expect(
+      fs.existsSync(
+        path.join(
+          workspace,
+          "home",
+          ".codebuddy",
+          "plugins",
+          "marketplaces",
+          "sad-marketplace",
+          "plugins",
+          "android-adb",
+          "commands",
+          "ADB-Screenshot.md",
         ),
       ),
     ).toBe(true);

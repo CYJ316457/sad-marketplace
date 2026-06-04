@@ -267,6 +267,93 @@
           "MarkItDown-Convert"
         ]
       }
+    },
+    {
+      "name": "android-adb",
+      "version": "1.0.0",
+      "description": "Control Android devices via ADB with UI hierarchy analysis and screenshot-based visual verification",
+      "author": {
+        "name": "staticai"
+      },
+      "license": "MIT",
+      "tags": [
+        "android",
+        "adb",
+        "automation",
+        "uiautomator",
+        "screenshot"
+      ],
+      "source": "./packs/android-adb",
+      "platformSupport": {
+        "codex": true,
+        "claude": true,
+        "codebuddy": true,
+        "opencode": true
+      },
+      "install": {
+        "unit": "pack"
+      },
+      "contents": {
+        "skills": [
+          "android-adb"
+        ],
+        "commands": [
+          "ADB-Devices",
+          "ADB-Pair",
+          "ADB-Connect",
+          "ADB-Disconnect",
+          "ADB-Shell",
+          "ADB-Install",
+          "ADB-Launch",
+          "ADB-Packages",
+          "ADB-UI-Dump",
+          "ADB-Screenshot",
+          "ADB-Tap",
+          "ADB-Text",
+          "ADB-Keyevent",
+          "ADB-Swipe",
+          "ADB-Pull",
+          "ADB-Logcat",
+          "ADB-Screenrecord",
+          "ADB-Push",
+          "ADB-Clear-Data",
+          "ADB-Force-Stop"
+        ]
+      }
+    },
+    {
+      "name": "ppt-master",
+      "version": "2.9.0",
+      "description": "AI 生成原生可编辑 PPTX，支持 PDF、DOCX、Markdown、URL 等输入",
+      "author": {
+        "name": "Hugo He"
+      },
+      "license": "MIT",
+      "tags": [
+        "ppt",
+        "pptx",
+        "presentation",
+        "slides",
+        "svg",
+        "document",
+        "ai",
+        "chinese"
+      ],
+      "source": "./packs/ppt-master",
+      "platformSupport": {
+        "codex": true,
+        "claude": true,
+        "codebuddy": true,
+        "opencode": true
+      },
+      "install": {
+        "unit": "pack"
+      },
+      "contents": {
+        "skills": [
+          "ppt-master"
+        ]
+      }
     }
   ]
 }

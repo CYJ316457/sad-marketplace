@@ -1,0 +1,137 @@
+{
+  "name": "android-adb",
+  "version": "1.0.0",
+  "description": "Control Android devices via ADB with UI hierarchy analysis and screenshot-based visual verification",
+  "author": {
+    "name": "staticai"
+  },
+  "license": "MIT",
+  "tags": [
+    "android",
+    "adb",
+    "automation",
+    "uiautomator",
+    "screenshot"
+  ],
+  "platformSupport": {
+    "codex": true,
+    "claude": true,
+    "codebuddy": true,
+    "opencode": true
+  },
+  "contents": {
+    "skills": [
+      {
+        "name": "android-adb",
+        "path": "skills/android-adb",
+        "kind": "shared"
+      }
+    ],
+    "commands": [
+      {
+        "name": "ADB-Devices",
+        "path": "commands/ADB-Devices.md",
+        "kind": "shared"
+      },
+      {
+        "name": "ADB-Pair",
+        "path": "commands/ADB-Pair.md",
+        "kind": "shared"
+      },
+      {
+        "name": "ADB-Connect",
+        "path": "commands/ADB-Connect.md",
+        "kind": "shared"
+      },
+      {
+        "name": "ADB-Disconnect",
+        "path": "commands/ADB-Disconnect.md",
+        "kind": "shared"
+      },
+      {
+        "name": "ADB-Shell",
+        "path": "commands/ADB-Shell.md",
+        "kind": "shared"
+      },
+      {
+        "name": "ADB-Install",
+        "path": "commands/ADB-Install.md",
+        "kind": "shared"
+      },
+      {
+        "name": "ADB-Launch",
+        "path": "commands/ADB-Launch.md",
+        "kind": "shared"
+      },
+      {
+        "name": "ADB-Packages",
+        "path": "commands/ADB-Packages.md",
+        "kind": "shared"
+      },
+      {
+        "name": "ADB-UI-Dump",
+        "path": "commands/ADB-UI-Dump.md",
+        "kind": "shared"
+      },
+      {
+        "name": "ADB-Screenshot",
+        "path": "commands/ADB-Screenshot.md",
+        "kind": "shared"
+      },
+      {
+        "name": "ADB-Tap",
+        "path": "commands/ADB-Tap.md",
+        "kind": "shared"
+      },
+      {
+        "name": "ADB-Text",
+        "path": "commands/ADB-Text.md",
+        "kind": "shared"
+      },
+      {
+        "name": "ADB-Keyevent",
+        "path": "commands/ADB-Keyevent.md",
+        "kind": "shared"
+      },
+      {
+        "name": "ADB-Swipe",
+        "path": "commands/ADB-Swipe.md",
+        "kind": "shared"
+      },
+      {
+        "name": "ADB-Pull",
+        "path": "commands/ADB-Pull.md",
+        "kind": "shared"
+      },
+      {
+        "name": "ADB-Logcat",
+        "path": "commands/ADB-Logcat.md",
+        "kind": "shared"
+      },
+      {
+        "name": "ADB-Screenrecord",
+        "path": "commands/ADB-Screenrecord.md",
+        "kind": "shared"
+      },
+      {
+        "name": "ADB-Push",
+        "path": "commands/ADB-Push.md",
+        "kind": "shared"
+      },
+      {
+        "name": "ADB-Clear-Data",
+        "path": "commands/ADB-Clear-Data.md",
+        "kind": "shared"
+      },
+      {
+        "name": "ADB-Force-Stop",
+        "path": "commands/ADB-Force-Stop.md",
+        "kind": "shared"
+      }
+    ]
+  },
+  "codebuddy": {
+    "pluginName": "android-adb",
+    "category": "developer-tools"
+  }
+}

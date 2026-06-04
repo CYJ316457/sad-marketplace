@@ -1,0 +1,31 @@
+{
+  "name": "android-adb",
+  "description": "Control Android devices via ADB with UI hierarchy analysis and screenshot-based visual verification",
+  "version": "1.0.0",
+  "license": "MIT",
+  "skills": [
+    "./skills/android-adb"
+  ],
+  "commands": [
+    "./commands/ADB-Devices.md",
+    "./commands/ADB-Pair.md",
+    "./commands/ADB-Connect.md",
+    "./commands/ADB-Disconnect.md",
+    "./commands/ADB-Shell.md",
+    "./commands/ADB-Install.md",
+    "./commands/ADB-Launch.md",
+    "./commands/ADB-Packages.md",
+    "./commands/ADB-UI-Dump.md",
+    "./commands/ADB-Screenshot.md",
+    "./commands/ADB-Tap.md",
+    "./commands/ADB-Text.md",
+    "./commands/ADB-Keyevent.md",
+    "./commands/ADB-Swipe.md",
+    "./commands/ADB-Pull.md",
+    "./commands/ADB-Logcat.md",
+    "./commands/ADB-Screenrecord.md",
+    "./commands/ADB-Push.md",
+    "./commands/ADB-Clear-Data.md",
+    "./commands/ADB-Force-Stop.md"
+  ]
+}
