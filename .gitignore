@@ -1,5 +1,6 @@
 node_modules/
 dist/
+.claude/
 .skill-marketplace/
 .global-home/
 *.log
