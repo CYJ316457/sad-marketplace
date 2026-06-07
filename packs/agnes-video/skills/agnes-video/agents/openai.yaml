@@ -1,0 +1,7 @@
+﻿interface:
+  display_name: "Agnes Video"
+  short_description: "Generate, poll, and download Agnes Video V2.0 outputs."
+  default_prompt: "Use $agnes-video to generate a short video from this prompt and save it locally."
+
+policy:
+  allow_implicit_invocation: true

@@ -1,0 +1,13 @@
+{
+  "name": "agnes-video",
+  "description": "Generate videos with Agnes Video V2.0 through the Agnes AI asynchronous video API",
+  "author": {
+    "name": "Local Publisher"
+  },
+  "skills": [
+    "./skills/agnes-video"
+  ],
+  "commands": [
+    "./commands/Agnes-Video-Gen.md"
+  ]
+}

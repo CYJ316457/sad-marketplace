@@ -1,0 +1,13 @@
+{
+  "name": "skill-creator",
+  "description": "Create or update agent skills with validation scripts, UI metadata, and bundled resources",
+  "author": {
+    "name": "OpenAI"
+  },
+  "skills": [
+    "./skills/skill-creator"
+  ],
+  "commands": [
+    "./commands/Skill-Create.md"
+  ]
+}

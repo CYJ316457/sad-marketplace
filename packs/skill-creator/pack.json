@@ -1,0 +1,42 @@
+{
+  "name": "skill-creator",
+  "version": "1.0.0",
+  "description": "Create or update agent skills with validation scripts, UI metadata, and bundled resources",
+  "author": {
+    "name": "OpenAI"
+  },
+  "license": "MIT",
+  "tags": [
+    "skills",
+    "skill-creator",
+    "authoring",
+    "workflow",
+    "agents"
+  ],
+  "platformSupport": {
+    "codex": true,
+    "claude": true,
+    "codebuddy": true,
+    "opencode": true
+  },
+  "contents": {
+    "skills": [
+      {
+        "name": "skill-creator",
+        "path": "skills/skill-creator",
+        "kind": "shared"
+      }
+    ],
+    "commands": [
+      {
+        "name": "Skill-Create",
+        "path": "commands/Skill-Create.md",
+        "kind": "shared"
+      }
+    ]
+  },
+  "codebuddy": {
+    "pluginName": "skill-creator",
+    "category": "developer-tools"
+  }
+}

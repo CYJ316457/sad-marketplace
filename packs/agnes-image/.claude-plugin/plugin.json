@@ -1,0 +1,13 @@
+{
+  "name": "agnes-image",
+  "description": "Generate or edit images with Agnes Image 2.1 Flash through the Agnes AI API",
+  "author": {
+    "name": "Local Publisher"
+  },
+  "skills": [
+    "./skills/agnes-image"
+  ],
+  "commands": [
+    "./commands/Agnes-Image-Gen.md"
+  ]
+}

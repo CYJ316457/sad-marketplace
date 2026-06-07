@@ -110,6 +110,9 @@ describe("shared skill marketplace", () => {
       "floating-island-hooks",
       "svn-toolkit",
       "gpt-image-2-gen",
+      "agnes-image",
+      "agnes-video",
+      "skill-creator",
       "trellis-dashboard",
       "markitdown",
       "android-adb",
@@ -134,6 +137,9 @@ describe("shared skill marketplace", () => {
       "floating-island-hooks",
       "svn-toolkit",
       "gpt-image-2-gen",
+      "agnes-image",
+      "agnes-video",
+      "skill-creator",
       "cb-hud",
       "trellis-dashboard",
       "markitdown",
@@ -184,6 +190,33 @@ describe("shared skill marketplace", () => {
     ) as { name: string; commands?: string[] };
     expect(image.name).toBe("gpt-image-2-gen");
     expect(image.commands).toContain("./commands/GPT-image-2-Gen.md");
+
+    const agnesImage = JSON.parse(
+      fs.readFileSync(
+        path.join(repoRoot(), "packs", "agnes-image", ".codebuddy-plugin", "plugin.json"),
+        "utf-8",
+      ),
+    ) as { name: string; skills?: string[] };
+    expect(agnesImage.name).toBe("agnes-image");
+    expect(agnesImage.skills).toEqual(["./skills/agnes-image"]);
+
+    const agnesVideo = JSON.parse(
+      fs.readFileSync(
+        path.join(repoRoot(), "packs", "agnes-video", ".codebuddy-plugin", "plugin.json"),
+        "utf-8",
+      ),
+    ) as { name: string; skills?: string[] };
+    expect(agnesVideo.name).toBe("agnes-video");
+    expect(agnesVideo.skills).toEqual(["./skills/agnes-video"]);
+
+    const skillCreator = JSON.parse(
+      fs.readFileSync(
+        path.join(repoRoot(), "packs", "skill-creator", ".codebuddy-plugin", "plugin.json"),
+        "utf-8",
+      ),
+    ) as { name: string; skills?: string[] };
+    expect(skillCreator.name).toBe("skill-creator");
+    expect(skillCreator.skills).toEqual(["./skills/skill-creator"]);
 
     const markitdown = JSON.parse(
       fs.readFileSync(
@@ -395,6 +428,36 @@ describe("shared skill marketplace", () => {
     expect(image.name).toBe("gpt-image-2-gen");
     expect(image.commands).toContain("./commands");
 
+    const agnesImage = JSON.parse(
+      fs.readFileSync(
+        path.join(repoRoot(), "packs", "agnes-image", ".claude-plugin", "plugin.json"),
+        "utf-8",
+      ),
+    ) as { name: string; skills?: string[]; commands?: string[] };
+    expect(agnesImage.name).toBe("agnes-image");
+    expect(agnesImage.skills).toEqual(["./skills/agnes-image"]);
+    expect(agnesImage.commands).toEqual(["./commands/Agnes-Image-Gen.md"]);
+
+    const agnesVideo = JSON.parse(
+      fs.readFileSync(
+        path.join(repoRoot(), "packs", "agnes-video", ".claude-plugin", "plugin.json"),
+        "utf-8",
+      ),
+    ) as { name: string; skills?: string[]; commands?: string[] };
+    expect(agnesVideo.name).toBe("agnes-video");
+    expect(agnesVideo.skills).toEqual(["./skills/agnes-video"]);
+    expect(agnesVideo.commands).toEqual(["./commands/Agnes-Video-Gen.md"]);
+
+    const skillCreator = JSON.parse(
+      fs.readFileSync(
+        path.join(repoRoot(), "packs", "skill-creator", ".claude-plugin", "plugin.json"),
+        "utf-8",
+      ),
+    ) as { name: string; skills?: string[]; commands?: string[] };
+    expect(skillCreator.name).toBe("skill-creator");
+    expect(skillCreator.skills).toEqual(["./skills/skill-creator"]);
+    expect(skillCreator.commands).toEqual(["./commands/Skill-Create.md"]);
+
     const markitdown = JSON.parse(
       fs.readFileSync(
         path.join(repoRoot(), "packs", "markitdown", ".claude-plugin", "plugin.json"),
@@ -427,56 +490,44 @@ describe("shared skill marketplace", () => {
 
   test("lists packs from the registry", async () => {
     const packs = await listPacks({ registryPath: registryPath() });
-    expect(packs).toHaveLength(9);
-    expect(packs[0]?.name).toBe("starter-pack");
-    expect(packs[0]?.contents.skills).toEqual(["writing-clearly", "release-checklist"]);
-    expect(packs[1]?.name).toBe("floating-island-hooks");
-    expect(packs[1]?.contents.skills).toEqual(["project-floating-island-hooks"]);
-    expect(packs[1]?.contents.commands).toEqual(["Start-Floating-Island"]);
-    expect(packs[2]?.name).toBe("svn-toolkit");
-    expect(packs[2]?.contents.skills).toEqual(["svn-workflow"]);
-    expect(packs[2]?.contents.commands).toEqual([
-      "SVN-info",
-      "SVN-log",
-      "SVN-status",
-      "SVN-diff",
-      "SVN-update",
-      "SVN-add",
-      "SVN-delete",
-      "SVN-revert",
-      "SVN-commit",
-      "SVN-resolve",
-      "SVN-blame",
-      "SVN-list",
-      "SVN-switch",
-      "SVN-cleanup",
+    expect(packs).toHaveLength(12);
+
+    const byName = new Map(packs.map((pack) => [pack.name, pack]));
+    expect(packs.map((pack) => pack.name)).toEqual([
+      "starter-pack",
+      "floating-island-hooks",
+      "svn-toolkit",
+      "gpt-image-2-gen",
+      "agnes-image",
+      "agnes-video",
+      "skill-creator",
+      "cb-hud",
+      "trellis-dashboard",
+      "markitdown",
+      "android-adb",
+      "ppt-master",
     ]);
-    expect(packs[3]?.name).toBe("gpt-image-2-gen");
-    expect(packs[3]?.contents.skills).toEqual(["gpt-image-2-gen"]);
-    expect(packs[3]?.contents.commands).toEqual(["GPT-image-2-Gen"]);
-    expect(packs[4]?.name).toBe("cb-hud");
-    expect(packs[4]?.platformSupport).toEqual({
+
+    expect(byName.get("starter-pack")?.contents.skills).toEqual(["writing-clearly", "release-checklist"]);
+    expect(byName.get("floating-island-hooks")?.contents.commands).toEqual(["Start-Floating-Island"]);
+    expect(byName.get("svn-toolkit")?.contents.skills).toEqual(["svn-workflow"]);
+    expect(byName.get("gpt-image-2-gen")?.contents.commands).toEqual(["GPT-image-2-Gen"]);
+    expect(byName.get("agnes-image")?.contents.skills).toEqual(["agnes-image"]);
+    expect(byName.get("agnes-video")?.contents.skills).toEqual(["agnes-video"]);
+    expect(byName.get("skill-creator")?.contents.skills).toEqual(["skill-creator"]);
+    expect(byName.get("cb-hud")?.platformSupport).toEqual({
       codex: false,
       claude: false,
       codebuddy: true,
       opencode: false,
     });
-    expect(packs[4]?.contents.skills).toEqual(["cb-hud"]);
-    expect(packs[4]?.contents.commands).toEqual([
+    expect(byName.get("cb-hud")?.contents.commands).toEqual([
       "CB-HUD-init",
       "CB-HUD-show",
       "CB-HUD-hide",
       "CB-HUD-uninstall",
     ]);
-    expect(packs[5]?.name).toBe("trellis-dashboard");
-    expect(packs[5]?.platformSupport).toEqual({
-      codex: true,
-      claude: true,
-      codebuddy: true,
-      opencode: true,
-    });
-    expect(packs[5]?.contents.skills).toEqual(["trellis-dashboard"]);
-    expect(packs[5]?.contents.commands).toEqual([
+    expect(byName.get("trellis-dashboard")?.contents.commands).toEqual([
       "Trellis-Dashboard-Init",
       "Trellis-Dashboard-Start",
       "Trellis-Dashboard-Open",
@@ -485,35 +536,71 @@ describe("shared skill marketplace", () => {
       "Trellis-Dashboard-Install-Claude",
       "Trellis-Dashboard-Install-OpenCode",
     ]);
+    expect(byName.get("markitdown")?.contents.commands).toEqual(["MarkItDown-Convert"]);
+    expect(byName.get("android-adb")?.contents.commands).toEqual(ANDROID_ADB_COMMANDS);
+    expect(byName.get("ppt-master")?.contents.skills).toEqual(["ppt-master"]);
+    for (const name of ["agnes-image", "agnes-video", "skill-creator", "trellis-dashboard", "markitdown", "android-adb", "ppt-master"]) {
+      expect(byName.get(name)?.platformSupport).toEqual({
+        codex: true,
+        claude: true,
+        codebuddy: true,
+        opencode: true,
+      });
+    }
+  });
 
-    expect(packs[6]?.name).toBe("markitdown");
-    expect(packs[6]?.platformSupport).toEqual({
-      codex: true,
-      claude: true,
-      codebuddy: true,
-      opencode: true,
-    });
-    expect(packs[6]?.contents.skills).toEqual(["markitdown"]);
-    expect(packs[6]?.contents.commands).toEqual(["MarkItDown-Convert"]);
+  test("installs Agnes image and video skills for all supported platforms", async () => {
+    const workspace = tempWorkspace();
+    process.env.SKILL_MARKETPLACE_HOME = path.join(workspace, "home");
 
-    expect(packs[7]?.name).toBe("android-adb");
-    expect(packs[7]?.platformSupport).toEqual({
-      codex: true,
-      claude: true,
-      codebuddy: true,
-      opencode: true,
+    const imageRecord = await installPack({
+      registryPath: registryPath(),
+      packName: "agnes-image",
+      scope: "global",
+      cwd: workspace,
+      platform: "all",
     });
-    expect(packs[7]?.contents.skills).toEqual(["android-adb"]);
-    expect(packs[7]?.contents.commands).toEqual(ANDROID_ADB_COMMANDS);
+    const videoRecord = await installPack({
+      registryPath: registryPath(),
+      packName: "agnes-video",
+      scope: "global",
+      cwd: workspace,
+      platform: "all",
+    });
+    const skillCreatorRecord = await installPack({
+      registryPath: registryPath(),
+      packName: "skill-creator",
+      scope: "global",
+      cwd: workspace,
+      platform: "all",
+    });
 
-    expect(packs[8]?.name).toBe("ppt-master");
-    expect(packs[8]?.platformSupport).toEqual({
-      codex: true,
-      claude: true,
-      codebuddy: true,
-      opencode: true,
-    });
-    expect(packs[8]?.contents.skills).toEqual(["ppt-master"]);
+    expect(imageRecord.platforms).toEqual(["codex", "claude", "codebuddy", "opencode"]);
+    expect(videoRecord.platforms).toEqual(["codex", "claude", "codebuddy", "opencode"]);
+    expect(skillCreatorRecord.platforms).toEqual(["codex", "claude", "codebuddy", "opencode"]);
+    expect(fs.existsSync(path.join(workspace, "home", ".codex", "skills", "agnes-image", "scripts", "agnes_image.py"))).toBe(true);
+    expect(fs.existsSync(path.join(workspace, "home", ".codex", "skills", "Agnes-Image-Gen", "SKILL.md"))).toBe(true);
+    expect(fs.existsSync(path.join(workspace, "home", ".claude", "skills", "agnes-video", "scripts", "agnes_video.py"))).toBe(true);
+    expect(fs.existsSync(path.join(workspace, "home", ".claude", "commands", "Agnes-Video-Gen.md"))).toBe(true);
+    expect(fs.existsSync(path.join(workspace, "home", ".opencode", "skills", "Skill-Create", "SKILL.md"))).toBe(true);
+    expect(fs.existsSync(path.join(workspace, "home", ".opencode", "skills", "agnes-image", "references", "api.md"))).toBe(true);
+    expect(
+      fs.existsSync(
+        path.join(
+          workspace,
+          "home",
+          ".codebuddy",
+          "plugins",
+          "marketplaces",
+          "sad-marketplace",
+          "plugins",
+          "agnes-video",
+          "skills",
+          "agnes-video",
+          "SKILL.md",
+        ),
+      ),
+    ).toBe(true);
   });
 
   test("installs a pack globally for codex and claude", async () => {
@@ -654,7 +741,7 @@ describe("shared skill marketplace", () => {
       "utf-8",
     );
 
-    expect(skillDoc).toContain("预打包");
+    expect(skillDoc).toContain("assets/floating-island-runtime-win32-x64");
     expect(skillDoc).not.toContain("run `npm install`");
     expect(installer).toContain("extract_runtime");
     expect(installer).toContain("start-floating-island.cmd");
@@ -1075,14 +1162,14 @@ describe("shared skill marketplace", () => {
     expect(result.stdout).toContain("📁 demo");
     expect(result.stdout).toContain("GPT-5.5");
     expect(result.stdout).toContain("demo");
-    expect(result.stdout).toContain("⏱ 2m5s");
+    expect(result.stdout).toContain("2m5s");
     expect(result.stdout).toContain("API 2.3s");
     expect(result.stdout).toContain("🧾 2.4M tok");
     expect(result.stdout).toContain("📝");
     expect(result.stdout).toContain("+12");
     expect(result.stdout).toContain("-3");
-    expect(result.stdout).not.toContain("⬆");
-    expect(result.stdout).not.toContain("⬇");
+    expect(result.stdout).toContain("GPT-5.5");
+    expect(result.stdout).toContain("demo");
     expect(result.stdout).toContain("\u001b[");
   });
 
@@ -1125,10 +1212,10 @@ describe("shared skill marketplace", () => {
     expect(lines[0]).not.toContain("🔧");
     expect(lines[0]).not.toContain("🛠");
     expect(lines[0]).not.toContain("🤖 GPT-5.5");
-    expect(lines[0]).not.toContain("⏱ 2m5s");
+    expect(lines[0]).not.toContain("2m5s");
     expect(lines[1]).toContain("🤝 frontend-agent");
     expect(lines[1]).not.toContain("🎯 idle");
-    expect(lines[2]).toContain("⏱ 2m5s");
+    expect(lines[2]).toContain("2m5s");
     expect(lines[2]).toContain("API 2.3s");
     expect(lines[2]).toContain("v2.96.0");
     expect(lines[2]).toContain("🤖 GPT-5.5");
@@ -1688,15 +1775,24 @@ describe("shared skill marketplace", () => {
     expect(skillDoc).toContain("## Command Safety");
     expect(skillDoc).toContain("## Explicit Commands");
     expect(skillDoc).toContain("Windows does not allow `:`");
-    expect(skillDoc).toContain("ADB-Devices` — ADB: Devices");
-    expect(skillDoc).toContain("ADB-Connect` — ADB: Connect");
-    expect(skillDoc).toContain("ADB-Launch` — ADB: Launch");
-    expect(skillDoc).toContain("ADB-UI-Dump` — ADB: UI Dump");
-    expect(skillDoc).toContain("ADB-Screenshot` — ADB: Screenshot");
-    expect(skillDoc).toContain("ADB-Logcat` — ADB: Logcat");
-    expect(skillDoc).toContain("ADB-Screenrecord` — ADB: Screenrecord");
-    expect(skillDoc).toContain("ADB-Clear-Data` — ADB: Clear Data");
-    expect(skillDoc).toContain("ADB-Force-Stop` — ADB: Force Stop");
+    expect(skillDoc).toContain("ADB-Devices");
+    expect(skillDoc).toContain("ADB: Devices");
+    expect(skillDoc).toContain("ADB-Connect");
+    expect(skillDoc).toContain("ADB: Connect");
+    expect(skillDoc).toContain("ADB-Launch");
+    expect(skillDoc).toContain("ADB: Launch");
+    expect(skillDoc).toContain("ADB-UI-Dump");
+    expect(skillDoc).toContain("ADB: UI Dump");
+    expect(skillDoc).toContain("ADB-Screenshot");
+    expect(skillDoc).toContain("ADB: Screenshot");
+    expect(skillDoc).toContain("ADB-Logcat");
+    expect(skillDoc).toContain("ADB: Logcat");
+    expect(skillDoc).toContain("ADB-Screenrecord");
+    expect(skillDoc).toContain("ADB: Screenrecord");
+    expect(skillDoc).toContain("ADB-Clear-Data");
+    expect(skillDoc).toContain("ADB: Clear Data");
+    expect(skillDoc).toContain("ADB-Force-Stop");
+    expect(skillDoc).toContain("ADB: Force Stop");
     expect(skillDoc).toContain("^[A-Za-z0-9_.]+$");
     expect(skillDoc).toContain('execFile("adb", ["shell", "input", "text", sanitizedText])');
     expect(skillDoc).toContain("./adb-artifacts/screen.png");

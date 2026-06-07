@@ -11,6 +11,9 @@
 | android-adb | 通过 ADB 控制 Android 设备，支持 UI 层级分析和截图验证 | ✓ | ✓ | ✓ | ✓ |
 | floating-island-hooks | 项目级浮窗状态助手，AI 工作时显示 busy/ask/idle | ✓ | ✓ | ✓ | ✓ |
 | gpt-image-2-gen | 使用 gpt-image-2 在项目内生成图片 | ✓ | ✓ | ✓ | ✓ |
+| agnes-image | 使用 Agnes Image 2.1 Flash 生成或编辑图片 | ✓ | ✓ | ✓ | ✓ |
+| agnes-video | 使用 Agnes Video V2.0 异步生成视频 | ✓ | ✓ | ✓ | ✓ |
+| skill-creator | 创建或更新 agent skill，包含校验脚本和元数据模板 | ✓ | ✓ | ✓ | ✓ |
 | markitdown | 将 PDF、Office、HTML、图片、音频等文档转为 Markdown 供 AI 阅读 | ✓ | ✓ | ✓ | ✓ |
 | starter-pack | 入门包，包含两个通用工作流技能 | ✓ | ✓ | ✓ | ✓ |
 | svn-toolkit | SVN 工作流技能，包含 15 个斜杠命令 | ✓ | ✓ | ✓ | ✓ |
@@ -63,6 +66,45 @@ Android ADB 自动化技能，来自 SkillHub 的 **ADB Connection**（`staticai
 - 需在项目根目录配置 `.gpt-image-2.env`，设置 `OPENAI_BASE_URL` 和 `OPENAI_API_KEY`
 - 支持 `--size`（如 `1024x1536`）和 `--aspect-ratio`（如 `16:9`、`9:16`、`1:1`）
 - 输出路径：`<project>/.generated-images/gpt-image-2/gpt-image-2-YYYYMMDD-HHMMSS.png`
+
+---
+
+### agnes-image
+
+Agnes AI 生图技能，使用 Agnes Image 2.1 Flash API 生成或编辑项目内图片资源。
+
+- **技能：** `agnes-image`
+- **命令：** `Agnes-Image-Gen`
+- 支持 Codex、Claude Code、CodeBuddy 和 OpenCode 安装
+- 通过 Agnes AI API 生成图片，输出保存到项目目录内
+- 包含 `references/api.md` 和 `references/key-config.md`，用于说明 API 参数与密钥配置
+- CodeBuddy / Claude Code 的 command 文件路径为 `commands/Agnes-Image-Gen.md`
+
+---
+
+### agnes-video
+
+Agnes AI 生视频技能，使用 Agnes Video V2.0 异步视频 API 生成项目内视频资源。
+
+- **技能：** `agnes-video`
+- **命令：** `Agnes-Video-Gen`
+- 支持 Codex、Claude Code、CodeBuddy 和 OpenCode 安装
+- 使用异步任务轮询方式生成视频，脚本入口为 `scripts/agnes_video.py`
+- 包含 API 参考和密钥配置说明
+- CodeBuddy / Claude Code 的 command 文件路径为 `commands/Agnes-Video-Gen.md`
+
+---
+
+### skill-creator
+
+用于创建或更新 agent skill 的技能包，包含 OpenAI YAML 元数据、校验脚本和初始化工具。
+
+- **技能：** `skill-creator`
+- **命令：** `Skill-Create`
+- 支持 Codex、Claude Code、CodeBuddy 和 OpenCode 安装
+- 包含 `scripts/init_skill.py`、`scripts/quick_validate.py` 和 `scripts/generate_openai_yaml.py`
+- 适合编写新 skill、补充 UI 元数据、生成 `openai.yaml` 或快速校验 skill 结构
+- CodeBuddy / Claude Code 的 command 文件路径为 `commands/Skill-Create.md`
 
 ---
 

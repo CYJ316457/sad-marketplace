@@ -1,0 +1,12 @@
+{
+  "name": "agnes-video",
+  "description": "Generate videos with Agnes Video V2.0 through the Agnes AI asynchronous video API",
+  "version": "1.0.0",
+  "license": "MIT",
+  "skills": [
+    "./skills/agnes-video"
+  ],
+  "commands": [
+    "./commands/Agnes-Video-Gen.md"
+  ]
+}

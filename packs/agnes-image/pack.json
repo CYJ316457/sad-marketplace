@@ -1,0 +1,42 @@
+{
+  "name": "agnes-image",
+  "version": "1.0.0",
+  "description": "Generate or edit images with Agnes Image 2.1 Flash through the Agnes AI API",
+  "author": {
+    "name": "Local Publisher"
+  },
+  "license": "MIT",
+  "tags": [
+    "agnes",
+    "image",
+    "image-generation",
+    "openai-compatible",
+    "assets"
+  ],
+  "platformSupport": {
+    "codex": true,
+    "claude": true,
+    "codebuddy": true,
+    "opencode": true
+  },
+  "contents": {
+    "skills": [
+      {
+        "name": "agnes-image",
+        "path": "skills/agnes-image",
+        "kind": "shared"
+      }
+    ],
+    "commands": [
+      {
+        "name": "Agnes-Image-Gen",
+        "path": "commands/Agnes-Image-Gen.md",
+        "kind": "shared"
+      }
+    ]
+  },
+  "codebuddy": {
+    "pluginName": "agnes-image",
+    "category": "productivity"
+  }
+}

@@ -1,0 +1,7 @@
+﻿interface:
+  display_name: "Agnes Image"
+  short_description: "Generate and edit images with Agnes Image 2.1 Flash."
+  default_prompt: "Use $agnes-image to generate an image from this prompt and save it locally."
+
+policy:
+  allow_implicit_invocation: true

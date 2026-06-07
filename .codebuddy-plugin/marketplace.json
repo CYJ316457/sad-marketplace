@@ -67,6 +67,57 @@
       ]
     },
     {
+      "name": "agnes-image",
+      "description": "Generate or edit images with Agnes Image 2.1 Flash through the Agnes AI API",
+      "version": "1.0.0",
+      "source": "./packs/agnes-image",
+      "category": "productivity",
+      "author": {
+        "name": "Local Publisher"
+      },
+      "license": "MIT",
+      "skills": [
+        "./packs/agnes-image/skills/agnes-image"
+      ],
+      "commands": [
+        "./packs/agnes-image/commands/Agnes-Image-Gen.md"
+      ]
+    },
+    {
+      "name": "agnes-video",
+      "description": "Generate videos with Agnes Video V2.0 through the Agnes AI asynchronous video API",
+      "version": "1.0.0",
+      "source": "./packs/agnes-video",
+      "category": "productivity",
+      "author": {
+        "name": "Local Publisher"
+      },
+      "license": "MIT",
+      "skills": [
+        "./packs/agnes-video/skills/agnes-video"
+      ],
+      "commands": [
+        "./packs/agnes-video/commands/Agnes-Video-Gen.md"
+      ]
+    },
+    {
+      "name": "skill-creator",
+      "description": "Create or update agent skills with validation scripts, UI metadata, and bundled resources",
+      "version": "1.0.0",
+      "source": "./packs/skill-creator",
+      "category": "developer-tools",
+      "author": {
+        "name": "OpenAI"
+      },
+      "license": "MIT",
+      "skills": [
+        "./packs/skill-creator/skills/skill-creator"
+      ],
+      "commands": [
+        "./packs/skill-creator/commands/Skill-Create.md"
+      ]
+    },
+    {
       "name": "cb-hud",
       "description": "CodeBuddy-only cat HUD with skill, tool, phase, duration, SVN, and activity tracking",
       "version": "1.3.3",

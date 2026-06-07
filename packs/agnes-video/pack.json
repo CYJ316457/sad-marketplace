@@ -1,0 +1,42 @@
+{
+  "name": "agnes-video",
+  "version": "1.0.0",
+  "description": "Generate videos with Agnes Video V2.0 through the Agnes AI asynchronous video API",
+  "author": {
+    "name": "Local Publisher"
+  },
+  "license": "MIT",
+  "tags": [
+    "agnes",
+    "video",
+    "video-generation",
+    "openai-compatible",
+    "async"
+  ],
+  "platformSupport": {
+    "codex": true,
+    "claude": true,
+    "codebuddy": true,
+    "opencode": true
+  },
+  "contents": {
+    "skills": [
+      {
+        "name": "agnes-video",
+        "path": "skills/agnes-video",
+        "kind": "shared"
+      }
+    ],
+    "commands": [
+      {
+        "name": "Agnes-Video-Gen",
+        "path": "commands/Agnes-Video-Gen.md",
+        "kind": "shared"
+      }
+    ]
+  },
+  "codebuddy": {
+    "pluginName": "agnes-video",
+    "category": "productivity"
+  }
+}

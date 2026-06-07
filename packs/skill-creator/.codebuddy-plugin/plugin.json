@@ -1,0 +1,12 @@
+{
+  "name": "skill-creator",
+  "description": "Create or update agent skills with validation scripts, UI metadata, and bundled resources",
+  "version": "1.0.0",
+  "license": "MIT",
+  "skills": [
+    "./skills/skill-creator"
+  ],
+  "commands": [
+    "./commands/Skill-Create.md"
+  ]
+}

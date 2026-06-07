@@ -152,6 +152,108 @@
       }
     },
     {
+      "name": "agnes-image",
+      "version": "1.0.0",
+      "description": "Generate or edit images with Agnes Image 2.1 Flash through the Agnes AI API",
+      "author": {
+        "name": "Local Publisher"
+      },
+      "license": "MIT",
+      "tags": [
+        "agnes",
+        "image",
+        "image-generation",
+        "openai-compatible",
+        "assets"
+      ],
+      "source": "./packs/agnes-image",
+      "platformSupport": {
+        "codex": true,
+        "claude": true,
+        "codebuddy": true,
+        "opencode": true
+      },
+      "install": {
+        "unit": "pack"
+      },
+      "contents": {
+        "skills": [
+          "agnes-image"
+        ],
+        "commands": [
+          "Agnes-Image-Gen"
+        ]
+      }
+    },
+    {
+      "name": "agnes-video",
+      "version": "1.0.0",
+      "description": "Generate videos with Agnes Video V2.0 through the Agnes AI asynchronous video API",
+      "author": {
+        "name": "Local Publisher"
+      },
+      "license": "MIT",
+      "tags": [
+        "agnes",
+        "video",
+        "video-generation",
+        "openai-compatible",
+        "async"
+      ],
+      "source": "./packs/agnes-video",
+      "platformSupport": {
+        "codex": true,
+        "claude": true,
+        "codebuddy": true,
+        "opencode": true
+      },
+      "install": {
+        "unit": "pack"
+      },
+      "contents": {
+        "skills": [
+          "agnes-video"
+        ],
+        "commands": [
+          "Agnes-Video-Gen"
+        ]
+      }
+    },
+    {
+      "name": "skill-creator",
+      "version": "1.0.0",
+      "description": "Create or update agent skills with validation scripts, UI metadata, and bundled resources",
+      "author": {
+        "name": "OpenAI"
+      },
+      "license": "MIT",
+      "tags": [
+        "skills",
+        "skill-creator",
+        "authoring",
+        "workflow",
+        "agents"
+      ],
+      "source": "./packs/skill-creator",
+      "platformSupport": {
+        "codex": true,
+        "claude": true,
+        "codebuddy": true,
+        "opencode": true
+      },
+      "install": {
+        "unit": "pack"
+      },
+      "contents": {
+        "skills": [
+          "skill-creator"
+        ],
+        "commands": [
+          "Skill-Create"
+        ]
+      }
+    },
+    {
       "name": "cb-hud",
       "version": "1.3.3",
       "description": "CodeBuddy-only cat HUD with skill, tool, phase, duration, SVN, and activity tracking",
