@@ -1,216 +1,108 @@
-# sad-marketplace
+﻿# sad-marketplace
 
 面向 Codex、Claude Code、CodeBuddy 和 OpenCode 的共享技能市场。
 
-支持 `skills/` 和 `commands/` 的分发包分发。
+这个仓库把可复用的 `skills/` 和 `commands/` 组织成 marketplace pack，方便在不同 AI 编程工具中安装同一套能力。
 
 ## 技能包总览
 
 | 技能包 | 描述 | Codex | Claude Code | CodeBuddy | OpenCode |
-|--------|------|:-----:|:-----------:|:---------:|:--------:|
-| android-adb | 通过 ADB 控制 Android 设备，支持 UI 层级分析和截图验证 | ✓ | ✓ | ✓ | ✓ |
-| floating-island-hooks | 项目级浮窗状态助手，AI 工作时显示 busy/ask/idle | ✓ | ✓ | ✓ | ✓ |
-| gpt-image-2-gen | 使用 gpt-image-2 在项目内生成图片 | ✓ | ✓ | ✓ | ✓ |
-| agnes-image | 使用 Agnes Image 2.1 Flash 生成或编辑图片 | ✓ | ✓ | ✓ | ✓ |
-| agnes-video | 使用 Agnes Video V2.0 异步生成视频 | ✓ | ✓ | ✓ | ✓ |
-| skill-creator | 创建或更新 agent skill，包含校验脚本和元数据模板 | ✓ | ✓ | ✓ | ✓ |
-| markitdown | 将 PDF、Office、HTML、图片、音频等文档转为 Markdown 供 AI 阅读 | ✓ | ✓ | ✓ | ✓ |
-| starter-pack | 入门包，包含两个通用工作流技能 | ✓ | ✓ | ✓ | ✓ |
-| svn-toolkit | SVN 工作流技能，包含 15 个斜杠命令 | ✓ | ✓ | ✓ | ✓ |
-| trellis-dashboard | 实时 Trellis 看板，本地 Web 服务 | ✓ | ✓ | ✓ | ✓ |
-| cb-hud | CodeBuddy 专属猫咪状态栏 HUD | — | — | ✓ | — |
+| --- | --- | :---: | :---: | :---: | :---: |
+| starter-pack | 入门包，包含通用写作和发布检查工作流 | 支持 | 支持 | 支持 | 支持 |
+| floating-island-hooks | 项目级 Floating Island 状态浮窗 hooks | 支持 | 支持 | 支持 | 支持 |
+| svn-toolkit | SVN 工作流技能和常用命令集合 | 支持 | 支持 | 支持 | 支持 |
+| gpt-image-2-gen | 使用 gpt-image-2 在项目内生成图片 | 支持 | 支持 | 支持 | 支持 |
+| agnes-image | 使用 Agnes Image 2.1 Flash 生成或编辑图片 | 支持 | 支持 | 支持 | 支持 |
+| agnes-video | 使用 Agnes Video V2.0 异步生成视频 | 支持 | 支持 | 支持 | 支持 |
+| skill-creator | 创建或更新 agent skill 的辅助工具 | 支持 | 支持 | 支持 | 支持 |
+| cb-hud | CodeBuddy 专属 HUD 状态栏 | 不支持 | 不支持 | 支持 | 不支持 |
+| trellis-dashboard | 本地 Web Trellis 实时看板 | 支持 | 支持 | 支持 | 支持 |
+| markitdown | 将 PDF、Office、HTML、图片、音频等转成 Markdown | 支持 | 支持 | 支持 | 支持 |
+| android-adb | Android ADB 自动化、UI 层级分析和截图验证 | 支持 | 支持 | 支持 | 支持 |
+| lanhu-xml-to-android | 蓝湖 WXML/WXSS 导出转 Android View XML 工作流 | 支持 | 支持 | 支持 | 支持 |
+| ppt-master | 生成原生可编辑 PPTX | 支持 | 支持 | 支持 | 支持 |
 
-## 技能包详情
+## lanhu-xml-to-android
 
-### android-adb
+`lanhu-xml-to-android` 是一个工作流式技能，用来把蓝湖导出的 WXML/WXSS 或页面规格转换成 Android View XML，并尽量贴合目标 Android 项目的既有规范。
 
-Android ADB 自动化技能，来自 SkillHub 的 **ADB Connection**（`staticai/android-adb`）。
+它的重点不是简单字符串转换，而是先检查项目，再生成结果：
 
-- **技能：** `android-adb`
-- **命令：** `ADB-Devices`、`ADB-Pair`、`ADB-Connect`、`ADB-Disconnect`、`ADB-Shell`、`ADB-Install`、`ADB-Launch`、`ADB-Packages`、`ADB-UI-Dump`、`ADB-Screenshot`、`ADB-Tap`、`ADB-Text`、`ADB-Keyevent`、`ADB-Swipe`、`ADB-Pull`、`ADB-Logcat`、`ADB-Screenrecord`、`ADB-Push`、`ADB-Clear-Data`、`ADB-Force-Stop`
-- 命令文件名使用 Windows 安全的 `ADB-*`，命令文档标题统一显示为 `ADB: ...`
-- 使用系统 `adb`、`uiautomator` 和 `screencap` 控制 Android 设备
-- 支持 USB / Android 11+ 无线调试连接说明
-- 覆盖常见操作：设备列表、配对/连接/断开、启动应用、安装 APK、package 查询、dump UI 层级、点击、输入、按键、滑动、截图、logcat、录屏、push/pull、清除应用数据、强制停止应用
-- 所有截图、UI dump、日志和录屏建议保存到 `./adb-artifacts/`，避免覆盖项目文件
+1. 收集蓝湖导出的 WXML、WXSS、页面规格和目标 Android 模块。
+2. 检查 Android 项目的 layout、values、drawable、style、命名和自定义 View 习惯。
+3. 列出控件映射方案，例如 TextView、ImageView、ConstraintLayout，以及项目里可复用的自定义 View。
+4. 让用户补齐 dpi、设计稿宽度、目标输出目录、是否使用某些自定义控件等关键选择。
+5. 优先复用已有 colors、dimens、drawables、assets；复用不了的资源会在报告里说明应该加到哪里。
+6. 先 dry-run 输出计划，再写入 Android XML、values 资源和 drawable shape。
+7. 最终报告生成了哪些文件、复用了哪些资源、新增了哪些资源、还有哪些图片或字体等资产需要人工补充。
 
----
+技能目录：`packs/lanhu-xml-to-android/skills/lanhu-xml-to-android`
 
-### floating-island-hooks
+主要脚本：`scripts/convert.py`
 
-项目级浮窗应用，在 AI 助手工作期间显示 **busy / ask / idle** 三种状态。
+示例用法：
 
-- **技能：** `project-floating-island-hooks`
-- **命令：** `Start-Floating-Island`
-- 内置预编译 Windows x64 运行时，无需本地 npm 安装或 Electron 构建
-- Hook 自动启动浮窗并发送状态更新
-- 安装命令：`python scripts/install_codebuddy_hooks.py --project <路径> --platform codebuddy|claude|codex|all`
-
-事件映射：
-
-| 事件 | 浮窗状态 | 说明 |
-|------|:--------:|------|
-| `SessionStart` | idle | 默认/重置状态 |
-| `UserPromptSubmit` | busy | 用户发送了消息 |
-| `Notification`（permission/idle） | ask | 助手需要用户输入或授权 |
-| `Stop` | idle | 回复完成 |
-
----
-
-### gpt-image-2-gen
-
-使用 gpt-image-2 API 生成图片，输出保存到项目目录内。
-
-- **技能：** `gpt-image-2-gen`
-- **命令：** `GPT-image-2-Gen`
-- 需在项目根目录配置 `.gpt-image-2.env`，设置 `OPENAI_BASE_URL` 和 `OPENAI_API_KEY`
-- 支持 `--size`（如 `1024x1536`）和 `--aspect-ratio`（如 `16:9`、`9:16`、`1:1`）
-- 输出路径：`<project>/.generated-images/gpt-image-2/gpt-image-2-YYYYMMDD-HHMMSS.png`
-
----
-
-### agnes-image
-
-Agnes AI 生图技能，使用 Agnes Image 2.1 Flash API 生成或编辑项目内图片资源。
-
-- **技能：** `agnes-image`
-- **命令：** `Agnes-Image-Gen`
-- 支持 Codex、Claude Code、CodeBuddy 和 OpenCode 安装
-- 通过 Agnes AI API 生成图片，输出保存到项目目录内
-- 包含 `references/api.md` 和 `references/key-config.md`，用于说明 API 参数与密钥配置
-- CodeBuddy / Claude Code 的 command 文件路径为 `commands/Agnes-Image-Gen.md`
-
----
-
-### agnes-video
-
-Agnes AI 生视频技能，使用 Agnes Video V2.0 异步视频 API 生成项目内视频资源。
-
-- **技能：** `agnes-video`
-- **命令：** `Agnes-Video-Gen`
-- 支持 Codex、Claude Code、CodeBuddy 和 OpenCode 安装
-- 使用异步任务轮询方式生成视频，脚本入口为 `scripts/agnes_video.py`
-- 包含 API 参考和密钥配置说明
-- CodeBuddy / Claude Code 的 command 文件路径为 `commands/Agnes-Video-Gen.md`
-
----
-
-### skill-creator
-
-用于创建或更新 agent skill 的技能包，包含 OpenAI YAML 元数据、校验脚本和初始化工具。
-
-- **技能：** `skill-creator`
-- **命令：** `Skill-Create`
-- 支持 Codex、Claude Code、CodeBuddy 和 OpenCode 安装
-- 包含 `scripts/init_skill.py`、`scripts/quick_validate.py` 和 `scripts/generate_openai_yaml.py`
-- 适合编写新 skill、补充 UI 元数据、生成 `openai.yaml` 或快速校验 skill 结构
-- CodeBuddy / Claude Code 的 command 文件路径为 `commands/Skill-Create.md`
-
----
-
-### markitdown
-
-将本地文档转换为 Markdown，供 AI 代理阅读和分析。基于 [microsoft/markitdown](https://github.com/microsoft/markitdown)。
-
-- **技能：** `markitdown`
-- **命令：** `MarkItDown-Convert`
-- 支持格式：PDF、Office（Word/Excel/PPT）、HTML、图片、音频
-- 自动安装缺失的 markitdown 可选依赖：`.pdf` → `markitdown[pdf]`、`.docx` → `markitdown[docx]`、`.pptx` → `markitdown[pptx]`、`.xls` → `markitdown[xls]`、`.xlsx` → `markitdown[xlsx]`
-- 输出默认保存在源文件同目录，扩展名为 `.md`
-
----
-
-### starter-pack
-
-两个轻量工作流技能，适合日常使用。
-
-| 技能 | 描述 |
-|------|------|
-| `writing-clearly` | 使用简短、精准的语言，偏好直接表述而非填充词 |
-| `release-checklist` | 发布前确认：测试通过、文档与行为一致、回滚步骤已记录 |
-
----
-
-### svn-toolkit
-
-通用 Subversion 工作流技能，以斜杠命令形式暴露。支持中文触发词，如 `提交svn`、`查看svn log` 等。
-
-- **技能：** `svn-workflow`
-- **命令：**
-
-| 命令 | 功能 |
-|------|------|
-| `SVN-add` | 将新文件纳入版本控制 |
-| `SVN-blame` | 查看每行修改者 |
-| `SVN-cleanup` | 清理锁定和中断的操作 |
-| `SVN-commit` | 提交变更 |
-| `SVN-delete` | 从版本控制中删除文件 |
-| `SVN-diff` | 查看本地修改差异 |
-| `SVN-info` | 查看工作副本信息 |
-| `SVN-list` | 列出仓库路径 |
-| `SVN-log` | 查看提交历史 |
-| `SVN-resolve` | 解决冲突 |
-| `SVN-revert` | 撤销本地修改 |
-| `SVN-status` | 查看工作副本状态 |
-| `SVN-switch` | 切换分支或路径 |
-| `SVN-update` | 更新工作副本 |
-
----
-
-### trellis-dashboard
-
-本地 Web 服务，为 Trellis 仓库渲染实时看板。
-
-- **技能：** `trellis-dashboard`
-- **命令：**
-
-| 命令 | 功能 |
-|------|------|
-| `Trellis-Dashboard-Init` | 初始化看板配置 |
-| `Trellis-Dashboard-Start` | 启动看板服务 |
-| `Trellis-Dashboard-Open` | 在浏览器中打开看板 |
-| `Trellis-Dashboard-Stop` | 停止看板服务 |
-| `Trellis-Dashboard-Install-Claude` | 安装 Claude Code 事件钩子 |
-| `Trellis-Dashboard-Install-CodeBuddy` | 安装 CodeBuddy 事件钩子 |
-| `Trellis-Dashboard-Install-OpenCode` | 安装 OpenCode 事件钩子 |
-
-看板展示：活动任务、当前阶段、代理活动、渲染产物（PRD、研究文档、摘要）及事件流。
-
----
-
-### cb-hud
-
-CodeBuddy 专属状态栏 HUD，猫咪主题三行 ANSI 布局。
-
-- **技能：** `cb-hud`
-- **命令：**
-
-| 命令 | 功能 |
-|------|------|
-| `CB-HUD-init` | 写入配置并安装工具追踪钩子 |
-| `CB-HUD-show` | 重新启用状态栏 |
-| `CB-HUD-hide` | 隐藏状态栏但保留配置 |
-| `CB-HUD-uninstall` | 移除所有 CB HUD 配置和状态 |
-
-展示信息：阶段、活动技能/工具、时长、模型、项目、会话、Git/SVN 状态、Token 用量、费用、变更行数。
-
-## 市场检测
-
-CodeBuddy 通过以下文件检测此仓库为市场：
-
+```bash
+python scripts/convert.py \
+  --project /path/to/android-project \
+  --wxml /path/to/lanhu-page.wxml \
+  --wxss /path/to/lanhu-page.wxss \
+  --module app \
+  --layout-name activity_lanhu_demo \
+  --design-width 375 \
+  --dpi 3 \
+  --dry-run
 ```
+
+确认计划后去掉 `--dry-run` 写入文件。
+
+## 安装路径
+
+同一个 pack 会按平台安装到不同目录：
+
+| 平台 | 全局安装路径 |
+| --- | --- |
+| Codex | `.codex/skills/<skill>` |
+| Claude Code | `.claude/skills/<skill>` |
+| OpenCode | `.opencode/skills/<skill>` |
+| CodeBuddy | `.codebuddy/plugins/marketplaces/sad-marketplace/plugins/<pack>/skills/<skill>` |
+
+项目级 Codex 安装会写入项目内 `.agents/skills/<skill>`。
+
+## Marketplace 入口
+
+CodeBuddy 通过下面的文件识别 marketplace：
+
+```text
 .codebuddy-plugin/marketplace.json
 ```
 
-各包的 marketplace 入口指向 `./packs/<包名>`，注册市场仓库后 CodeBuddy 可直接下载安装插件。
+Claude Code 通过下面的文件识别 marketplace：
 
-## 开发
+```text
+.claude-plugin/marketplace.json
+```
+
+通用 registry 文件：
+
+```text
+registry/index.json
+```
+
+## 开发和验证
 
 ```bash
 npm install
 npm test
+npm run typecheck
 npm run build
 node dist/src/cli/index.js list --registry registry/index.json
+```
+
+单独验证蓝湖转换技能：
+
+```bash
+python -m pytest packs/lanhu-xml-to-android/skills/lanhu-xml-to-android/scripts/test_convert.py
 ```
 
 ## 链接

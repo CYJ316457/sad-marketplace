@@ -1,0 +1,9 @@
+{
+  "name": "lanhu-xml-to-android",
+  "description": "Convert Lanhu WXML/WXSS exports into project-aware Android View XML",
+  "version": "1.0.0",
+  "license": "MIT",
+  "skills": [
+    "./skills/lanhu-xml-to-android"
+  ]
+}

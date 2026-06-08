@@ -1,0 +1,3 @@
+﻿display_name: Lanhu XML to Android
+short_description: Convert Lanhu WXML/WXSS into project-aware Android XML.
+default_prompt: Convert these Lanhu exported WXML/WXSS files into Android XML using the target project conventions.

@@ -424,6 +424,38 @@
       }
     },
     {
+      "name": "lanhu-xml-to-android",
+      "version": "1.0.0",
+      "description": "Convert Lanhu WXML/WXSS exports into project-aware Android View XML",
+      "author": {
+        "name": "Local Publisher"
+      },
+      "license": "MIT",
+      "tags": [
+        "lanhu",
+        "android",
+        "xml",
+        "wxml",
+        "wxss",
+        "design-to-code"
+      ],
+      "source": "./packs/lanhu-xml-to-android",
+      "platformSupport": {
+        "codex": true,
+        "claude": true,
+        "codebuddy": true,
+        "opencode": true
+      },
+      "install": {
+        "unit": "pack"
+      },
+      "contents": {
+        "skills": [
+          "lanhu-xml-to-android"
+        ]
+      }
+    },
+    {
       "name": "ppt-master",
       "version": "2.9.0",
       "description": "AI 生成原生可编辑 PPTX，支持 PDF、DOCX、Markdown、URL 等输入",

@@ -106,6 +106,15 @@
       "source": "./packs/android-adb"
     },
     {
+      "name": "lanhu-xml-to-android",
+      "description": "Convert Lanhu WXML/WXSS exports into project-aware Android View XML",
+      "author": {
+        "name": "Local Publisher"
+      },
+      "category": "developer-tools",
+      "source": "./packs/lanhu-xml-to-android"
+    },
+    {
       "name": "ppt-master",
       "description": "AI 生成原生可编辑 PPTX，支持 PDF、DOCX、Markdown、URL 等输入",
       "source": "./packs/ppt-master",

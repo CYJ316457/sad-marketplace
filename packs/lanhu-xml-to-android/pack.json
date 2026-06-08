@@ -1,0 +1,36 @@
+{
+  "name": "lanhu-xml-to-android",
+  "version": "1.0.0",
+  "description": "Convert Lanhu WXML/WXSS exports into project-aware Android View XML",
+  "author": {
+    "name": "Local Publisher"
+  },
+  "license": "MIT",
+  "tags": [
+    "lanhu",
+    "android",
+    "xml",
+    "wxml",
+    "wxss",
+    "design-to-code"
+  ],
+  "platformSupport": {
+    "codex": true,
+    "claude": true,
+    "codebuddy": true,
+    "opencode": true
+  },
+  "contents": {
+    "skills": [
+      {
+        "name": "lanhu-xml-to-android",
+        "path": "skills/lanhu-xml-to-android",
+        "kind": "shared"
+      }
+    ]
+  },
+  "codebuddy": {
+    "pluginName": "lanhu-xml-to-android",
+    "category": "developer-tools"
+  }
+}
