@@ -9,6 +9,7 @@ const project = resolveProject(process.argv.slice(2));
 const logPath = path.join(project, ".codebuddy", "codebuddy-pet", "runtime.log");
 
 let windowRef;
+let dragOffset;
 
 logRuntime("main:start");
 
@@ -32,10 +33,30 @@ ipcMain.handle("codebuddy-pet-context", () => ({
   petDir: path.join(project, ".codebuddy", "codebuddy-pet", "pets", "ikunchick"),
 }));
 
+ipcMain.on("codebuddy-pet-drag-start", (_event, point) => {
+  if (!windowRef) return;
+  const [windowX, windowY] = windowRef.getPosition();
+  dragOffset = {
+    x: Number(point?.screenX) - windowX,
+    y: Number(point?.screenY) - windowY,
+  };
+});
+
+ipcMain.on("codebuddy-pet-drag-move", (_event, point) => {
+  if (!windowRef || !dragOffset) return;
+  const nextX = Math.round(Number(point?.screenX) - dragOffset.x);
+  const nextY = Math.round(Number(point?.screenY) - dragOffset.y);
+  windowRef.setPosition(nextX, nextY, false);
+});
+
+ipcMain.on("codebuddy-pet-drag-end", () => {
+  dragOffset = undefined;
+});
+
 function createWindow() {
   windowRef = new BrowserWindow({
-    width: 220,
-    height: 220,
+    width: 240,
+    height: 280,
     frame: false,
     transparent: true,
     alwaysOnTop: true,

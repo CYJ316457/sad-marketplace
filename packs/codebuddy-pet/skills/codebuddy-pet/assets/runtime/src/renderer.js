@@ -5,6 +5,7 @@ const path = require("node:path");
 const canvas = document.getElementById("sprite");
 const context2d = canvas.getContext("2d");
 const bubble = document.getElementById("bubble");
+const root = document.getElementById("pet-root");
 
 let context;
 let petConfig;
@@ -16,6 +17,8 @@ let temporaryAnimation;
 let bubbleVisible = true;
 let lastStateText = "";
 let reactionTimer;
+let pointerDown;
+let isDragging = false;
 
 init();
 
@@ -26,6 +29,10 @@ async function init() {
   await loadSpritesheet();
   canvas.addEventListener("click", reactToPetClick);
   bubble.addEventListener("click", toggleBubble);
+  root.addEventListener("pointerdown", startPotentialDrag);
+  window.addEventListener("pointermove", movePotentialDrag);
+  window.addEventListener("pointerup", stopPotentialDrag);
+  window.addEventListener("pointercancel", stopPotentialDrag);
   setInterval(tick, 250);
   tick();
   requestAnimationFrame(drawLoop);
@@ -58,6 +65,37 @@ function toggleBubble(event) {
   event.stopPropagation();
   bubbleVisible = !bubbleVisible;
   renderBubble(readState());
+}
+
+function startPotentialDrag(event) {
+  if (event.button !== 0) return;
+  pointerDown = {
+    x: event.screenX,
+    y: event.screenY,
+  };
+}
+
+function movePotentialDrag(event) {
+  if (!pointerDown) return;
+  const movedX = event.screenX - pointerDown.x;
+  const movedY = event.screenY - pointerDown.y;
+  if (!isDragging && Math.hypot(movedX, movedY) < 4) return;
+
+  if (!isDragging) {
+    isDragging = true;
+    root.classList.add("dragging");
+    ipcRenderer.send("codebuddy-pet-drag-start", pointerDown);
+  }
+
+  ipcRenderer.send("codebuddy-pet-drag-move", { screenX: event.screenX, screenY: event.screenY });
+}
+
+function stopPotentialDrag() {
+  pointerDown = undefined;
+  if (!isDragging) return;
+  isDragging = false;
+  root.classList.remove("dragging");
+  ipcRenderer.send("codebuddy-pet-drag-end");
 }
 
 function readState() {
