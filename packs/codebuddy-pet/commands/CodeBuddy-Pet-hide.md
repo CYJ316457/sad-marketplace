@@ -1,0 +1,15 @@
+---
+description: Hide or disable the CodeBuddy desktop pet
+argument-hint: [project-path]
+allowed-tools: [Bash(node *), Read, Glob]
+---
+
+Locate the installed script:
+
+`<marketplace-root>/plugins/codebuddy-pet/skills/codebuddy-pet/scripts/codebuddy-pet.js`
+
+Run it for the current project or the user-provided path:
+
+`node "<script>" hide --project <project-path>`
+
+This preserves project-local pet files and removes this pack's active hook entries.

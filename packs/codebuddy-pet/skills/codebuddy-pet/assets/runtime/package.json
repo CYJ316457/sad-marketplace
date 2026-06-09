@@ -1,0 +1,9 @@
+{
+  "name": "codebuddy-pet-runtime",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Project-local CodeBuddy desktop pet runtime",
+  "main": "src/main.js",
+  "dependencies": { "electron": "^38.5.1" }
+}

@@ -46,6 +46,17 @@ const ANDROID_ADB_CODEBUDDY_COMMANDS = ANDROID_ADB_COMMANDS.map(
   (command) => `./commands/${command}.md`,
 );
 
+const CODEBUDDY_PET_COMMANDS = [
+  "CodeBuddy-Pet-init",
+  "CodeBuddy-Pet-show",
+  "CodeBuddy-Pet-hide",
+  "CodeBuddy-Pet-uninstall",
+];
+
+const CODEBUDDY_PET_COMMAND_PATHS = CODEBUDDY_PET_COMMANDS.map(
+  (command) => `./commands/${command}.md`,
+);
+
 const tempDirs: string[] = [];
 
 function tempWorkspace(): string {
@@ -94,6 +105,27 @@ afterEach(() => {
 }, 60_000);
 
 describe("shared skill marketplace", () => {
+  test("codebuddy-pet embeds ikunchick pet assets", async () => {
+    const petDir = path.join(repoRoot(), "packs", "codebuddy-pet", "skills", "codebuddy-pet", "assets", "pets", "ikunchick");
+    expect(fs.existsSync(path.join(petDir, "pet.json"))).toBe(true);
+    expect(fs.existsSync(path.join(petDir, "spritesheet.webp"))).toBe(true);
+    const petJson = JSON.parse(fs.readFileSync(path.join(petDir, "pet.json"), "utf-8")) as Record<string, unknown>;
+    expect(Object.keys(petJson).length).toBeGreaterThan(0);
+    expect(fs.statSync(path.join(petDir, "spritesheet.webp")).size).toBeGreaterThan(1024);
+  });
+
+  test("installs codebuddy-pet for CodeBuddy only", async () => {
+    const workspace = tempWorkspace();
+    process.env.SKILL_MARKETPLACE_HOME = path.join(workspace, "home");
+    const record = await installPack({ registryPath: registryPath(), packName: "codebuddy-pet", scope: "global", cwd: workspace, platform: "all" });
+    expect(record.platforms).toEqual(["codebuddy"]);
+    const pluginRoot = path.join(workspace, "home", ".codebuddy", "plugins", "marketplaces", "sad-marketplace", "plugins", "codebuddy-pet");
+    expect(fs.existsSync(path.join(pluginRoot, "skills", "codebuddy-pet", "SKILL.md"))).toBe(true);
+    expect(fs.existsSync(path.join(pluginRoot, "commands", "CodeBuddy-Pet-init.md"))).toBe(true);
+    expect(fs.existsSync(path.join(pluginRoot, "skills", "codebuddy-pet", "assets", "pets", "ikunchick", "pet.json"))).toBe(true);
+    expect(fs.existsSync(path.join(pluginRoot, "skills", "codebuddy-pet", "assets", "pets", "ikunchick", "spritesheet.webp"))).toBe(true);
+  });
+
   test("exposes a Claude-native marketplace root", async () => {
     const marketplace = JSON.parse(
       fs.readFileSync(path.join(repoRoot(), ".claude-plugin", "marketplace.json"), "utf-8"),
@@ -142,6 +174,7 @@ describe("shared skill marketplace", () => {
       "agnes-video",
       "skill-creator",
       "cb-hud",
+      "codebuddy-pet",
       "codebuddy-usage-report",
       "trellis-dashboard",
       "markitdown",
@@ -282,6 +315,16 @@ describe("shared skill marketplace", () => {
       "./commands/CB-HUD-hide.md",
       "./commands/CB-HUD-uninstall.md",
     ]);
+
+    const codebuddyPet = JSON.parse(
+      fs.readFileSync(
+        path.join(repoRoot(), "packs", "codebuddy-pet", ".codebuddy-plugin", "plugin.json"),
+        "utf-8",
+      ),
+    ) as { name: string; skills?: string[]; commands?: string[] };
+    expect(codebuddyPet.name).toBe("codebuddy-pet");
+    expect(codebuddyPet.skills).toEqual(["./skills/codebuddy-pet"]);
+    expect(codebuddyPet.commands).toEqual(CODEBUDDY_PET_COMMAND_PATHS);
   });
 
   test("trellis-dashboard plugin manifests include commands", async () => {
@@ -520,7 +563,7 @@ describe("shared skill marketplace", () => {
 
   test("lists packs from the registry", async () => {
     const packs = await listPacks({ registryPath: registryPath() });
-    expect(packs).toHaveLength(13);
+    expect(packs).toHaveLength(15);
 
     const byName = new Map(packs.map((pack) => [pack.name, pack]));
     expect(packs.map((pack) => pack.name)).toEqual([
@@ -532,6 +575,7 @@ describe("shared skill marketplace", () => {
       "agnes-video",
       "skill-creator",
       "cb-hud",
+      "codebuddy-pet",
       "codebuddy-usage-report",
       "trellis-dashboard",
       "markitdown",
@@ -559,6 +603,14 @@ describe("shared skill marketplace", () => {
       "CB-HUD-hide",
       "CB-HUD-uninstall",
     ]);
+    expect(byName.get("codebuddy-pet")?.platformSupport).toEqual({
+      codex: false,
+      claude: false,
+      codebuddy: true,
+      opencode: false,
+    });
+    expect(byName.get("codebuddy-pet")?.contents.skills).toEqual(["codebuddy-pet"]);
+    expect(byName.get("codebuddy-pet")?.contents.commands).toEqual(CODEBUDDY_PET_COMMANDS);
     expect(byName.get("codebuddy-usage-report")?.platformSupport).toEqual({
       codex: false,
       claude: false,
@@ -1106,6 +1158,33 @@ describe("shared skill marketplace", () => {
         path.join(workspace, "home", ".opencode", "skills", "gpt-image-2-gen", "scripts", "generate_gpt_image_2.py"),
       ),
     ).toBe(true);
+  });
+
+  test("codebuddy-pet CLI supports dry-run and hook state updates", async () => {
+    const workspace = tempWorkspace();
+    const script = path.join(repoRoot(), "packs", "codebuddy-pet", "skills", "codebuddy-pet", "scripts", "codebuddy-pet.js");
+    const dryRun = spawnSync("node", [script, "init", "--project", workspace, "--dry-run"], { encoding: "utf-8" });
+    expect(dryRun.status).toBe(0);
+    expect(dryRun.stdout).toContain("codebuddy-pet");
+    const hook = spawnSync("node", [script, "hook", "PreToolUse", "--project", workspace], { encoding: "utf-8", input: JSON.stringify({ tool_name: "Bash", skill: "codebuddy-pet" }) });
+    expect(hook.status).toBe(0);
+    const state = JSON.parse(fs.readFileSync(path.join(workspace, ".codebuddy", "codebuddy-pet", "state.json"), "utf-8")) as { phase: string; tool: string; message: string };
+    expect(state.phase).toBe("tool");
+    expect(state.tool).toBe("Bash");
+    expect(state.message).toBe("Using Bash");
+  });
+
+  test("codebuddy-pet init preserves unrelated CodeBuddy hooks", async () => {
+    const workspace = tempWorkspace();
+    const settingsDir = path.join(workspace, ".codebuddy");
+    fs.mkdirSync(settingsDir, { recursive: true });
+    fs.writeFileSync(path.join(settingsDir, "settings.json"), JSON.stringify({ hooks: { Stop: [{ hooks: [{ type: "command", command: "node other-hook.js" }] }] } }, null, 2), "utf-8");
+    const script = path.join(repoRoot(), "packs", "codebuddy-pet", "skills", "codebuddy-pet", "scripts", "codebuddy-pet.js");
+    const result = spawnSync("node", [script, "init", "--project", workspace], { encoding: "utf-8" });
+    expect(result.status).toBe(0);
+    const settings = JSON.parse(fs.readFileSync(path.join(settingsDir, "settings.json"), "utf-8")) as { hooks?: Record<string, Array<{ hooks: Array<{ command: string }> }>> };
+    expect(settings.hooks?.Stop?.some((group) => group.hooks.some((hook) => hook.command === "node other-hook.js"))).toBe(true);
+    expect(Object.values(settings.hooks || {}).some((groups) => groups.some((group) => group.hooks.some((hook) => hook.command.includes("codebuddy-pet.js"))))).toBe(true);
   });
 
   test("installs cb-hud only for CodeBuddy with status line commands", async () => {

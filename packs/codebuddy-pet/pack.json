@@ -1,0 +1,19 @@
+{
+  "name": "codebuddy-pet",
+  "version": "1.0.0",
+  "description": "CodeBuddy-only desktop pet with embedded ikunchick assets and hook-driven status bubbles",
+  "author": { "name": "Local Publisher" },
+  "license": "MIT",
+  "tags": ["codebuddy", "pet", "desktop-pet", "hooks", "ikunchick"],
+  "platformSupport": { "codex": false, "claude": false, "codebuddy": true, "opencode": false },
+  "contents": {
+    "skills": [{ "name": "codebuddy-pet", "path": "skills/codebuddy-pet", "kind": "platform" }],
+    "commands": [
+      { "name": "CodeBuddy-Pet-init", "path": "commands/CodeBuddy-Pet-init.md", "kind": "platform" },
+      { "name": "CodeBuddy-Pet-show", "path": "commands/CodeBuddy-Pet-show.md", "kind": "platform" },
+      { "name": "CodeBuddy-Pet-hide", "path": "commands/CodeBuddy-Pet-hide.md", "kind": "platform" },
+      { "name": "CodeBuddy-Pet-uninstall", "path": "commands/CodeBuddy-Pet-uninstall.md", "kind": "platform" }
+    ]
+  },
+  "codebuddy": { "pluginName": "codebuddy-pet", "category": "productivity" }
+}

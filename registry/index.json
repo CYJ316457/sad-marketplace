@@ -291,6 +291,43 @@
       }
     },
     {
+      "name": "codebuddy-pet",
+      "version": "1.0.0",
+      "description": "CodeBuddy-only desktop pet with embedded ikunchick assets and hook-driven status bubbles",
+      "author": {
+        "name": "Local Publisher"
+      },
+      "license": "MIT",
+      "tags": [
+        "codebuddy",
+        "pet",
+        "desktop-pet",
+        "hooks",
+        "ikunchick"
+      ],
+      "source": "./packs/codebuddy-pet",
+      "platformSupport": {
+        "codex": false,
+        "claude": false,
+        "codebuddy": true,
+        "opencode": false
+      },
+      "install": {
+        "unit": "pack"
+      },
+      "contents": {
+        "skills": [
+          "codebuddy-pet"
+        ],
+        "commands": [
+          "CodeBuddy-Pet-init",
+          "CodeBuddy-Pet-show",
+          "CodeBuddy-Pet-hide",
+          "CodeBuddy-Pet-uninstall"
+        ]
+      }
+    },
+    {
       "name": "codebuddy-usage-report",
       "version": "1.0.0",
       "description": "CodeBuddy-only local usage dashboard for tokens, cache rate, credits, trends, groups, and request details",

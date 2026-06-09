@@ -16,6 +16,7 @@
 | agnes-video | 使用 Agnes Video V2.0 异步生成视频 | 支持 | 支持 | 支持 | 支持 |
 | skill-creator | 创建或更新 agent skill 的辅助工具 | 支持 | 支持 | 支持 | 支持 |
 | cb-hud | CodeBuddy 专属 HUD 状态栏 | 不支持 | 不支持 | 支持 | 不支持 |
+| codebuddy-pet | CodeBuddy 专属桌宠，内置 ikunchick 资源并通过 hooks 显示状态气泡 | 不支持 | 不支持 | 支持 | 不支持 |
 | codebuddy-usage-report | CodeBuddy 专属本地用量统计报表，统计请求、Token、缓存率、积分和趋势 | 不支持 | 不支持 | 支持 | 不支持 |
 | trellis-dashboard | 本地 Web Trellis 实时看板 | 支持 | 支持 | 支持 | 支持 |
 | markitdown | 将 PDF、Office、HTML、图片、音频等转成 Markdown | 支持 | 支持 | 支持 | 支持 |
@@ -134,3 +135,14 @@ node scripts/generate-codebuddy-usage-report.js --open
 ```bash
 node scripts/generate-codebuddy-usage-report.js --traces <trace-dir> --projects <projects-dir> --out <report.html> --open
 ```
+
+---
+
+### codebuddy-pet
+
+CodeBuddy 专属桌宠技能包。它内置用户提供并确认可分发的 `ikunchick` 桌宠资源，并安装项目本地 CodeBuddy hooks，用于更新 `idle`、`busy`、`tool`、`ask` 和 `done` 状态。
+
+- **技能：** `codebuddy-pet`
+- **命令：** `CodeBuddy-Pet-init`、`CodeBuddy-Pet-show`、`CodeBuddy-Pet-hide`、`CodeBuddy-Pet-uninstall`
+- **项目文件：** `<project>/.codebuddy/codebuddy-pet/`
+- **状态文件：** `<project>/.codebuddy/codebuddy-pet/state.json`

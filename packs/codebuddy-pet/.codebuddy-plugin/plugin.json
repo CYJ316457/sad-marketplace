@@ -1,0 +1,12 @@
+{
+  "name": "codebuddy-pet",
+  "version": "1.0.0",
+  "description": "CodeBuddy-only desktop pet with embedded ikunchick assets and hook-driven status bubbles",
+  "skills": ["./skills/codebuddy-pet"],
+  "commands": [
+    "./commands/CodeBuddy-Pet-init.md",
+    "./commands/CodeBuddy-Pet-show.md",
+    "./commands/CodeBuddy-Pet-hide.md",
+    "./commands/CodeBuddy-Pet-uninstall.md"
+  ]
+}
