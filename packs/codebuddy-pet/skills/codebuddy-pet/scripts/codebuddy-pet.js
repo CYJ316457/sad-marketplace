@@ -109,11 +109,7 @@ function runStart(args) {
     throw new Error(`Runtime not installed. Run init first for ${project}`);
   }
   const electronBin = resolveElectronBin(runtimeDir);
-  const child = spawn(electronBin.command, [...electronBin.args, runtimeDir, "--project", project], {
-    detached: true,
-    stdio: "ignore",
-    windowsHide: true,
-  });
+  const child = spawnDetached(electronBin.command, [...electronBin.args, runtimeDir, "--project", project], runtimeDir);
   child.on("error", (error) => {
     console.error(`CodeBuddy Pet failed to start: ${error.message}`);
     process.exitCode = 1;
@@ -125,14 +121,26 @@ function runStart(args) {
 function resolveElectronBin(runtimeDir) {
   const npmDir = path.join(runtimeDir, "node_modules");
   const isWin = process.platform === "win32";
+  // Prefer the real executable on Windows. Spawning .cmd shims directly can fail
+  // with EINVAL in embedded terminals and agent runtimes.
+  const directExe = path.join(npmDir, "electron", "dist", isWin ? "electron.exe" : "electron");
+  if (fs.existsSync(directExe)) return { command: directExe, args: [] };
   // Check .bin shims (created by npm for most packages)
   const localCmd = path.join(npmDir, ".bin", isWin ? "electron.cmd" : "electron");
   if (fs.existsSync(localCmd)) return { command: localCmd, args: [] };
-  // Check directly in electron/dist (common on Windows when .bin shims aren't created)
-  const directExe = path.join(npmDir, "electron", "dist", isWin ? "electron.exe" : "electron");
-  if (fs.existsSync(directExe)) return { command: directExe, args: [] };
   const npx = findOnPath(isWin ? "npx.cmd" : "npx") || findOnPath("npx");
   return { command: npx || (isWin ? "npx.cmd" : "npx"), args: ["electron"] };
+}
+
+function spawnDetached(commandPath, args, cwd) {
+  const useShell = process.platform === "win32" && /\.(?:cmd|bat)$/i.test(commandPath);
+  return spawn(commandPath, args, {
+    cwd,
+    detached: true,
+    stdio: "ignore",
+    windowsHide: true,
+    shell: useShell,
+  });
 }
 
 function findOnPath(executable) {
