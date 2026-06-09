@@ -1,0 +1,35 @@
+{
+  "name": "codebuddy-usage-report",
+  "version": "1.0.0",
+  "description": "CodeBuddy-only local usage dashboard for tokens, cache rate, credits, trends, groups, and request details",
+  "author": {
+    "name": "Local Publisher"
+  },
+  "license": "MIT",
+  "tags": [
+    "codebuddy",
+    "usage",
+    "tokens",
+    "credits",
+    "dashboard"
+  ],
+  "platformSupport": {
+    "codex": false,
+    "claude": false,
+    "codebuddy": true,
+    "opencode": false
+  },
+  "contents": {
+    "skills": [
+      {
+        "name": "codebuddy-usage-report",
+        "path": "skills/codebuddy-usage-report",
+        "kind": "platform"
+      }
+    ]
+  },
+  "codebuddy": {
+    "pluginName": "codebuddy-usage-report",
+    "category": "productivity"
+  }
+}

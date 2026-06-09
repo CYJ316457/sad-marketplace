@@ -1,0 +1,9 @@
+{
+  "name": "codebuddy-usage-report",
+  "description": "CodeBuddy-only local usage dashboard for tokens, cache rate, credits, trends, groups, and request details",
+  "version": "1.0.0",
+  "license": "MIT",
+  "skills": [
+    "./skills/codebuddy-usage-report"
+  ]
+}

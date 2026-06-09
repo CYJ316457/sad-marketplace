@@ -142,6 +142,7 @@ describe("shared skill marketplace", () => {
       "agnes-video",
       "skill-creator",
       "cb-hud",
+      "codebuddy-usage-report",
       "trellis-dashboard",
       "markitdown",
       "android-adb",
@@ -219,6 +220,15 @@ describe("shared skill marketplace", () => {
     ) as { name: string; skills?: string[] };
     expect(skillCreator.name).toBe("skill-creator");
     expect(skillCreator.skills).toEqual(["./skills/skill-creator"]);
+
+    const usageReport = JSON.parse(
+      fs.readFileSync(
+        path.join(repoRoot(), "packs", "codebuddy-usage-report", ".codebuddy-plugin", "plugin.json"),
+        "utf-8",
+      ),
+    ) as { name: string; skills?: string[] };
+    expect(usageReport.name).toBe("codebuddy-usage-report");
+    expect(usageReport.skills).toEqual(["./skills/codebuddy-usage-report"]);
 
     const markitdown = JSON.parse(
       fs.readFileSync(
@@ -522,6 +532,7 @@ describe("shared skill marketplace", () => {
       "agnes-video",
       "skill-creator",
       "cb-hud",
+      "codebuddy-usage-report",
       "trellis-dashboard",
       "markitdown",
       "android-adb",
@@ -548,6 +559,13 @@ describe("shared skill marketplace", () => {
       "CB-HUD-hide",
       "CB-HUD-uninstall",
     ]);
+    expect(byName.get("codebuddy-usage-report")?.platformSupport).toEqual({
+      codex: false,
+      claude: false,
+      codebuddy: true,
+      opencode: false,
+    });
+    expect(byName.get("codebuddy-usage-report")?.contents.skills).toEqual(["codebuddy-usage-report"]);
     expect(byName.get("trellis-dashboard")?.contents.commands).toEqual([
       "Trellis-Dashboard-Init",
       "Trellis-Dashboard-Start",
@@ -1143,6 +1161,93 @@ describe("shared skill marketplace", () => {
         ),
       ),
     ).toBe(true);
+  });
+
+  test("installs codebuddy usage report only for CodeBuddy", async () => {
+    const workspace = tempWorkspace();
+    process.env.SKILL_MARKETPLACE_HOME = path.join(workspace, "home");
+
+    const record = await installPack({
+      registryPath: registryPath(),
+      packName: "codebuddy-usage-report",
+      scope: "global",
+      cwd: workspace,
+      platform: "all",
+    });
+
+    expect(record.platforms).toEqual(["codebuddy"]);
+    expect(
+      fs.existsSync(path.join(workspace, "home", ".codex", "skills", "codebuddy-usage-report", "SKILL.md")),
+    ).toBe(false);
+    expect(
+      fs.existsSync(path.join(workspace, "home", ".claude", "skills", "codebuddy-usage-report", "SKILL.md")),
+    ).toBe(false);
+    expect(
+      fs.existsSync(
+        path.join(
+          workspace,
+          "home",
+          ".codebuddy",
+          "plugins",
+          "marketplaces",
+          "sad-marketplace",
+          "plugins",
+          "codebuddy-usage-report",
+          "skills",
+          "codebuddy-usage-report",
+          "scripts",
+          "generate-codebuddy-usage-report.js",
+        ),
+      ),
+    ).toBe(true);
+  });
+
+  test("codebuddy usage report script generates a local html dashboard", async () => {
+    const workspace = tempWorkspace();
+    const traces = path.join(workspace, "traces");
+    const projects = path.join(workspace, "projects", "demo");
+    fs.mkdirSync(traces, { recursive: true });
+    fs.mkdirSync(projects, { recursive: true });
+    fs.writeFileSync(
+      path.join(projects, "session.jsonl"),
+      JSON.stringify({
+        timestamp: "2026-06-08T09:00:00.000Z",
+        providerData: {
+          rawUsage: {
+            prompt_tokens: 120,
+            completion_tokens: 30,
+            total_tokens: 150,
+            prompt_tokens_details: { cached_tokens: 60 },
+            credit: 1.25,
+          },
+        },
+      }) + "\n",
+      "utf-8",
+    );
+
+    const output = path.join(workspace, "report.html");
+    const script = path.join(
+      repoRoot(),
+      "packs",
+      "codebuddy-usage-report",
+      "skills",
+      "codebuddy-usage-report",
+      "scripts",
+      "generate-codebuddy-usage-report.js",
+    );
+    const result = spawnSync(
+      "node",
+      [script, "--traces", traces, "--projects", path.dirname(projects), "--out", output],
+      { encoding: "utf-8" },
+    );
+
+    expect(result.status).toBe(0);
+    expect(result.stdout).toContain("Usage rows: 1");
+    expect(result.stdout).toContain("Rows with credit: 1");
+    expect(fs.existsSync(output)).toBe(true);
+    const html = fs.readFileSync(output, "utf-8");
+    expect(html).toContain("CodeBuddy Usage");
+    expect(html).toContain("\"credit\":1.25");
   });
 
   test("cb-hud status line script renders styled session state", async () => {

@@ -291,6 +291,37 @@
       }
     },
     {
+      "name": "codebuddy-usage-report",
+      "version": "1.0.0",
+      "description": "CodeBuddy-only local usage dashboard for tokens, cache rate, credits, trends, groups, and request details",
+      "author": {
+        "name": "Local Publisher"
+      },
+      "license": "MIT",
+      "tags": [
+        "codebuddy",
+        "usage",
+        "tokens",
+        "credits",
+        "dashboard"
+      ],
+      "source": "./packs/codebuddy-usage-report",
+      "platformSupport": {
+        "codex": false,
+        "claude": false,
+        "codebuddy": true,
+        "opencode": false
+      },
+      "install": {
+        "unit": "pack"
+      },
+      "contents": {
+        "skills": [
+          "codebuddy-usage-report"
+        ]
+      }
+    },
+    {
       "name": "trellis-dashboard",
       "version": "0.1.0",
       "description": "Realtime Trellis dashboard with a local web service for CodeBuddy, Claude Code, Codex, and OpenCode projects",

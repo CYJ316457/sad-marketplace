@@ -138,6 +138,20 @@
       ]
     },
     {
+      "name": "codebuddy-usage-report",
+      "description": "CodeBuddy-only local usage dashboard for tokens, cache rate, credits, trends, groups, and request details",
+      "version": "1.0.0",
+      "source": "./packs/codebuddy-usage-report",
+      "category": "productivity",
+      "author": {
+        "name": "Local Publisher"
+      },
+      "license": "MIT",
+      "skills": [
+        "./packs/codebuddy-usage-report/skills/codebuddy-usage-report"
+      ]
+    },
+    {
       "name": "trellis-dashboard",
       "description": "Realtime Trellis dashboard with a local web service and hook-based event stream",
       "version": "0.1.0",

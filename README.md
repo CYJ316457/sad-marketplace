@@ -16,6 +16,7 @@
 | agnes-video | 使用 Agnes Video V2.0 异步生成视频 | 支持 | 支持 | 支持 | 支持 |
 | skill-creator | 创建或更新 agent skill 的辅助工具 | 支持 | 支持 | 支持 | 支持 |
 | cb-hud | CodeBuddy 专属 HUD 状态栏 | 不支持 | 不支持 | 支持 | 不支持 |
+| codebuddy-usage-report | CodeBuddy 专属本地用量统计报表，统计请求、Token、缓存率、积分和趋势 | 不支持 | 不支持 | 支持 | 不支持 |
 | trellis-dashboard | 本地 Web Trellis 实时看板 | 支持 | 支持 | 支持 | 支持 |
 | markitdown | 将 PDF、Office、HTML、图片、音频等转成 Markdown | 支持 | 支持 | 支持 | 支持 |
 | android-adb | Android ADB 自动化、UI 层级分析和截图验证 | 支持 | 支持 | 支持 | 支持 |
@@ -108,3 +109,28 @@ python -m pytest packs/lanhu-xml-to-android/skills/lanhu-xml-to-android/scripts/
 ## 链接
 
 - [VSLLM](https://vsllm.com/)
+
+---
+
+### codebuddy-usage-report
+
+CodeBuddy 专属本地用量统计技能。它读取本机 `~/.codebuddy` 下的 traces 和 project JSONL 日志，生成一个自包含 HTML 报表。
+
+- **技能：** `codebuddy-usage-report`
+- 默认数据源：`~/.codebuddy/traces` 和 `~/.codebuddy/projects`
+- 默认输出：当前目录的 `codebuddy-usage-report.html`
+- 统计内容：请求次数、时间、输入/输出/总 Token、缓存读写、缓存率、积分、模型、会话、Agent、每日趋势、小时趋势和明细分页
+- 趋势图支持动画、滚轮缩放、拖拽平移和鼠标悬停提示
+- 指标口径可在积分和 Token 之间切换，默认按积分查看
+
+常用命令：
+
+```bash
+node scripts/generate-codebuddy-usage-report.js --open
+```
+
+指定路径：
+
+```bash
+node scripts/generate-codebuddy-usage-report.js --traces <trace-dir> --projects <projects-dir> --out <report.html> --open
+```
