@@ -8,21 +8,21 @@
 
 | 技能包 | 描述 | Codex | Claude Code | CodeBuddy | OpenCode |
 | --- | --- | :---: | :---: | :---: | :---: |
-| starter-pack | 入门包，包含通用写作和发布检查工作流 | 支持 | 支持 | 支持 | 支持 |
-| floating-island-hooks | 项目级 Floating Island 状态浮窗 hooks | 支持 | 支持 | 支持 | 支持 |
-| svn-toolkit | SVN 工作流技能和常用命令集合 | 支持 | 支持 | 支持 | 支持 |
-| gpt-image-2-gen | 使用 gpt-image-2 在项目内生成图片 | 支持 | 支持 | 支持 | 支持 |
-| agnes-image | 使用 Agnes Image 2.1 Flash 生成或编辑图片 | 支持 | 支持 | 支持 | 支持 |
-| agnes-video | 使用 Agnes Video V2.0 异步生成视频 | 支持 | 支持 | 支持 | 支持 |
-| skill-creator | 创建或更新 agent skill 的辅助工具 | 支持 | 支持 | 支持 | 支持 |
-| cb-hud | CodeBuddy 专属 HUD 状态栏 | 不支持 | 不支持 | 支持 | 不支持 |
-| codebuddy-pet | CodeBuddy 专属桌宠，内置 ikunchick 资源并通过 hooks 显示状态气泡 | 不支持 | 不支持 | 支持 | 不支持 |
-| codebuddy-usage-report | CodeBuddy 专属本地用量统计报表，统计请求、Token、缓存率、积分和趋势 | 不支持 | 不支持 | 支持 | 不支持 |
-| trellis-dashboard | 本地 Web Trellis 实时看板 | 支持 | 支持 | 支持 | 支持 |
-| markitdown | 将 PDF、Office、HTML、图片、音频等转成 Markdown | 支持 | 支持 | 支持 | 支持 |
-| android-adb | Android ADB 自动化、UI 层级分析和截图验证 | 支持 | 支持 | 支持 | 支持 |
-| lanhu-xml-to-android | 蓝湖 WXML/WXSS 导出转 Android View XML 工作流 | 支持 | 支持 | 支持 | 支持 |
-| ppt-master | 生成原生可编辑 PPTX | 支持 | 支持 | 支持 | 支持 |
+| starter-pack | 入门包，包含通用写作和发布检查工作流 | ✓ | ✓ | ✓ | ✓ |
+| floating-island-hooks | 项目级 Floating Island 状态浮窗 hooks | ✓ | ✓ | ✓ | ✓ |
+| svn-toolkit | SVN 工作流技能和常用命令集合 | ✓ | ✓ | ✓ | ✓ |
+| gpt-image-2-gen | 使用 gpt-image-2 在项目内生成图片 | ✓ | ✓ | ✓ | ✓ |
+| agnes-image | 使用 Agnes Image 2.1 Flash 生成或编辑图片 | ✓ | ✓ | ✓ | ✓ |
+| agnes-video | 使用 Agnes Video V2.0 异步生成视频 | ✓ | ✓ | ✓ | ✓ |
+| skill-creator | 创建或更新 agent skill 的辅助工具 | ✓ | ✓ | ✓ | ✓ |
+| cb-hud | CodeBuddy 专属 HUD 状态栏 | ✗ | ✗ | ✓ | ✗ |
+| codebuddy-pet | CodeBuddy 专属桌宠，内置 ikunchick 资源并通过 hooks 显示状态气泡 | ✗ | ✗ | ✓ | ✗ |
+| codebuddy-usage-report | CodeBuddy 专属本地用量统计报表，统计请求、Token、缓存率、积分和趋势 | ✗ | ✗ | ✓ | ✗ |
+| trellis-dashboard | 本地 Web Trellis 实时看板 | ✓ | ✓ | ✓ | ✓ |
+| markitdown | 将 PDF、Office、HTML、图片、音频等转成 Markdown | ✓ | ✓ | ✓ | ✓ |
+| android-adb | Android ADB 自动化、UI 层级分析和截图验证 | ✓ | ✓ | ✓ | ✓ |
+| lanhu-xml-to-android | 蓝湖 WXML/WXSS 导出转 Android View XML 工作流 | ✓ | ✓ | ✓ | ✓ |
+| ppt-master | 生成原生可编辑 PPTX | ✓ | ✓ | ✓ | ✓ |
 
 ## lanhu-xml-to-android
 
