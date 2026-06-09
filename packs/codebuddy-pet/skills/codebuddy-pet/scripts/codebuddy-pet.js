@@ -114,14 +114,35 @@ function runStart(args) {
     stdio: "ignore",
     windowsHide: true,
   });
+  child.on("error", (error) => {
+    console.error(`CodeBuddy Pet failed to start: ${error.message}`);
+    process.exitCode = 1;
+  });
   child.unref();
   console.log(`CodeBuddy Pet started for ${project}`);
 }
 
 function resolveElectronBin(runtimeDir) {
-  const localCmd = path.join(runtimeDir, "node_modules", ".bin", process.platform === "win32" ? "electron.cmd" : "electron");
+  const npmDir = path.join(runtimeDir, "node_modules");
+  const isWin = process.platform === "win32";
+  // Check .bin shims (created by npm for most packages)
+  const localCmd = path.join(npmDir, ".bin", isWin ? "electron.cmd" : "electron");
   if (fs.existsSync(localCmd)) return { command: localCmd, args: [] };
-  return { command: "npx", args: ["electron"] };
+  // Check directly in electron/dist (common on Windows when .bin shims aren't created)
+  const directExe = path.join(npmDir, "electron", "dist", isWin ? "electron.exe" : "electron");
+  if (fs.existsSync(directExe)) return { command: directExe, args: [] };
+  const npx = findOnPath(isWin ? "npx.cmd" : "npx") || findOnPath("npx");
+  return { command: npx || (isWin ? "npx.cmd" : "npx"), args: ["electron"] };
+}
+
+function findOnPath(executable) {
+  const pathValue = process.env.PATH || "";
+  for (const entry of pathValue.split(path.delimiter)) {
+    if (!entry) continue;
+    const fullPath = path.join(entry, executable);
+    if (fs.existsSync(fullPath)) return fullPath;
+  }
+  return "";
 }
 
 function mergePetHooks(hooks, currentScriptPath, project) {
