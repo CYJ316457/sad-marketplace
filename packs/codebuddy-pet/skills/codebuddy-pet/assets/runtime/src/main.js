@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { app, BrowserWindow, ipcMain } from "electron";
+import { app, BrowserWindow, Menu, ipcMain } from "electron";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -51,6 +51,20 @@ ipcMain.on("codebuddy-pet-drag-move", (_event, point) => {
 
 ipcMain.on("codebuddy-pet-drag-end", () => {
   dragOffset = undefined;
+});
+
+ipcMain.on("codebuddy-pet-show-menu", () => {
+  if (!windowRef) return;
+  const menu = Menu.buildFromTemplate([
+    {
+      label: "Close",
+      click: () => {
+        logRuntime("menu:close");
+        app.quit();
+      },
+    },
+  ]);
+  menu.popup({ window: windowRef });
 });
 
 function createWindow() {

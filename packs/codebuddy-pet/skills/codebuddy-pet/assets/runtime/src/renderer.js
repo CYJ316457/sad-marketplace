@@ -29,6 +29,7 @@ async function init() {
   await loadSpritesheet();
   canvas.addEventListener("click", reactToPetClick);
   bubble.addEventListener("click", toggleBubble);
+  root.addEventListener("contextmenu", showContextMenu);
   root.addEventListener("pointerdown", startPotentialDrag);
   window.addEventListener("pointermove", movePotentialDrag);
   window.addEventListener("pointerup", stopPotentialDrag);
@@ -65,6 +66,13 @@ function toggleBubble(event) {
   event.stopPropagation();
   bubbleVisible = !bubbleVisible;
   renderBubble(readState());
+}
+
+function showContextMenu(event) {
+  event.preventDefault();
+  event.stopPropagation();
+  stopPotentialDrag();
+  ipcRenderer.send("codebuddy-pet-show-menu");
 }
 
 function startPotentialDrag(event) {
