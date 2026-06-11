@@ -492,36 +492,42 @@
       }
     },
     {
-      "name": "lanhu-xml-to-android",
+      "name": "android-build",
       "version": "1.0.0",
-      "description": "Convert Lanhu WXML/WXSS exports into project-aware Android View XML",
+      "description": "Build Android project debug APK and install/run on ADB-connected device — Gradle-version-aware",
       "author": {
-        "name": "Local Publisher"
+        "name": "sad-marketplace"
       },
       "license": "MIT",
       "tags": [
-        "lanhu",
         "android",
-        "xml",
-        "wxml",
-        "wxss",
-        "design-to-code"
+        "build",
+        "gradle",
+        "adb",
+        "apk",
+        "assemble"
       ],
-      "source": "./packs/lanhu-xml-to-android",
+      "source": "./packs/android-build",
       "platformSupport": {
         "codex": true,
         "claude": true,
         "codebuddy": true,
         "opencode": true
       },
-      "install": {
-        "unit": "pack"
-      },
-      "contents": {
-        "skills": [
-          "lanhu-xml-to-android"
-        ]
-      }
+      "install": { "unit": "pack" },
+      "contents": { "skills": ["android-build"] }
+    },
+    {
+      "name": "lanhu-to-android",
+      "version": "1.0.0",
+      "description": "将蓝湖导出的 XML/WXML + CSS/WXSS 转换为 Android View XML。DPI 感知、交互式询问、自动校验审查",
+      "author": { "name": "sad-marketplace" },
+      "license": "MIT",
+      "tags": ["lanhu", "android", "xml", "css", "wxml", "wxss", "design-to-code", "layout"],
+      "source": "./packs/lanhu-to-android",
+      "platformSupport": { "codex": true, "claude": true, "codebuddy": true, "opencode": true },
+      "install": { "unit": "pack" },
+      "contents": { "skills": ["lanhu-to-android"] }
     },
     {
       "name": "ppt-master",

@@ -2,7 +2,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { spawn } from "node:child_process";
+import { spawn, spawnSync } from "node:child_process";
 
 const command = process.argv[2] || "help";
 const argv = process.argv.slice(3);
@@ -42,21 +42,25 @@ function runInit(args) {
     copyDirectory(runtimeSourceDir, path.join(localDir, "runtime"));
   }
   copyDirectory(petSourceDir, path.join(localDir, "pets", "ikunchick"));
+  ensureRuntimeDependencies(path.join(localDir, "runtime"));
   writeState(project, defaultState("idle", "Ready"));
   const settings = readJson(settingsPath);
   settings.hooks = mergePetHooks(settings.hooks || {}, scriptPath, project);
   writeJson(settingsPath, settings);
   console.log(`CodeBuddy Pet initialized: ${localDir}`);
+  startPet(project);
 }
 
 function runShow(args) {
   const project = resolveProject(args);
+  installLocalFiles(project);
   const settingsPath = codebuddySettingsPath(project);
   const settings = readJson(settingsPath);
   settings.hooks = mergePetHooks(settings.hooks || {}, scriptPath, project);
   writeJson(settingsPath, settings);
   writeState(project, defaultState("idle", "Ready"));
   console.log(`CodeBuddy Pet enabled: ${settingsPath}`);
+  startPet(project);
 }
 
 function runHide(args) {
@@ -103,11 +107,16 @@ async function runHook(args, rawInput) {
 
 function runStart(args) {
   const project = resolveProject(args);
+  startPet(project);
+}
+
+function startPet(project) {
   const runtimeDir = path.join(localPetDir(project), "runtime");
   const runtimeMain = path.join(runtimeDir, "src", "main.js");
   if (!fs.existsSync(runtimeMain)) {
     throw new Error(`Runtime not installed. Run init first for ${project}`);
   }
+  ensureRuntimeDependencies(runtimeDir);
   const electronBin = resolveElectronBin(runtimeDir);
   const child = spawnDetached(electronBin.command, [...electronBin.args, runtimeDir, "--project", project], runtimeDir);
   child.on("error", (error) => {
@@ -116,6 +125,37 @@ function runStart(args) {
   });
   child.unref();
   console.log(`CodeBuddy Pet started for ${project}`);
+}
+
+function installLocalFiles(project) {
+  assertPetAssets();
+  const localDir = localPetDir(project);
+  if (fs.existsSync(runtimeSourceDir)) {
+    copyDirectory(runtimeSourceDir, path.join(localDir, "runtime"));
+  }
+  copyDirectory(petSourceDir, path.join(localDir, "pets", "ikunchick"));
+  ensureRuntimeDependencies(path.join(localDir, "runtime"));
+}
+
+function ensureRuntimeDependencies(runtimeDir) {
+  const packageJsonPath = path.join(runtimeDir, "package.json");
+  if (!fs.existsSync(packageJsonPath)) {
+    throw new Error(`Missing runtime package.json: ${packageJsonPath}`);
+  }
+  if (fs.existsSync(path.join(runtimeDir, "node_modules", "electron"))) return;
+
+  const npm = findOnPath(process.platform === "win32" ? "npm.cmd" : "npm") || findOnPath("npm");
+  if (!npm) throw new Error("npm is required to install CodeBuddy Pet runtime dependencies");
+  console.log("Installing CodeBuddy Pet runtime dependencies...");
+  const result = spawnSync(npm, ["install", "--omit=dev"], {
+    cwd: runtimeDir,
+    stdio: "inherit",
+    shell: process.platform === "win32" && /\.(?:cmd|bat)$/i.test(npm),
+  });
+  if (result.error) throw result.error;
+  if (result.status !== 0) {
+    throw new Error(`npm install failed with exit code ${result.status}`);
+  }
 }
 
 function resolveElectronBin(runtimeDir) {

@@ -1,0 +1,37 @@
+{
+  "name": "android-build",
+  "version": "1.0.0",
+  "description": "Build Android project debug APK and install/run on ADB-connected device — Gradle-version-aware with multi-module support",
+  "author": {
+    "name": "sad-marketplace"
+  },
+  "license": "MIT",
+  "tags": [
+    "android",
+    "build",
+    "gradle",
+    "adb",
+    "apk",
+    "assemble",
+    "install"
+  ],
+  "platformSupport": {
+    "codex": true,
+    "claude": true,
+    "codebuddy": true,
+    "opencode": true
+  },
+  "contents": {
+    "skills": [
+      {
+        "name": "android-build",
+        "path": "skills/android-build",
+        "kind": "shared"
+      }
+    ]
+  },
+  "codebuddy": {
+    "pluginName": "android-build",
+    "category": "developer-tools"
+  }
+}
