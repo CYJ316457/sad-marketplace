@@ -12,4 +12,4 @@ Run it for the current project or the user-provided path:
 
 `node "<script>" show --project <project-path>`
 
-Restart CodeBuddy if hooks were previously disabled.
+The command refreshes local pet files, installs runtime dependencies if needed, re-enables hooks, and starts the pet window. Restart CodeBuddy only when you need it to reload hook settings.

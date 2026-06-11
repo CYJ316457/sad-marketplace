@@ -12,4 +12,4 @@ Run it for the current project or the user-provided path:
 
 `node "<script>" init --project <project-path>`
 
-After initialization, restart CodeBuddy so it reloads `.codebuddy/settings.json` hooks.
+Initialization installs the local Electron runtime dependencies if needed and starts the pet window. Restart CodeBuddy only when you need it to reload `.codebuddy/settings.json` hooks.

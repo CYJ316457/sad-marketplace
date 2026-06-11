@@ -148,7 +148,8 @@ describe("shared skill marketplace", () => {
       "trellis-dashboard",
       "markitdown",
       "android-adb",
-      "lanhu-xml-to-android",
+      "android-build",
+      "lanhu-to-android",
       "ppt-master",
     ]);
     expect(marketplace.plugins.map((plugin) => plugin.name)).not.toContain("cb-hud");
@@ -179,7 +180,8 @@ describe("shared skill marketplace", () => {
       "trellis-dashboard",
       "markitdown",
       "android-adb",
-      "lanhu-xml-to-android",
+      "android-build",
+      "lanhu-to-android",
       "ppt-master",
     ]);
   });
@@ -282,15 +284,6 @@ describe("shared skill marketplace", () => {
     expect(androidAdb.name).toBe("android-adb");
     expect(androidAdb.skills).toEqual(["./skills/android-adb"]);
     expect(androidAdb.commands).toEqual(ANDROID_ADB_CODEBUDDY_COMMANDS);
-
-    const lanhu = JSON.parse(
-      fs.readFileSync(
-        path.join(repoRoot(), "packs", "lanhu-xml-to-android", ".codebuddy-plugin", "plugin.json"),
-        "utf-8",
-      ),
-    ) as { name: string; skills?: string[] };
-    expect(lanhu.name).toBe("lanhu-xml-to-android");
-    expect(lanhu.skills).toEqual(["./skills/lanhu-xml-to-android"]);
 
     const pptMaster = JSON.parse(
       fs.readFileSync(
@@ -542,15 +535,6 @@ describe("shared skill marketplace", () => {
     expect(androidAdb.skills).toEqual(["./skills/android-adb"]);
     expect(androidAdb.commands).toEqual(["./commands"]);
 
-    const lanhu = JSON.parse(
-      fs.readFileSync(
-        path.join(repoRoot(), "packs", "lanhu-xml-to-android", ".claude-plugin", "plugin.json"),
-        "utf-8",
-      ),
-    ) as { name: string; skills?: string[] };
-    expect(lanhu.name).toBe("lanhu-xml-to-android");
-    expect(lanhu.skills).toEqual(["./skills/lanhu-xml-to-android"]);
-
     const pptMaster = JSON.parse(
       fs.readFileSync(
         path.join(repoRoot(), "packs", "ppt-master", ".claude-plugin", "plugin.json"),
@@ -563,7 +547,7 @@ describe("shared skill marketplace", () => {
 
   test("lists packs from the registry", async () => {
     const packs = await listPacks({ registryPath: registryPath() });
-    expect(packs).toHaveLength(15);
+    expect(packs).toHaveLength(16);
 
     const byName = new Map(packs.map((pack) => [pack.name, pack]));
     expect(packs.map((pack) => pack.name)).toEqual([
@@ -580,7 +564,8 @@ describe("shared skill marketplace", () => {
       "trellis-dashboard",
       "markitdown",
       "android-adb",
-      "lanhu-xml-to-android",
+      "android-build",
+      "lanhu-to-android",
       "ppt-master",
     ]);
 
@@ -629,9 +614,9 @@ describe("shared skill marketplace", () => {
     ]);
     expect(byName.get("markitdown")?.contents.commands).toEqual(["MarkItDown-Convert"]);
     expect(byName.get("android-adb")?.contents.commands).toEqual(ANDROID_ADB_COMMANDS);
-    expect(byName.get("lanhu-xml-to-android")?.contents.skills).toEqual(["lanhu-xml-to-android"]);
+    expect(byName.get("lanhu-to-android")?.contents.skills).toEqual(["lanhu-to-android"]);
     expect(byName.get("ppt-master")?.contents.skills).toEqual(["ppt-master"]);
-    for (const name of ["agnes-image", "agnes-video", "skill-creator", "trellis-dashboard", "markitdown", "android-adb", "lanhu-xml-to-android", "ppt-master"]) {
+    for (const name of ["agnes-image", "agnes-video", "skill-creator", "trellis-dashboard", "markitdown", "android-adb", "android-build", "lanhu-to-android", "ppt-master"]) {
       expect(byName.get(name)?.platformSupport).toEqual({
         codex: true,
         claude: true,
@@ -2111,13 +2096,13 @@ describe("shared skill marketplace", () => {
     ).toBe(true);
   });
 
-  test("installs lanhu-xml-to-android for all supported platforms", async () => {
+  test("installs lanhu-to-android for all supported platforms", async () => {
     const workspace = tempWorkspace();
     process.env.SKILL_MARKETPLACE_HOME = path.join(workspace, "home");
 
     const record = await installPack({
       registryPath: registryPath(),
-      packName: "lanhu-xml-to-android",
+      packName: "lanhu-to-android",
       scope: "global",
       cwd: workspace,
       platform: "all",
@@ -2125,16 +2110,16 @@ describe("shared skill marketplace", () => {
 
     expect(record.platforms).toEqual(["codex", "claude", "codebuddy", "opencode"]);
     expect(
-      fs.existsSync(path.join(workspace, "home", ".codex", "skills", "lanhu-xml-to-android", "SKILL.md")),
+      fs.existsSync(path.join(workspace, "home", ".codex", "skills", "lanhu-to-android", "SKILL.md")),
     ).toBe(true);
     expect(
       fs.existsSync(
-        path.join(workspace, "home", ".claude", "skills", "lanhu-xml-to-android", "scripts", "convert.py"),
+        path.join(workspace, "home", ".claude", "skills", "lanhu-to-android", "scripts", "convert.py"),
       ),
     ).toBe(true);
     expect(
       fs.existsSync(
-        path.join(workspace, "home", ".opencode", "skills", "lanhu-xml-to-android", "references", "widget-mapping.md"),
+        path.join(workspace, "home", ".opencode", "skills", "lanhu-to-android", "references", "widget-mapping.md"),
       ),
     ).toBe(true);
     expect(
@@ -2147,9 +2132,9 @@ describe("shared skill marketplace", () => {
           "marketplaces",
           "sad-marketplace",
           "plugins",
-          "lanhu-xml-to-android",
+          "lanhu-to-android",
           "skills",
-          "lanhu-xml-to-android",
+          "lanhu-to-android",
           "scripts",
           "convert.py",
         ),

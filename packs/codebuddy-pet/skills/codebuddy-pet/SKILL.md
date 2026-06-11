@@ -11,14 +11,14 @@ Install and manage a CodeBuddy-only desktop pet for the current project.
 
 1. Confirm the target project root.
 2. Run `node scripts/codebuddy-pet.js init --project <project>` from the installed skill directory.
-3. Restart CodeBuddy so it reloads `.codebuddy/settings.json` hooks.
-4. Verify state manually with `node scripts/codebuddy-pet.js hook busy --project <project>`.
-5. Start the pet with `node scripts/codebuddy-pet.js start --project <project>` if it is not already visible.
+3. The init command installs runtime dependencies if needed and starts the pet window.
+4. Restart CodeBuddy if it needs to reload `.codebuddy/settings.json` hooks.
+5. Verify state manually with `node scripts/codebuddy-pet.js hook busy --project <project>`.
 
 ## Commands
 
-- `CodeBuddy-Pet-init`: install runtime files, embedded ikunchick assets, state file, and CodeBuddy hooks.
-- `CodeBuddy-Pet-show`: re-enable hooks and make the pet visible again.
+- `CodeBuddy-Pet-init`: install runtime files, embedded ikunchick assets, state file, CodeBuddy hooks, local Electron dependencies, and start the pet.
+- `CodeBuddy-Pet-show`: refresh files, re-enable hooks, install local Electron dependencies if needed, and make the pet visible again.
 - `CodeBuddy-Pet-hide`: disable this pack's hooks while preserving project-local files.
 - `CodeBuddy-Pet-uninstall`: remove this pack's hooks and project-local files.
 

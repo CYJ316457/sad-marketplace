@@ -106,13 +106,22 @@
       "source": "./packs/android-adb"
     },
     {
-      "name": "lanhu-xml-to-android",
+      "name": "android-build",
+      "description": "Build Android project debug APK and install/run on ADB-connected device — Gradle-version-aware",
+      "author": {
+        "name": "sad-marketplace"
+      },
+      "category": "developer-tools",
+      "source": "./packs/android-build"
+    },
+    {
+      "name": "lanhu-to-android",
       "description": "Convert Lanhu WXML/WXSS exports into project-aware Android View XML",
       "author": {
         "name": "Local Publisher"
       },
       "category": "developer-tools",
-      "source": "./packs/lanhu-xml-to-android"
+      "source": "./packs/lanhu-to-android"
     },
     {
       "name": "ppt-master",
