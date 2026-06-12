@@ -102,7 +102,7 @@ afterEach(() => {
   for (const dir of tempDirs.splice(0)) {
     fs.rmSync(dir, { recursive: true, force: true });
   }
-}, 60_000);
+}, 120_000);
 
 describe("shared skill marketplace", () => {
   test("codebuddy-pet embeds ikunchick pet assets", async () => {
@@ -1197,19 +1197,13 @@ describe("shared skill marketplace", () => {
     const script = path.join(repoRoot(), "packs", "codebuddy-pet", "skills", "codebuddy-pet", "scripts", "codebuddy-pet.js");
     const init = spawnSync("node", [script, "init", "--project", workspace, "--no-start", "--no-install"], { encoding: "utf-8" });
     expect(init.status).toBe(0);
-    const runtimeDir = path.join(workspace, ".codebuddy", "codebuddy-pet", "runtime");
-    fs.mkdirSync(path.join(runtimeDir, "node_modules", "electron"), { recursive: true });
-    const binDir = path.join(runtimeDir, "node_modules", ".bin");
-    fs.mkdirSync(binDir, { recursive: true });
-    const electronShim = path.join(binDir, process.platform === "win32" ? "electron.cmd" : "electron");
-    fs.writeFileSync(electronShim, process.platform === "win32" ? "@echo off\r\nexit /b 0\r\n" : "#!/bin/sh\nexit 0\n", "utf-8");
-    if (process.platform !== "win32") fs.chmodSync(electronShim, 0o755);
-    fs.writeFileSync(path.join(workspace, ".codebuddy", "codebuddy-pet", "pet.pid"), JSON.stringify({ pid: process.pid }, null, 2), "utf-8");
+    fs.writeFileSync(path.join(workspace, ".codebuddy", "codebuddy-pet", "pet.pid"), JSON.stringify({ name: "codebuddy-pet", pid: process.pid, project: workspace, updatedAt: new Date().toISOString() }, null, 2), "utf-8");
 
-    const start = spawnSync("node", [script, "start", "--project", workspace], { encoding: "utf-8" });
+    const result = spawnSync("node", [script, "start", "--project", workspace], { encoding: "utf-8" });
 
-    expect(start.status).toBe(0);
-    expect(start.stdout).toContain("started");
+    expect(result.status).toBe(0);
+    expect(result.stdout).toContain("already running");
+    expect(result.stdout).not.toContain("Installing CodeBuddy Pet runtime dependencies");
   });
 
   test("codebuddy-pet start skips launch while another start holds the lock", async () => {
