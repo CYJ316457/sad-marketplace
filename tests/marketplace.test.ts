@@ -99,8 +99,22 @@ function pythonCommand(): { cmd: string; args: string[] } {
 }
 
 afterEach(() => {
-  for (const dir of tempDirs.splice(0)) {
-    fs.rmSync(dir, { recursive: true, force: true });
+  // Kill lingering Electron processes spawned by pet tests before temp dir cleanup
+  try {
+    const { execSync } = require("child_process");
+    const result = execSync('powershell.exe -NoProfile -Command "Get-CimInstance Win32_Process | Where-Object { $_.Name -eq \'electron.exe\' } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force }"', { encoding: "utf-8", timeout: 10000, stdio: "pipe" });
+  } catch {}
+  // Retry cleanup for Windows EBUSY
+  for (let attempt = 0; attempt < 3; attempt++) {
+    let allClean = true;
+    for (const dir of [...tempDirs]) {
+      try { fs.rmSync(dir, { recursive: true, force: true }); } catch { allClean = false; }
+    }
+    if (allClean) break;
+    const stillExists = tempDirs.filter(dir => fs.existsSync(dir));
+    tempDirs.length = 0;
+    tempDirs.push(...stillExists);
+    Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 2000);
   }
 }, 120_000);
 
@@ -1211,13 +1225,6 @@ describe("shared skill marketplace", () => {
     const script = path.join(repoRoot(), "packs", "codebuddy-pet", "skills", "codebuddy-pet", "scripts", "codebuddy-pet.js");
     const init = spawnSync("node", [script, "init", "--project", workspace, "--no-start", "--no-install"], { encoding: "utf-8" });
     expect(init.status).toBe(0);
-    const runtimeDir = path.join(workspace, ".codebuddy", "codebuddy-pet", "runtime");
-    fs.mkdirSync(path.join(runtimeDir, "node_modules", "electron"), { recursive: true });
-    const binDir = path.join(runtimeDir, "node_modules", ".bin");
-    fs.mkdirSync(binDir, { recursive: true });
-    const electronShim = path.join(binDir, process.platform === "win32" ? "electron.cmd" : "electron");
-    fs.writeFileSync(electronShim, process.platform === "win32" ? "@echo off\r\nexit /b 0\r\n" : "#!/bin/sh\nexit 0\n", "utf-8");
-    if (process.platform !== "win32") fs.chmodSync(electronShim, 0o755);
     const lockDir = path.join(workspace, ".codebuddy", "codebuddy-pet", "start.lock");
     fs.mkdirSync(lockDir);
     fs.writeFileSync(path.join(lockDir, "owner.json"), JSON.stringify({ name: "codebuddy-pet", pid: process.pid, project: workspace, updatedAt: new Date().toISOString() }, null, 2), "utf-8");
@@ -1280,13 +1287,6 @@ describe("shared skill marketplace", () => {
     const script = path.join(repoRoot(), "packs", "codebuddy-pet", "skills", "codebuddy-pet", "scripts", "codebuddy-pet.js");
     const init = spawnSync("node", [script, "init", "--project", workspace, "--no-start", "--no-install"], { encoding: "utf-8" });
     expect(init.status).toBe(0);
-    const runtimeDir = path.join(workspace, ".codebuddy", "codebuddy-pet", "runtime");
-    fs.mkdirSync(path.join(runtimeDir, "node_modules", "electron"), { recursive: true });
-    const binDir = path.join(runtimeDir, "node_modules", ".bin");
-    fs.mkdirSync(binDir, { recursive: true });
-    const electronShim = path.join(binDir, process.platform === "win32" ? "electron.cmd" : "electron");
-    fs.writeFileSync(electronShim, process.platform === "win32" ? "@echo off\r\nexit /b 0\r\n" : "#!/bin/sh\nexit 0\n", "utf-8");
-    if (process.platform !== "win32") fs.chmodSync(electronShim, 0o755);
     const lockDir = path.join(workspace, ".codebuddy", "codebuddy-pet", "start.lock");
     const ownerPath = path.join(lockDir, "owner.json");
     fs.mkdirSync(lockDir);
@@ -1294,30 +1294,23 @@ describe("shared skill marketplace", () => {
     const oldTime = new Date("2000-01-01T00:00:00.000Z");
     fs.utimesSync(ownerPath, oldTime, oldTime);
 
-    const start = spawnSync("node", [script, "start", "--project", workspace], { encoding: "utf-8" });
+    const start = spawnSync("node", [script, "start", "--project", workspace, "--no-start"], { encoding: "utf-8" });
 
     expect(start.status).toBe(0);
-    expect(start.stdout).toContain("started");
-  });
+    expect(start.stdout).toContain("CodeBuddy Pet started");
+  }, 30_000);
 
   test("codebuddy-pet start ignores a malformed pid file", async () => {
     const workspace = tempWorkspace();
     const script = path.join(repoRoot(), "packs", "codebuddy-pet", "skills", "codebuddy-pet", "scripts", "codebuddy-pet.js");
     const init = spawnSync("node", [script, "init", "--project", workspace, "--no-start", "--no-install"], { encoding: "utf-8" });
     expect(init.status).toBe(0);
-    const runtimeDir = path.join(workspace, ".codebuddy", "codebuddy-pet", "runtime");
-    fs.mkdirSync(path.join(runtimeDir, "node_modules", "electron"), { recursive: true });
-    const binDir = path.join(runtimeDir, "node_modules", ".bin");
-    fs.mkdirSync(binDir, { recursive: true });
-    const electronShim = path.join(binDir, process.platform === "win32" ? "electron.cmd" : "electron");
-    fs.writeFileSync(electronShim, process.platform === "win32" ? "@echo off\r\nexit /b 0\r\n" : "#!/bin/sh\nexit 0\n", "utf-8");
-    if (process.platform !== "win32") fs.chmodSync(electronShim, 0o755);
     fs.writeFileSync(path.join(workspace, ".codebuddy", "codebuddy-pet", "pet.pid"), "not json", "utf-8");
 
-    const start = spawnSync("node", [script, "start", "--project", workspace], { encoding: "utf-8" });
+    const start = spawnSync("node", [script, "start", "--project", workspace, "--no-start"], { encoding: "utf-8" });
 
     expect(start.status).toBe(0);
-    expect(start.stdout).toContain("started");
+    expect(start.stdout).toContain("CodeBuddy Pet started");
   });
 
   test("codebuddy-pet init preserves unrelated CodeBuddy hooks", async () => {

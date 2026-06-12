@@ -1,0 +1,83 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"D:\\AI\\GitHub\\sad-marketplace\\packs\\codebuddy-pet\\skills\\codebuddy-pet\\scripts\\codebuddy-pet.js\" hook SessionStart --project \"d:\\ai\\github\\sad-marketplace\"",
+            "timeout": 3
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"D:\\AI\\GitHub\\sad-marketplace\\packs\\codebuddy-pet\\skills\\codebuddy-pet\\scripts\\codebuddy-pet.js\" hook UserPromptSubmit --project \"d:\\ai\\github\\sad-marketplace\"",
+            "timeout": 3
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"D:\\AI\\GitHub\\sad-marketplace\\packs\\codebuddy-pet\\skills\\codebuddy-pet\\scripts\\codebuddy-pet.js\" hook PreToolUse --project \"d:\\ai\\github\\sad-marketplace\"",
+            "timeout": 3
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"D:\\AI\\GitHub\\sad-marketplace\\packs\\codebuddy-pet\\skills\\codebuddy-pet\\scripts\\codebuddy-pet.js\" hook PostToolUse --project \"d:\\ai\\github\\sad-marketplace\"",
+            "timeout": 3
+          }
+        ]
+      }
+    ],
+    "Notification": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"D:\\AI\\GitHub\\sad-marketplace\\packs\\codebuddy-pet\\skills\\codebuddy-pet\\scripts\\codebuddy-pet.js\" hook Notification --project \"d:\\ai\\github\\sad-marketplace\"",
+            "timeout": 3
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"D:\\AI\\GitHub\\sad-marketplace\\packs\\codebuddy-pet\\skills\\codebuddy-pet\\scripts\\codebuddy-pet.js\" hook Stop --project \"d:\\ai\\github\\sad-marketplace\"",
+            "timeout": 3
+          }
+        ]
+      }
+    ],
+    "SessionEnd": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"D:\\AI\\GitHub\\sad-marketplace\\packs\\codebuddy-pet\\skills\\codebuddy-pet\\scripts\\codebuddy-pet.js\" hook SessionEnd --project \"d:\\ai\\github\\sad-marketplace\"",
+            "timeout": 3
+          }
+        ]
+      }
+    ]
+  }
+}

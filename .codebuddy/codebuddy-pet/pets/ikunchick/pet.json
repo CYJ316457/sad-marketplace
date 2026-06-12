@@ -1,0 +1,20 @@
+{
+  "id": "ikunchick",
+  "displayName": "ikunchick",
+  "description": "A tiny basketball chick digital pet based closely on the provided IKun chick reference.",
+  "spritesheetPath": "spritesheet.webp",
+  "kind": "animal",
+  "frameWidth": 192,
+  "frameHeight": 208,
+  "columns": 8,
+  "rows": 9,
+  "fps": 8,
+  "animations": {
+    "idle": [0, 1, 2, 3, 4, 5],
+    "busy": [8, 9, 10, 11, 12, 13, 14, 15],
+    "tool": [16, 17, 18, 19, 20, 21, 22, 23],
+    "ask": [40, 41, 42, 43, 44],
+    "done": [48, 49, 50, 51, 52, 53],
+    "tap": [64, 65, 66, 67, 68, 69, 70, 71]
+  }
+}
