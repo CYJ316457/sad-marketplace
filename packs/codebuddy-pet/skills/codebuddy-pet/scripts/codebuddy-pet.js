@@ -11,6 +11,9 @@ const scriptPath = fileURLToPath(import.meta.url);
 const skillDir = path.resolve(path.dirname(scriptPath), "..");
 const runtimeSourceDir = path.join(skillDir, "assets", "runtime");
 const petSourceDir = path.join(skillDir, "assets", "pets", "ikunchick");
+const petProcessName = "codebuddy-pet";
+const stalePetProcessMs = 60_000;
+const staleStartLockMs = 30_000;
 
 try {
   if (command === "init") runInit(argv);
@@ -28,6 +31,8 @@ try {
 function runInit(args) {
   const project = resolveProject(args);
   const dryRun = hasFlag(args, "--dry-run");
+  const noStart = shouldSkipStart(args);
+  const noInstall = shouldSkipInstall(args);
   assertPetAssets();
   const localDir = localPetDir(project);
   const settingsPath = codebuddySettingsPath(project);
@@ -42,24 +47,28 @@ function runInit(args) {
     copyDirectory(runtimeSourceDir, path.join(localDir, "runtime"));
   }
   copyDirectory(petSourceDir, path.join(localDir, "pets", "ikunchick"));
-  ensureRuntimeDependencies(path.join(localDir, "runtime"));
+  if (!noInstall) ensureRuntimeDependencies(path.join(localDir, "runtime"));
   writeState(project, defaultState("idle", "Ready"));
   const settings = readJson(settingsPath);
   settings.hooks = mergePetHooks(settings.hooks || {}, scriptPath, project);
   writeJson(settingsPath, settings);
   console.log(`CodeBuddy Pet initialized: ${localDir}`);
+  if (noStart) return;
   startPet(project);
 }
 
 function runShow(args) {
   const project = resolveProject(args);
-  installLocalFiles(project);
+  const noStart = shouldSkipStart(args);
+  const noInstall = shouldSkipInstall(args);
+  installLocalFiles(project, { skipInstall: noInstall });
   const settingsPath = codebuddySettingsPath(project);
   const settings = readJson(settingsPath);
   settings.hooks = mergePetHooks(settings.hooks || {}, scriptPath, project);
   writeJson(settingsPath, settings);
   writeState(project, defaultState("idle", "Ready"));
   console.log(`CodeBuddy Pet enabled: ${settingsPath}`);
+  if (noStart) return;
   startPet(project);
 }
 
@@ -116,25 +125,51 @@ function startPet(project) {
   if (!fs.existsSync(runtimeMain)) {
     throw new Error(`Runtime not installed. Run init first for ${project}`);
   }
-  ensureRuntimeDependencies(runtimeDir);
-  const electronBin = resolveElectronBin(runtimeDir);
-  const child = spawnDetached(electronBin.command, [...electronBin.args, runtimeDir, "--project", project], runtimeDir);
-  child.on("error", (error) => {
-    console.error(`CodeBuddy Pet failed to start: ${error.message}`);
-    process.exitCode = 1;
-  });
-  child.unref();
-  console.log(`CodeBuddy Pet started for ${project}`);
+  if (reuseRunningPet(project)) return;
+
+  const lockAcquired = acquireStartLock(project);
+  if (!lockAcquired) {
+    console.log(`CodeBuddy Pet already starting for ${project}`);
+    return;
+  }
+
+  try {
+    if (reuseRunningPet(project)) return;
+    ensureRuntimeDependencies(runtimeDir);
+    const electronBin = resolveElectronBin(runtimeDir);
+    const child = spawnDetached(electronBin.command, [...electronBin.args, runtimeDir, "--project", project], runtimeDir);
+    child.on("error", (error) => {
+      removePetProcess(project);
+      console.error(`CodeBuddy Pet failed to start: ${error.message}`);
+      process.exitCode = 1;
+    });
+    if (child.pid && electronBin.trackPid) writePetProcess(project, child.pid);
+    child.unref();
+    console.log(`CodeBuddy Pet started for ${project}`);
+  } finally {
+    releaseStartLock(project);
+  }
 }
 
-function installLocalFiles(project) {
+function reuseRunningPet(project) {
+  const existingProcess = readPetProcess(project);
+  if (!existingProcess) return false;
+  if (isPetProcessCurrent(existingProcess, project)) {
+    console.log(`CodeBuddy Pet already running for ${project}`);
+    return true;
+  }
+  removePetProcess(project);
+  return false;
+}
+
+function installLocalFiles(project, options = {}) {
   assertPetAssets();
   const localDir = localPetDir(project);
   if (fs.existsSync(runtimeSourceDir)) {
     copyDirectory(runtimeSourceDir, path.join(localDir, "runtime"));
   }
   copyDirectory(petSourceDir, path.join(localDir, "pets", "ikunchick"));
-  ensureRuntimeDependencies(path.join(localDir, "runtime"));
+  if (!options.skipInstall) ensureRuntimeDependencies(path.join(localDir, "runtime"));
 }
 
 function ensureRuntimeDependencies(runtimeDir) {
@@ -164,12 +199,12 @@ function resolveElectronBin(runtimeDir) {
   // Prefer the real executable on Windows. Spawning .cmd shims directly can fail
   // with EINVAL in embedded terminals and agent runtimes.
   const directExe = path.join(npmDir, "electron", "dist", isWin ? "electron.exe" : "electron");
-  if (fs.existsSync(directExe)) return { command: directExe, args: [] };
+  if (fs.existsSync(directExe)) return { command: directExe, args: [], trackPid: true };
   // Check .bin shims (created by npm for most packages)
   const localCmd = path.join(npmDir, ".bin", isWin ? "electron.cmd" : "electron");
-  if (fs.existsSync(localCmd)) return { command: localCmd, args: [] };
+  if (fs.existsSync(localCmd)) return { command: localCmd, args: [], trackPid: false };
   const npx = findOnPath(isWin ? "npx.cmd" : "npx") || findOnPath("npx");
-  return { command: npx || (isWin ? "npx.cmd" : "npx"), args: ["electron"] };
+  return { command: npx || (isWin ? "npx.cmd" : "npx"), args: ["electron"], trackPid: false };
 }
 
 function spawnDetached(commandPath, args, cwd) {
@@ -266,6 +301,128 @@ function writeState(project, state) {
   writeJson(codebuddyStatePath(project), state);
 }
 
+function readPetProcess(project) {
+  try {
+    const record = readJson(codebuddyPidPath(project));
+    const pid = Number(record.pid);
+    if (!Number.isInteger(pid) || pid <= 0) return undefined;
+    return {
+      name: String(record.name || ""),
+      pid,
+      project: String(record.project || ""),
+      updatedAt: String(record.updatedAt || ""),
+    };
+  } catch {
+    return undefined;
+  }
+}
+
+function writePetProcess(project, pid) {
+  writeJsonAtomic(codebuddyPidPath(project), petProcessRecord(project, pid));
+}
+
+function petProcessRecord(project, pid) {
+  return {
+    name: petProcessName,
+    pid,
+    project,
+    updatedAt: new Date().toISOString(),
+  };
+}
+
+function isPetProcessCurrent(record, project) {
+  return record.name === petProcessName && sameProject(record.project, project) && isRecentTimestamp(record.updatedAt, stalePetProcessMs) && isProcessRunning(record.pid);
+}
+
+function isRecentTimestamp(value, maxAgeMs) {
+  const timestamp = Date.parse(value);
+  return Number.isFinite(timestamp) && Date.now() - timestamp <= maxAgeMs;
+}
+
+function removePetProcess(project) {
+  fs.rmSync(codebuddyPidPath(project), { force: true });
+}
+
+function acquireStartLock(project) {
+  const lockPath = codebuddyStartLockPath(project);
+  try {
+    createStartLock(lockPath, project);
+    return true;
+  } catch (error) {
+    if (error?.code !== "EEXIST") throw error;
+    if (!isStaleStartLock(project)) return false;
+    if (!acquireRecoveryLock(project)) return false;
+    try {
+      if (!isStaleStartLock(project)) return false;
+      releaseStartLock(project);
+      try {
+        createStartLock(lockPath, project);
+        return true;
+      } catch (retryError) {
+        if (retryError?.code === "EEXIST") return false;
+        throw retryError;
+      }
+    } finally {
+      releaseRecoveryLock(project);
+    }
+  }
+}
+
+function createStartLock(lockPath, project) {
+  fs.mkdirSync(lockPath, { recursive: false });
+  writeJsonAtomic(path.join(lockPath, "owner.json"), petProcessRecord(project, process.pid));
+}
+
+function isStaleStartLock(project) {
+  const lockPath = codebuddyStartLockPath(project);
+  const ownerPath = path.join(lockPath, "owner.json");
+  if (!fs.existsSync(ownerPath)) return !isRecentPath(lockPath, staleStartLockMs);
+
+  let owner;
+  try {
+    owner = readJson(ownerPath);
+  } catch {
+    return !isRecentPath(ownerPath, staleStartLockMs);
+  }
+  const pid = Number(owner.pid);
+  return owner.name !== petProcessName || !sameProject(String(owner.project || ""), project) || !Number.isInteger(pid) || pid <= 0 || !isProcessRunning(pid);
+}
+
+function isRecentPath(filePath, maxAgeMs) {
+  try {
+    return Date.now() - fs.statSync(filePath).mtimeMs <= maxAgeMs;
+  } catch {
+    return false;
+  }
+}
+
+function releaseStartLock(project) {
+  fs.rmSync(codebuddyStartLockPath(project), { recursive: true, force: true });
+}
+
+function acquireRecoveryLock(project) {
+  try {
+    fs.mkdirSync(codebuddyRecoveryLockPath(project), { recursive: false });
+    return true;
+  } catch (error) {
+    if (error?.code === "EEXIST") return false;
+    throw error;
+  }
+}
+
+function releaseRecoveryLock(project) {
+  fs.rmSync(codebuddyRecoveryLockPath(project), { recursive: true, force: true });
+}
+
+function isProcessRunning(pid) {
+  try {
+    process.kill(pid, 0);
+    return true;
+  } catch (error) {
+    return error?.code === "EPERM";
+  }
+}
+
 function assertPetAssets() {
   for (const file of ["pet.json", "spritesheet.webp"]) {
     const fullPath = path.join(petSourceDir, file);
@@ -285,9 +442,34 @@ function codebuddyStatePath(project) {
   return path.join(localPetDir(project), "state.json");
 }
 
+function codebuddyPidPath(project) {
+  return path.join(localPetDir(project), "pet.pid");
+}
+
+function codebuddyStartLockPath(project) {
+  return path.join(localPetDir(project), "start.lock");
+}
+
+function codebuddyRecoveryLockPath(project) {
+  return path.join(localPetDir(project), "start-recovery.lock");
+}
+
 function resolveProject(args, fallback = ".") {
   const value = optionValue(args, "--project") || fallback;
-  return path.resolve(value);
+  return normalizeProjectPath(value);
+}
+
+function normalizeProjectPath(value) {
+  const resolved = path.resolve(value);
+  let realPath = resolved;
+  try {
+    realPath = fs.realpathSync.native(resolved);
+  } catch {}
+  return process.platform === "win32" ? realPath.toLowerCase() : realPath;
+}
+
+function sameProject(left, right) {
+  return normalizeProjectPath(left) === normalizeProjectPath(right);
 }
 
 function optionValue(args, name) {
@@ -299,6 +481,14 @@ function hasFlag(args, name) {
   return args.includes(name);
 }
 
+function shouldSkipStart(args) {
+  return hasFlag(args, "--no-start") || process.env.CODEBUDDY_PET_NO_START === "1";
+}
+
+function shouldSkipInstall(args) {
+  return hasFlag(args, "--no-install") || process.env.CODEBUDDY_PET_NO_INSTALL === "1";
+}
+
 function readJson(filePath) {
   if (!fs.existsSync(filePath)) return {};
   return JSON.parse(fs.readFileSync(filePath, "utf-8"));
@@ -307,6 +497,13 @@ function readJson(filePath) {
 function writeJson(filePath, data) {
   fs.mkdirSync(path.dirname(filePath), { recursive: true });
   fs.writeFileSync(filePath, `${JSON.stringify(data, null, 2)}\n`, "utf-8");
+}
+
+function writeJsonAtomic(filePath, data) {
+  fs.mkdirSync(path.dirname(filePath), { recursive: true });
+  const tempPath = `${filePath}.${process.pid}.tmp`;
+  fs.writeFileSync(tempPath, `${JSON.stringify(data, null, 2)}\n`, "utf-8");
+  fs.renameSync(tempPath, filePath);
 }
 
 function copyDirectory(source, target) {

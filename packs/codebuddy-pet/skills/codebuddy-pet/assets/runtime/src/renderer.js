@@ -19,6 +19,8 @@ let lastStateText = "";
 let reactionTimer;
 let pointerDown;
 let isDragging = false;
+let suppressNextClick = false;
+let lastMenuAt = 0;
 
 init();
 
@@ -29,8 +31,9 @@ async function init() {
   await loadSpritesheet();
   canvas.addEventListener("click", reactToPetClick);
   bubble.addEventListener("click", toggleBubble);
-  root.addEventListener("contextmenu", showContextMenu);
-  root.addEventListener("pointerdown", startPotentialDrag);
+  bindPointerInteractions(root);
+  bindPointerInteractions(canvas);
+  bindPointerInteractions(bubble);
   window.addEventListener("pointermove", movePotentialDrag);
   window.addEventListener("pointerup", stopPotentialDrag);
   window.addEventListener("pointercancel", stopPotentialDrag);
@@ -50,6 +53,7 @@ function tick() {
 }
 
 function reactToPetClick(event) {
+  if (suppressNextClick) { suppressNextClick = false; return; }
   event.stopPropagation();
   bubbleVisible = true;
   playTemporaryAnimation("tap");
@@ -63,44 +67,66 @@ function reactToPetClick(event) {
 }
 
 function toggleBubble(event) {
+  if (suppressNextClick) { suppressNextClick = false; return; }
   event.stopPropagation();
   bubbleVisible = !bubbleVisible;
   renderBubble(readState());
 }
 
+function bindPointerInteractions(element) {
+  element.addEventListener("contextmenu", showContextMenu);
+  element.addEventListener("pointerdown", startPotentialDrag);
+}
+
 function showContextMenu(event) {
   event.preventDefault();
   event.stopPropagation();
-  stopPotentialDrag();
+  if (event.type === "contextmenu" && Date.now() - lastMenuAt < 300) return;
+  lastMenuAt = Date.now();
+  stopPotentialDrag(event);
   ipcRenderer.send("codebuddy-pet-show-menu");
 }
 
 function startPotentialDrag(event) {
+  if (event.button === 2) {
+    showContextMenu(event);
+    return;
+  }
   if (event.button !== 0) return;
+  event.stopPropagation();
+  event.currentTarget?.setPointerCapture?.(event.pointerId);
   pointerDown = {
-    x: event.screenX,
-    y: event.screenY,
+    id: event.pointerId,
+    target: event.currentTarget,
+    screenX: event.screenX,
+    screenY: event.screenY,
   };
 }
 
 function movePotentialDrag(event) {
   if (!pointerDown) return;
-  const movedX = event.screenX - pointerDown.x;
-  const movedY = event.screenY - pointerDown.y;
+  const movedX = event.screenX - pointerDown.screenX;
+  const movedY = event.screenY - pointerDown.screenY;
   if (!isDragging && Math.hypot(movedX, movedY) < 4) return;
 
   if (!isDragging) {
     isDragging = true;
+    suppressNextClick = true;
     root.classList.add("dragging");
-    ipcRenderer.send("codebuddy-pet-drag-start", pointerDown);
+    ipcRenderer.send("codebuddy-pet-drag-start", { screenX: pointerDown.screenX, screenY: pointerDown.screenY });
   }
 
   ipcRenderer.send("codebuddy-pet-drag-move", { screenX: event.screenX, screenY: event.screenY });
 }
 
-function stopPotentialDrag() {
+function stopPotentialDrag(event) {
+  if (pointerDown?.target && pointerDown.id !== undefined) {
+    pointerDown.target.releasePointerCapture?.(pointerDown.id);
+  }
   pointerDown = undefined;
   if (!isDragging) return;
+  event?.stopPropagation?.();
+  suppressNextClick = true;
   isDragging = false;
   root.classList.remove("dragging");
   ipcRenderer.send("codebuddy-pet-drag-end");

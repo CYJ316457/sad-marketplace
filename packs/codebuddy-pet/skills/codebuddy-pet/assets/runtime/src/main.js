@@ -6,10 +6,15 @@ import { app, BrowserWindow, Menu, ipcMain } from "electron";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const project = resolveProject(process.argv.slice(2));
-const logPath = path.join(project, ".codebuddy", "codebuddy-pet", "runtime.log");
+const petDir = path.join(project, ".codebuddy", "codebuddy-pet");
+const logPath = path.join(petDir, "runtime.log");
+const pidPath = path.join(petDir, "pet.pid");
+const petProcessName = "codebuddy-pet";
+const heartbeatIntervalMs = 5_000;
 
 let windowRef;
 let dragOffset;
+let heartbeatTimer;
 
 logRuntime("main:start");
 
@@ -17,14 +22,20 @@ app.whenReady()
   .then(() => {
     logRuntime("app:ready");
     createWindow();
+    startHeartbeat();
   })
   .catch((error) => {
     logRuntime(`app:ready-error ${error instanceof Error ? error.message : String(error)}`);
+    app.quit();
   });
 
 app.on("window-all-closed", () => {
   logRuntime("app:window-all-closed");
   app.quit();
+});
+
+app.on("before-quit", () => {
+  stopHeartbeat();
 });
 
 ipcMain.handle("codebuddy-pet-context", () => ({
@@ -94,6 +105,26 @@ function resolveProject(args) {
   const index = args.indexOf("--project");
   const value = index >= 0 ? args[index + 1] : process.cwd();
   return path.resolve(value);
+}
+
+function startHeartbeat() {
+  writeHeartbeat();
+  heartbeatTimer = setInterval(writeHeartbeat, heartbeatIntervalMs);
+}
+
+function stopHeartbeat() {
+  if (heartbeatTimer) clearInterval(heartbeatTimer);
+}
+
+function writeHeartbeat() {
+  try {
+    fs.mkdirSync(petDir, { recursive: true });
+    const tempPath = `${pidPath}.${process.pid}.tmp`;
+    fs.writeFileSync(tempPath, `${JSON.stringify({ name: petProcessName, pid: process.pid, project, updatedAt: new Date().toISOString() }, null, 2)}\n`, "utf8");
+    fs.renameSync(tempPath, pidPath);
+  } catch (error) {
+    logRuntime(`heartbeat:error ${error instanceof Error ? error.message : String(error)}`);
+  }
 }
 
 function logRuntime(message) {
