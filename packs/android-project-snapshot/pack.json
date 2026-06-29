@@ -1,0 +1,43 @@
+{
+  "name": "android-project-snapshot",
+  "version": "1.0.0",
+  "description": "将 Android 项目的架构、技术栈、API、数据模型等关键信息提取并总结到知识库中，支持 Claude Code 和 CodeBuddy",
+  "author": {
+    "name": "Local Publisher"
+  },
+  "license": "MIT",
+  "tags": [
+    "android",
+    "project",
+    "snapshot",
+    "documentation",
+    "knowledge-base",
+    "chinese"
+  ],
+  "platformSupport": {
+    "codex": true,
+    "claude": true,
+    "codebuddy": true,
+    "opencode": true
+  },
+  "contents": {
+    "skills": [
+      {
+        "name": "android-project-snapshot",
+        "path": "skills/android-project-snapshot",
+        "kind": "shared"
+      }
+    ],
+    "commands": [
+      {
+        "name": "Save-Project-Snapshot",
+        "path": "commands/Save-Project-Snapshot.md",
+        "kind": "shared"
+      }
+    ]
+  },
+  "codebuddy": {
+    "pluginName": "android-project-snapshot",
+    "category": "developer-tools"
+  }
+}

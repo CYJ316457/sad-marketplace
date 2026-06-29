@@ -23,7 +23,27 @@
 | android-adb | Android ADB 自动化、UI 层级分析和截图验证 | ✓ | ✓ | ✓ | ✓ |
 | android-build | Android 项目 Gradle 打包 debug APK 并安装运行到 ADB 设备，兼容多版本 Gradle | ✓ | ✓ | ✓ | ✓ |
 | lanhu-to-android | 蓝湖 XML/WXML + CSS/WXSS → Android View XML，DPI 感知、交互式询问、自动校验 | ✓ | ✓ | ✓ | ✓ |
+| android-project-snapshot | 将 Android 项目提取总结到知识库 | ✓ | ✓ | ✓ | ✓ |
 | ppt-master | 生成原生可编辑 PPTX | ✓ | ✓ | ✓ | ✓ |
+
+## android-project-snapshot
+
+`android-project-snapshot` 是一个将 Android 项目关键信息提取并保存到知识库的技能。当你接手一个新 Android 项目或需要记录项目架构时，使用 `/android-project-snapshot` 命令。
+
+它会自动分析项目的以下信息并生成结构化笔记：
+
+1. **项目概览** — 包名、SDK 版本、构建配置
+2. **架构与分层** — 包结构、MVVM/MVI 模式、DI 方式
+3. **技术栈** — 全部依赖库和版本号
+4. **API 接口** — Retrofit 定义、Base URL、请求/响应结构
+5. **数据模型** — Entity、DTO、Room 表结构
+6. **UI 规范** — 主题、颜色、公共组件
+7. **导航路由** — 页面跳转关系
+8. **项目约定** — Code Style、Base 类、团队规范
+
+生成的知识库文件存放在 `android/<项目名>/` 目录下，可随时检索。
+
+技能目录：`packs/android-project-snapshot/skills/android-project-snapshot`
 
 ## 安装路径
 

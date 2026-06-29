@@ -530,6 +530,41 @@
       "contents": { "skills": ["lanhu-to-android"] }
     },
     {
+      "name": "android-project-snapshot",
+      "version": "1.0.0",
+      "description": "将 Android 项目的架构、技术栈、API、数据模型等关键信息提取并总结到知识库中，支持 Claude Code 和 CodeBuddy",
+      "author": {
+        "name": "Local Publisher"
+      },
+      "license": "MIT",
+      "tags": [
+        "android",
+        "project",
+        "snapshot",
+        "documentation",
+        "knowledge-base",
+        "chinese"
+      ],
+      "source": "./packs/android-project-snapshot",
+      "platformSupport": {
+        "codex": true,
+        "claude": true,
+        "codebuddy": true,
+        "opencode": true
+      },
+      "install": {
+        "unit": "pack"
+      },
+      "contents": {
+        "skills": [
+          "android-project-snapshot"
+        ],
+        "commands": [
+          "Save-Project-Snapshot"
+        ]
+      }
+    },
+    {
       "name": "ppt-master",
       "version": "2.9.0",
       "description": "AI 生成原生可编辑 PPTX，支持 PDF、DOCX、Markdown、URL 等输入",
